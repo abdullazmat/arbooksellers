@@ -3,7 +3,7 @@ import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin, BookOpen } 
 
 export function Footer() {
   return (
-    <footer className="bg-gray-900 text-gray-300 py-12 md:py-16 font-inter">
+    <footer className="bg-gray-900 text-gray-300 pt-12 md:pt-16 font-inter">
       <div className="container mx-auto px-4 md:px-6 grid grid-cols-1 md:grid-cols-4 gap-8">
         {/* Company Info */}
         <div className="space-y-4">
@@ -113,7 +113,7 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-gray-700 mt-8 pt-8 text-center text-sm text-gray-500">
+      <div className="border-t border-gray-700 mt-8 py-5 text-center text-sm text-gray-500">
         &copy; {new Date().getFullYear()} Islamic Books. All rights reserved.
       </div>
     </footer>
