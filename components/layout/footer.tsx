@@ -7,9 +7,8 @@ export function Footer() {
       <div className="container mx-auto px-4 md:px-6 grid grid-cols-1 md:grid-cols-4 gap-8">
         {/* Company Info */}
         <div className="space-y-4">
-          <Link href="/" className="flex items-center gap-2 font-bold text-2xl text-white">
-            <BookOpen className="h-7 w-7 text-islamic-green-500" />
-            Islamic Books
+          <Link href="/" className="flex items-center">
+            <img src="/logo.png" alt="Islamic Books" className="h-20 w-20" />
           </Link>
           <p className="text-sm leading-relaxed">
             Your trusted source for authentic Islamic literature. We strive to provide a wide range of books to enrich your knowledge and faith.

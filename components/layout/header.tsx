@@ -1,40 +1,41 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { SheetTrigger, SheetContent, Sheet } from '@/components/ui/sheet'
 import {
-  DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuItem,
-  DropdownMenuContent,
-  DropdownMenu,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { ShoppingCart, Heart, User, Search, Menu, Home, BookOpen, Info, LayoutDashboard, LogOut, LogIn, UserPlus } from 'lucide-react'
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from '@/components/ui/sheet'
+import { useAuth } from '@/contexts/auth-context'
 import { useCart } from '@/contexts/cart-context'
 import { useWishlist } from '@/contexts/wishlist-context'
-import { useAuth } from '@/contexts/auth-context'
-import { useState, useEffect } from 'react'
+import { ShoppingCart, Heart, User, Search, Menu, Home, BookOpen, Info, LayoutDashboard, LogOut, LogIn, UserPlus } from 'lucide-react'
 
 export function Header() {
-  // Corrected destructuring: use 'items' property from contexts
+  const [isScrolled, setIsScrolled] = useState(false)
+  const { user, logout } = useAuth()
   const { items: cartItems } = useCart()
   const { items: wishlistItems } = useWishlist()
-  const { user, logout } = useAuth()
-  const [isScrolled, setIsScrolled] = useState(false)
+  const pathname = usePathname()
 
-  const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0)
+  const cartItemCount = cartItems.length
   const wishlistCount = wishlistItems.length
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 50) {
-        setIsScrolled(true)
-      } else {
-        setIsScrolled(false)
-      }
+      setIsScrolled(window.scrollY > 0)
     }
 
     window.addEventListener('scroll', handleScroll)
@@ -49,9 +50,8 @@ export function Header() {
     >
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
         {/* Logo */}
-        <Link className="flex items-center gap-2 text-lg font-semibold" href="/">
-          <BookOpenIcon className="h-6 w-6 text-islamic-green-600" />
-          <span className="gradient-text">Islamic Books</span>
+        <Link className="flex items-center" href="/">
+          <img src="/logo.png" alt="Islamic Books" className="h-16 w-[80px]" />
         </Link>
 
         {/* Desktop Navigation */}
@@ -185,26 +185,5 @@ export function Header() {
         </div>
       </div>
     </header>
-  )
-}
-
-function BookOpenIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M2 6v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2Z" />
-      <path d="M22 6v14c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2h16c1.1 0 2 .9 2 2Z" />
-      <path d="M12 4v16" />
-    </svg>
   )
 }

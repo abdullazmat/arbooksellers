@@ -81,18 +81,6 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-yellow-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center space-x-2">
-            <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
-              <BookOpen className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-green-600">Islamic Books</h1>
-              <p className="text-sm text-gray-600">Authentic Islamic Literature</p>
-            </div>
-          </Link>
-        </div>
 
         <Card className="border-0 shadow-lg">
           <CardHeader className="text-center">

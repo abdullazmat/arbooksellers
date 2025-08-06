@@ -52,11 +52,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
         <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white">
           <div className="flex h-16 items-center justify-between px-4 border-b">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
-                <BookOpen className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-lg font-bold text-green-600">Admin Panel</span>
+            <div className="flex items-center">
+              <img src="/logo.png" alt="Islamic Books" className="h-10 w-10" />
             </div>
             <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(false)}>
               <X className="h-5 w-5" />
@@ -90,11 +87,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
         <div className="flex flex-col flex-grow bg-white border-r border-gray-200">
           <div className="flex h-16 items-center px-4 border-b">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
-                <BookOpen className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-lg font-bold text-green-600">Admin Panel</span>
+            <div className="flex items-center">
+              <img src="/logo.png" alt="Islamic Books" className="h-10 w-10" />
             </div>
           </div>
           <nav className="flex-1 px-4 py-4 space-y-1">

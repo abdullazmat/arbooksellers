@@ -72,11 +72,8 @@ export default function AdminLoginPage() {
             <ArrowLeft className="h-4 w-4" />
             <span>Back to Store</span>
           </Link>
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="w-10 h-10 bg-islamic-green-600 rounded-full flex items-center justify-center">
-              <BookOpen className="h-6 w-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold text-islamic-green-600">Islamic Books</span>
+          <div className="flex items-center justify-center mb-4">
+            <img src="/logo.png" alt="Islamic Books" className="h-16 w-16" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Admin Panel</h1>
         </div>
