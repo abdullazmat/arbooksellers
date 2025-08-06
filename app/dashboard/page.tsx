@@ -3,8 +3,6 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
-import { Header } from '@/components/layout/header'
-import { Footer } from '@/components/layout/footer'
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout'
 import { DashboardOverview } from '@/components/dashboard/dashboard-overview'
 
@@ -34,12 +32,8 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      <Header />
-      <DashboardLayout>
-        <DashboardOverview />
-      </DashboardLayout>
-      <Footer />
-    </div>
+    <DashboardLayout>
+      <DashboardOverview />
+    </DashboardLayout>
   )
 }
