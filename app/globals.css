@@ -1,0 +1,374 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+
+    /* Custom Islamic Green Palette */
+    --islamic-green-50: 120 60% 95%;
+    --islamic-green-100: 120 60% 90%;
+    --islamic-green-200: 120 60% 80%;
+    --islamic-green-300: 120 60% 70%;
+    --islamic-green-400: 120 60% 60%;
+    --islamic-green-500: 120 60% 50%; /* Main Green */
+    --islamic-green-600: 120 60% 40%;
+    --islamic-green-700: 120 60% 30%;
+    --islamic-green-800: 120 60% 20%;
+    --islamic-green-900: 120 60% 10%;
+
+    /* Custom Islamic Gold Palette */
+    --islamic-gold-50: 40 100% 95%;
+    --islamic-gold-100: 40 100% 90%;
+    --islamic-gold-200: 40 100% 80%;
+    --islamic-gold-300: 40 100% 70%;
+    --islamic-gold-400: 40 100% 60%;
+    --islamic-gold-500: 40 100% 50%; /* Main Gold */
+    --islamic-gold-600: 40 100% 40%;
+    --islamic-gold-700: 40 100% 30%;
+    --islamic-gold-800: 40 100% 20%;
+    --islamic-gold-900: 40 100% 10%;
+
+    /* Custom Islamic Blue Palette (for accents) */
+    --islamic-blue-50: 210 100% 95%;
+    --islamic-blue-100: 210 100% 90%;
+    --islamic-blue-200: 210 100% 80%;
+    --islamic-blue-300: 210 100% 70%;
+    --islamic-blue-400: 210 100% 60%;
+    --islamic-blue-500: 210 100% 50%;
+    --islamic-blue-600: 210 100% 40%;
+    --islamic-blue-700: 210 100% 30%;
+    --islamic-blue-800: 210 100% 20%;
+    --islamic-blue-900: 210 100% 10%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom Fonts */
+.font-inter {
+  font-family: var(--font-inter);
+}
+
+.font-amiri {
+  font-family: var(--font-amiri);
+}
+
+/* Custom Gradients */
+.gradient-primary {
+  background: linear-gradient(to right, hsl(var(--islamic-green-600)), hsl(var(--islamic-green-700)));
+}
+
+.gradient-secondary {
+  background: linear-gradient(to right, hsl(var(--islamic-gold-500)), hsl(var(--islamic-gold-600)));
+}
+
+.gradient-text {
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-image: linear-gradient(to right, hsl(var(--islamic-green-600)), hsl(var(--islamic-gold-600)));
+}
+
+.bg-gradient-islamic {
+  background: linear-gradient(to bottom right, hsl(var(--islamic-green-500)), hsl(var(--islamic-green-700)));
+}
+
+.bg-gradient-gold {
+  background: linear-gradient(to bottom right, hsl(var(--islamic-gold-500)), hsl(var(--islamic-gold-700)));
+}
+
+.gradient-newsletter {
+  background: linear-gradient(135deg, hsl(var(--islamic-green-600)) 0%, hsl(var(--islamic-green-700)) 50%, hsl(var(--islamic-green-800)) 100%);
+}
+
+.gradient-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+}
+
+/* Islamic Pattern Background */
+.islamic-pattern {
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.1) 2px, transparent 2px),
+    radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.1) 2px, transparent 2px);
+  background-size: 50px 50px;
+  background-position: 0 0, 25px 25px;
+}
+
+/* Custom Shadows */
+.shadow-islamic {
+  box-shadow: 0 10px 15px -3px hsla(var(--islamic-green-500), 0.2), 0 4px 6px -2px hsla(var(--islamic-green-500), 0.1);
+}
+
+.shadow-modern {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-colored {
+  box-shadow: 0 10px 20px rgba(var(--islamic-green-500), 0.2), 0 6px 6px rgba(var(--islamic-gold-500), 0.1);
+}
+
+/* Glassmorphism Effect */
+.glass {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius);
+}
+
+/* Animations */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-down {
+  animation: fadeInDown 0.5s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in-left {
+  animation: fadeInLeft 0.5s ease-out forwards;
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in-right {
+  animation: fadeInRight 0.5s ease-out forwards;
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-bounce-in {
+  animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+@keyframes pulseGlow {
+  0% {
+    box-shadow: 0 0 0 0px rgba(var(--islamic-gold-500), 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(var(--islamic-gold-500), 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0px rgba(var(--islamic-gold-500), 0);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s infinite;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-bounce-y {
+  animation: bounce 1s infinite;
+}
+
+/* Staggered animations */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
+.stagger-6 { animation-delay: 0.6s; }
+.stagger-7 { animation-delay: 0.7s; }
+.stagger-8 { animation-delay: 0.8s; }
+.stagger-9 { animation-delay: 0.9s; }
+.stagger-10 { animation-delay: 1.0s; }
+
+/* Responsive Text Sizes */
+.text-responsive-xl {
+  font-size: clamp(2.5rem, 5vw + 1rem, 4.5rem); /* 40px to 72px */
+  line-height: 1.1;
+}
+
+.text-responsive-lg {
+  font-size: clamp(1.5rem, 3vw + 0.5rem, 2.5rem); /* 24px to 40px */
+  line-height: 1.2;
+}
+
+/* Hover Lift Effect */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Section Spacing Utilities */
+.section-spacing {
+  padding: 3rem 0;
+}
+
+@media (min-width: 768px) {
+  .section-spacing {
+    padding: 6rem 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  .section-spacing {
+    padding: 8rem 0;
+  }
+}
+
+/* Container Utilities */
+.container-padding {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 768px) {
+  .container-padding {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
