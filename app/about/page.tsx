@@ -1,5 +1,3 @@
-import { Header } from '@/components/layout/header'
-import { Footer } from '@/components/layout/footer'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { BookOpen, Users, Award, Globe, Heart, Shield } from 'lucide-react'
@@ -63,10 +61,7 @@ const stats = [
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen">
-      <Header />
-      
-      <main>
+    <main className="min-h-screen">
         {/* Hero Section */}
         <section className="bg-gradient-to-br from-green-50 via-white to-yellow-50 py-16">
           <div className="container mx-auto px-4">
@@ -288,8 +283,5 @@ export default function AboutPage() {
           </div>
         </section>
       </main>
-
-      <Footer />
-    </div>
   )
 }
