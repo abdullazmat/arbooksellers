@@ -1,11 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { useAuth } from '@/contexts/auth-context'
-import { LayoutDashboard, Package, ShoppingCart, Users, MessageSquare, Star, Tag, Settings, LogOut, Menu, X, BookOpen } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingCart, Users, MessageSquare, Star, Tag, Settings, LogOut, Menu, X, BookOpen, FileText, Image, CreditCard } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -15,6 +14,7 @@ const navigation = [
   { name: 'Reviews', href: '/admin/reviews', icon: Star },
   { name: 'Coupons', href: '/admin/coupons', icon: Tag },
   { name: 'Support', href: '/admin/support', icon: MessageSquare },
+  { name: 'Content', href: '/admin/content', icon: FileText },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ]
 
@@ -24,8 +24,26 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [adminUser, setAdminUser] = useState<any>(null)
   const pathname = usePathname()
-  const { user, logout } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    const adminUserData = localStorage.getItem('adminUser')
+    if (adminUserData) {
+      try {
+        setAdminUser(JSON.parse(adminUserData))
+      } catch (error) {
+        console.error('Error parsing admin user data:', error)
+      }
+    }
+  }, [])
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken')
+    localStorage.removeItem('adminUser')
+    router.push('/admin/login')
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -103,19 +121,19 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <div className="flex items-center space-x-3 mb-3">
               <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-medium">
-                  {user?.name?.charAt(0).toUpperCase()}
+                  {adminUser?.name?.charAt(0).toUpperCase()}
                 </span>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-900">{user?.name}</p>
-                <p className="text-xs text-gray-500">{user?.email}</p>
+                <p className="text-sm font-medium text-gray-900">{adminUser?.name}</p>
+                <p className="text-xs text-gray-500">{adminUser?.email}</p>
               </div>
             </div>
             <Button
               variant="outline"
               size="sm"
               className="w-full justify-start"
-              onClick={logout}
+              onClick={handleLogout}
             >
               <LogOut className="mr-2 h-4 w-4" />
               Sign Out
@@ -147,10 +165,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
                   <span className="text-white text-sm font-medium">
-                    {user?.name?.charAt(0).toUpperCase()}
+                    {adminUser?.name?.charAt(0).toUpperCase()}
                   </span>
                 </div>
-                <span className="text-sm font-medium text-gray-900">{user?.name}</span>
+                <span className="text-sm font-medium text-gray-900">{adminUser?.name}</span>
               </div>
             </div>
           </div>
