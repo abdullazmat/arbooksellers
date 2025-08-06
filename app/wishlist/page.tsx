@@ -1,7 +1,5 @@
 'use client'
 
-import { Header } from '@/components/layout/header'
-import { Footer } from '@/components/layout/footer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -21,8 +19,7 @@ export default function WishlistPage() {
       id: item.id,
       title: item.title,
       price: item.price,
-      image: item.image,
-      quantity: 1
+      image: item.image
     })
     toast({
       title: "Added to cart",
@@ -48,9 +45,7 @@ export default function WishlistPage() {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen">
-        <Header />
-        <main className="container mx-auto px-4 py-16">
+      <main className="min-h-screen container mx-auto px-4 py-16">
           <div className="text-center max-w-md mx-auto">
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <Heart className="h-12 w-12 text-gray-400" />
@@ -67,16 +62,11 @@ export default function WishlistPage() {
             </Button>
           </div>
         </main>
-        <Footer />
-      </div>
     )
   }
 
   return (
-    <div className="min-h-screen">
-      <Header />
-      
-      <main className="container mx-auto px-4 py-8">
+    <main className="min-h-screen container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">My Wishlist</h1>
@@ -135,7 +125,7 @@ export default function WishlistPage() {
                     </Link>
                   </h3>
 
-                  <p className="text-sm text-gray-600 mb-3">{item.author}</p>
+                  <p className="text-sm text-gray-600 mb-3">Islamic Book</p>
 
                   <div className="flex items-center justify-between">
                     <span className="text-lg font-bold text-green-600">
@@ -175,8 +165,5 @@ export default function WishlistPage() {
           </Button>
         </div>
       </main>
-
-      <Footer />
-    </div>
   )
 }

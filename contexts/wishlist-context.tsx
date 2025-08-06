@@ -24,6 +24,7 @@ const WishlistContext = createContext<{
   addItem: (item: WishlistItem) => void
   removeItem: (id: string) => void
   clearWishlist: () => void
+  isInWishlist: (id: string) => boolean
   items: WishlistItem[] // Expose items directly
 } | null>(null)
 
@@ -77,6 +78,10 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'CLEAR_WISHLIST' })
   }
 
+  const isInWishlist = (id: string) => {
+    return state.items.some(item => item.id === id)
+  }
+
   return (
     <WishlistContext.Provider
       value={{
@@ -84,6 +89,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         addItem,
         removeItem,
         clearWishlist,
+        isInWishlist,
         items: state.items, // Expose items directly
       }}
     >
