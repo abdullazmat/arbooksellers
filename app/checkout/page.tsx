@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useCart } from '@/contexts/cart-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Textarea } from '@/components/ui/textarea'
 import Image from 'next/image'
-import { CheckCircle, Loader2, Truck, DollarSign, ShieldCheck } from 'lucide-react'
+import { CheckCircle, Loader2, Truck, DollarSign, ShieldCheck, ShoppingCart } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
 export default function CheckoutPage() {
