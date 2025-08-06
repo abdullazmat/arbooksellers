@@ -51,12 +51,6 @@ dist/
 .Spotlight-V100
 .Trashes
 
-# npm package lock
-package-lock.json
-
-# pnpm
-pnpm-lock.yaml
-
 # TypeScript
 *.tsbuildinfo
 
@@ -71,6 +65,3 @@ pnpm-lock.yaml
 
 # Output of 'npm pack'
 *.tgz
-
-# Yarn Integrity file
-yarn.lock 
