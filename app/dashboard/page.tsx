@@ -2,6 +2,8 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { Header } from '@/components/layout/header'
+import { Footer } from '@/components/layout/footer'
 import { useAuth } from '@/contexts/auth-context'
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout'
 import { DashboardOverview } from '@/components/dashboard/dashboard-overview'
@@ -32,8 +34,12 @@ export default function DashboardPage() {
   }
 
   return (
-    <DashboardLayout>
-      <DashboardOverview />
-    </DashboardLayout>
+    <>
+      <Header />
+      <DashboardLayout>
+        <DashboardOverview />
+      </DashboardLayout>
+      <Footer />
+    </>
   )
 }

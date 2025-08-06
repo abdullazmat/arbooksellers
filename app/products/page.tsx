@@ -2,6 +2,8 @@
 
 import { useState, useEffect, Suspense, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { Header } from '@/components/layout/header'
+import { Footer } from '@/components/layout/footer'
 import { ProductGrid } from '@/components/products/product-grid'
 import { ProductFilters } from '@/components/products/product-filters'
 import { ProductSort } from '@/components/products/product-sort'
@@ -38,7 +40,9 @@ function ProductsContent() {
   }, [searchParams, filters.category])
 
   return (
-    <main className="min-h-screen container mx-auto px-4 py-8">
+    <>
+      <Header />
+      <main className="min-h-screen container mx-auto px-4 py-8">
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -99,6 +103,8 @@ function ProductsContent() {
           </div>
         </div>
       </main>
+      <Footer />
+    </>
   )
 }
 

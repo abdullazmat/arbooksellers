@@ -2,6 +2,8 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { Header } from '@/components/layout/header'
+import { Footer } from '@/components/layout/footer'
 import { useAuth } from '@/contexts/auth-context'
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout'
 import { OrderHistory } from '@/components/dashboard/order-history'
@@ -32,8 +34,12 @@ export default function OrdersPage() {
   }
 
   return (
-    <DashboardLayout>
-      <OrderHistory />
-    </DashboardLayout>
+    <>
+      <Header />
+      <DashboardLayout>
+        <OrderHistory />
+      </DashboardLayout>
+      <Footer />
+    </>
   )
 }

@@ -2,6 +2,8 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { Header } from '@/components/layout/header'
+import { Footer } from '@/components/layout/footer'
 import { useAuth } from '@/contexts/auth-context'
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout'
 import { ProfileSettings } from '@/components/dashboard/profile-settings'
@@ -32,8 +34,12 @@ export default function ProfilePage() {
   }
 
   return (
-    <DashboardLayout>
-      <ProfileSettings />
-    </DashboardLayout>
+    <>
+      <Header />
+      <DashboardLayout>
+        <ProfileSettings />
+      </DashboardLayout>
+      <Footer />
+    </>
   )
 }

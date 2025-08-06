@@ -4,8 +4,6 @@ import './globals.css'
 import { CartProvider } from '@/contexts/cart-context'
 import { WishlistProvider } from '@/contexts/wishlist-context'
 import { AuthProvider } from '@/contexts/auth-context'
-import { Header } from '@/components/layout/header'
-import { Footer } from '@/components/layout/footer'
 import { ThemeProvider } from '@/components/theme-provider'
 
 const inter = Inter({
@@ -40,11 +38,9 @@ export default function RootLayout({
             <CartProvider>
               <WishlistProvider>
                 <div className="flex flex-col min-h-screen">
-                  <Header />
                   <main className="flex-1">
                     {children}
                   </main>
-                  <Footer />
                 </div>
               </WishlistProvider>
             </CartProvider>

@@ -1,5 +1,7 @@
 'use client'
 
+import { Header } from '@/components/layout/header'
+import { Footer } from '@/components/layout/footer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -42,7 +44,9 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <main className="min-h-screen container mx-auto px-4 py-16">
+      <>
+        <Header />
+        <main className="min-h-screen container mx-auto px-4 py-16">
           <div className="text-center max-w-md mx-auto">
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <ShoppingBag className="h-12 w-12 text-gray-400" />
@@ -60,6 +64,8 @@ export default function CartPage() {
             </Button>
           </div>
         </main>
+        <Footer />
+      </>
     )
   }
 
@@ -68,7 +74,9 @@ export default function CartPage() {
   const finalTotal = total + shipping + tax
 
   return (
-    <main className="min-h-screen container mx-auto px-4 py-8">
+    <>
+      <Header />
+      <main className="min-h-screen container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Shopping Cart</h1>
           <p className="text-gray-600">
@@ -241,5 +249,7 @@ export default function CartPage() {
           </div>
         </div>
       </main>
+      <Footer />
+    </>
   )
 }
