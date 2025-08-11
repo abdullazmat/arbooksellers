@@ -7,17 +7,19 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Heart, ShoppingCart, Trash2, ArrowRight } from "lucide-react";
 import { useWishlist } from "@/contexts/wishlist-context";
 import { useCart } from "@/contexts/cart-context";
+import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 
 export default function WishlistPage() {
-  const { items, removeItem, clearWishlist } = useWishlist();
+  const { items, removeItem, clearWishlist, isLoading } = useWishlist();
   const { addItem } = useCart();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const handleAddToCart = (item: any) => {
     addItem({
-      id: item.id,
+      id: item.product,
       title: item.title,
       price: item.price,
       image: item.image,
@@ -28,21 +30,69 @@ export default function WishlistPage() {
     });
   };
 
-  const handleRemoveItem = (id: string, title: string) => {
-    removeItem(id);
+  const handleRemoveItem = async (productId: string, title: string) => {
+    await removeItem(productId);
     toast({
       title: "Removed from wishlist",
       description: `${title} has been removed from your wishlist.`,
     });
   };
 
-  const handleClearWishlist = () => {
-    clearWishlist();
+  const handleClearWishlist = async () => {
+    await clearWishlist();
     toast({
       title: "Wishlist cleared",
       description: "All items have been removed from your wishlist.",
     });
   };
+
+  // Show login prompt if user is not authenticated
+  if (!user) {
+    return (
+      <>
+        <Header />
+        <main className="min-h-screen container mx-auto px-4 py-16">
+          <div className="text-center max-w-md mx-auto">
+            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Heart className="h-12 w-12 text-gray-400" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Sign in to view your wishlist</h1>
+            <p className="text-gray-600 mb-8">
+              You need to be signed in to view and manage your wishlist.
+            </p>
+            <div className="space-y-3">
+              <Button className="bg-green-600 hover:bg-green-700 w-full" asChild>
+                <Link href="/auth/signin">
+                  Sign In
+                </Link>
+              </Button>
+              <Button variant="outline" className="w-full" asChild>
+                <Link href="/products">
+                  Browse Books
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <>
+        <Header />
+        <main className="min-h-screen container mx-auto px-4 py-16">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading your wishlist...</p>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
 
   if (items.length === 0) {
     return (
@@ -97,7 +147,7 @@ export default function WishlistPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {items.map((item) => (
             <Card
-              key={item.id}
+              key={item.product}
               className="group hover:shadow-lg transition-shadow duration-300"
             >
               <CardContent className="p-0">
@@ -112,7 +162,7 @@ export default function WishlistPage() {
                     variant="ghost"
                     size="sm"
                     className="absolute top-2 right-2 h-8 w-8 p-0 bg-white/90 hover:bg-white text-red-500"
-                    onClick={() => handleRemoveItem(item.id, item.title)}
+                    onClick={() => handleRemoveItem(item.product, item.title)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -132,19 +182,19 @@ export default function WishlistPage() {
                 <div className="p-4">
                   <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">
                     <Link
-                      href={`/products/${item.id}`}
+                      href={`/products/${item.product}`}
                       className="hover:text-green-600 transition-colors"
                     >
                       {item.title}
                     </Link>
                   </h3>
 
-                  <p className="text-sm text-gray-600 mb-3">Islamic Book</p>
+                  <p className="text-sm text-gray-600 mb-3">by {item.author}</p>
 
                   <div className="flex items-center justify-between">
-                    <span className="text-lg font-bold text-green-600">
-                      ${item.price.toFixed(2)}
-                    </span>
+                    <div className="text-lg font-bold text-green-600">
+                      PKR {item.price.toFixed(2)}
+                    </div>
 
                     <div className="flex items-center space-x-2">
                       <Button
@@ -158,7 +208,7 @@ export default function WishlistPage() {
                         variant="ghost"
                         size="sm"
                         className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => handleRemoveItem(item.id, item.title)}
+                        onClick={() => handleRemoveItem(item.product, item.title)}
                       >
                         <Heart className="h-4 w-4 fill-current" />
                       </Button>

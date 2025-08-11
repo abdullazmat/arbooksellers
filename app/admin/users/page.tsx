@@ -1,302 +1,286 @@
 'use client'
 
-import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { AdminLayout } from '@/components/admin/admin-layout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Search, Eye, Edit, Trash2, UserPlus, Mail, Phone, Calendar, MapPin } from 'lucide-react'
-import { AdminLayout } from '@/components/admin/admin-layout'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Switch } from '@/components/ui/switch'
+import { 
+  Search, 
+  Eye, 
+  Edit, 
+  Trash2, 
+  User,
+  Loader2,
+  Calendar,
+  Mail,
+  Phone,
+  Shield
+} from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
-// Mock data - in a real app, this would come from an API
-const users = [
-  {
-    id: '1',
-    name: 'Ahmed Hassan',
-    email: 'ahmed@example.com',
-    phone: '+1 (555) 123-4567',
-    role: 'customer',
-    status: 'active',
-    joinDate: '2023-06-15T10:30:00Z',
-    lastLogin: '2024-01-15T14:20:00Z',
-    totalOrders: 12,
-    totalSpent: 1250.50,
-    avatar: '/ahmed-hassan-profile.png',
-    address: {
-      street: '123 Islamic Way',
-      city: 'New York',
-      state: 'NY',
-      zip: '10001',
-      country: 'USA'
-    }
-  },
-  {
-    id: '2',
-    name: 'Fatima Al-Zahra',
-    email: 'fatima@example.com',
-    phone: '+1 (555) 987-6543',
-    role: 'customer',
-    status: 'active',
-    joinDate: '2023-08-22T09:15:00Z',
-    lastLogin: '2024-01-14T16:45:00Z',
-    totalOrders: 8,
-    totalSpent: 890.25,
-    avatar: '/fatima-ali-profile.png',
-    address: {
-      street: '456 Faith Street',
-      city: 'Los Angeles',
-      state: 'CA',
-      zip: '90210',
-      country: 'USA'
-    }
-  },
-  {
-    id: '3',
-    name: 'Omar Abdullah',
-    email: 'omar@example.com',
-    phone: '+1 (555) 456-7890',
-    role: 'customer',
-    status: 'active',
-    joinDate: '2023-11-10T11:20:00Z',
-    lastLogin: '2024-01-13T12:30:00Z',
-    totalOrders: 5,
-    totalSpent: 450.75,
-    avatar: '/omar-khan-profile.png',
-    address: {
-      street: '789 Peace Avenue',
-      city: 'Chicago',
-      state: 'IL',
-      zip: '60601',
-      country: 'USA'
-    }
-  },
-  {
-    id: '4',
-    name: 'Aisha Rahman',
-    email: 'aisha@example.com',
-    phone: '+1 (555) 321-6547',
-    role: 'admin',
-    status: 'active',
-    joinDate: '2023-03-05T08:45:00Z',
-    lastLogin: '2024-01-15T10:15:00Z',
-    totalOrders: 0,
-    totalSpent: 0,
-    avatar: '/aisha-rahman-profile.png',
-    address: {
-      street: '321 Wisdom Road',
-      city: 'Houston',
-      state: 'TX',
-      zip: '77001',
-      country: 'USA'
-    }
-  },
-  {
-    id: '5',
-    name: 'Ibrahim Khan',
-    email: 'ibrahim@example.com',
-    phone: '+1 (555) 789-0123',
-    role: 'customer',
-    status: 'inactive',
-    joinDate: '2023-09-18T15:30:00Z',
-    lastLogin: '2023-12-20T09:45:00Z',
-    totalOrders: 3,
-    totalSpent: 180.00,
-    avatar: null,
-    address: {
-      street: '654 Knowledge Lane',
-      city: 'Miami',
-      state: 'FL',
-      zip: '33101',
-      country: 'USA'
-    }
-  }
-]
+interface User {
+  _id: string
+  name: string
+  email: string
+  phone?: string
+  role: 'user' | 'admin'
+  isActive?: boolean
+  createdAt: string
+  updatedAt: string
+}
 
-const roleOptions = [
-  { value: 'all', label: 'All Roles' },
-  { value: 'customer', label: 'Customer' },
-  { value: 'admin', label: 'Admin' },
-  { value: 'moderator', label: 'Moderator' }
-]
-
-const statusOptions = [
-  { value: 'all', label: 'All Statuses' },
-  { value: 'active', label: 'Active' },
-  { value: 'inactive', label: 'Inactive' },
-  { value: 'suspended', label: 'Suspended' }
-]
+interface UserStats {
+  totalUsers: number
+  totalAdmins: number
+  activeUsers: number
+}
 
 export default function AdminUsersPage() {
+  const [users, setUsers] = useState<User[]>([])
+  const [stats, setStats] = useState<UserStats>({
+    totalUsers: 0,
+    totalAdmins: 0,
+    activeUsers: 0,
+  })
+  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedRole, setSelectedRole] = useState('all')
-  const [selectedStatus, setSelectedStatus] = useState('all')
-  const [selectedUser, setSelectedUser] = useState<any>(null)
-
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesRole = selectedRole === 'all' || user.role === selectedRole
-    const matchesStatus = selectedStatus === 'all' || user.status === selectedStatus
-    return matchesSearch && matchesRole && matchesStatus
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editData, setEditData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    role: 'user' as 'user' | 'admin',
+    isActive: true,
   })
+  const router = useRouter()
+  const { toast } = useToast()
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800'
-      case 'inactive':
-        return 'bg-gray-100 text-gray-800'
-      case 'suspended':
-        return 'bg-red-100 text-red-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
+  useEffect(() => {
+    fetchUsers()
+  }, [])
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true)
+      const token = localStorage.getItem('adminToken')
+      
+      const params = new URLSearchParams()
+      if (searchTerm) params.append('search', searchTerm)
+      if (selectedRole !== 'all') params.append('role', selectedRole)
+
+      const response = await fetch(`/api/admin/users?${params.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch users')
+      }
+
+      const data = await response.json()
+      setUsers(data.users)
+      setStats(data.stats)
+    } catch (error) {
+      console.error('Error fetching users:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to load users',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
     }
   }
 
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return 'bg-purple-100 text-purple-800'
-      case 'moderator':
-        return 'bg-blue-100 text-blue-800'
-      case 'customer':
-        return 'bg-green-100 text-green-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
+  const handleUpdateUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!selectedUser) return
+
+    try {
+      const token = localStorage.getItem('adminToken')
+      const response = await fetch(`/api/admin/users/${selectedUser._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(editData),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update user')
+      }
+
+      toast({
+        title: 'Success',
+        description: 'User updated successfully',
+      })
+
+      setIsEditDialogOpen(false)
+      setSelectedUser(null)
+      setEditData({ name: '', email: '', phone: '', role: 'user', isActive: true })
+      fetchUsers()
+    } catch (error) {
+      console.error('Error updating user:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to update user',
+        variant: 'destructive',
+      })
     }
+  }
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return
+
+    try {
+      const token = localStorage.getItem('adminToken')
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete user')
+      }
+
+      toast({
+        title: 'Success',
+        description: 'User deleted successfully',
+      })
+
+      fetchUsers()
+    } catch (error) {
+      console.error('Error deleting user:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to delete user',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handleViewUser = (user: User) => {
+    setSelectedUser(user)
+    setIsViewDialogOpen(true)
+  }
+
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user)
+    setEditData({
+      name: user.name,
+      email: user.email,
+      phone: user.phone || '',
+      role: user.role,
+      isActive: user.isActive !== false,
+    })
+    setIsEditDialogOpen(true)
   }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     })
   }
 
-  const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return 'bg-red-100 text-red-800'
+      case 'user':
+        return 'bg-blue-100 text-blue-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
   }
 
   return (
     <AdminLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Users Management</h1>
-            <p className="text-gray-600">Manage customer accounts and permissions</p>
-          </div>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button>
-                <UserPlus className="mr-2 h-4 w-4" />
-                Add User
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Add New User</DialogTitle>
-                <DialogDescription>
-                  Create a new user account
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Name</label>
-                  <Input placeholder="Full name" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Email</label>
-                  <Input type="email" placeholder="email@example.com" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Role</label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="customer">Customer</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="moderator">Moderator</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline">Cancel</Button>
-                <Button>Add User</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Users</h1>
+          <p className="text-gray-600">Manage user accounts and permissions</p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+              <User className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalUsers}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Admins</CardTitle>
+              <Shield className="h-4 w-4 text-red-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalAdmins}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+              <User className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.activeUsers}</div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Filters */}
         <Card>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search users..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+          <CardContent className="pt-6">
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search users by name or email..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
               </div>
               <Select value={selectedRole} onValueChange={setSelectedRole}>
-                <SelectTrigger>
+                <SelectTrigger className="w-48">
                   <SelectValue placeholder="All Roles" />
                 </SelectTrigger>
                 <SelectContent>
-                  {roleOptions.map(role => (
-                    <SelectItem key={role.value} value={role.value}>
-                      {role.label}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="all">All Roles</SelectItem>
+                  <SelectItem value="user">Users</SelectItem>
+                  <SelectItem value="admin">Admins</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Statuses" />
-                </SelectTrigger>
-                <SelectContent>
-                  {statusOptions.map(status => (
-                    <SelectItem key={status.value} value={status.value}>
-                      {status.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="flex items-center space-x-2">
-                <Badge variant="secondary">{filteredUsers.length} users</Badge>
-              </div>
+              <Button onClick={fetchUsers}>
+                <Search className="mr-2 h-4 w-4" />
+                Search
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -304,154 +288,258 @@ export default function AdminUsersPage() {
         {/* Users Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Users</CardTitle>
+            <CardTitle>User List</CardTitle>
+            <CardDescription>
+              {users.length} users found
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Orders</TableHead>
-                  <TableHead>Total Spent</TableHead>
-                  <TableHead>Last Login</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <div className="flex items-center space-x-3">
-                        <Avatar>
-                          <AvatarImage src={user.avatar || undefined} />
-                          <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="font-medium">{user.name}</div>
-                          <div className="text-sm text-gray-500">{user.email}</div>
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Contact</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Joined</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users.map((user) => (
+                    <TableRow key={user._id}>
+                      <TableCell>
+                        <div className="flex items-center space-x-3">
+                          <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                            <User className="h-5 w-5 text-gray-600" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{user.name}</p>
+                            <p className="text-sm text-gray-600">ID: {user._id.slice(-8)}</p>
+                          </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getRoleColor(user.role)}>
-                        {user.role}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(user.status)}>
-                        {user.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm font-medium">{user.totalOrders}</div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm font-medium">${user.totalSpent.toFixed(2)}</div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">{formatDateTime(user.lastLogin)}</div>
-                    </TableCell>
-                    <TableCell>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button 
-                            variant="ghost" 
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="flex items-center space-x-1">
+                            <Mail className="h-3 w-3 text-gray-400" />
+                            <p className="text-sm">{user.email}</p>
+                          </div>
+                          {user.phone && (
+                            <div className="flex items-center space-x-1">
+                              <Phone className="h-3 w-3 text-gray-400" />
+                              <p className="text-sm text-gray-600">{user.phone}</p>
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getRoleColor(user.role)}>
+                          {user.role}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={user.isActive !== false}
+                            disabled
+                          />
+                          <span className="text-sm">
+                            {user.isActive !== false ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-1">
+                          <Calendar className="h-3 w-3 text-gray-400" />
+                          <p className="text-sm text-gray-600">
+                            {formatDate(user.createdAt)}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button
                             size="sm"
-                            onClick={() => setSelectedUser(user)}
+                            variant="outline"
+                            onClick={() => handleViewUser(user)}
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-2xl">
-                          <DialogHeader>
-                            <DialogTitle>User Details - {user.name}</DialogTitle>
-                            <DialogDescription>
-                              Complete user information and activity
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="space-y-6">
-                            {/* User Information */}
-                            <div className="flex items-center space-x-4">
-                              <Avatar className="h-16 w-16">
-                                <AvatarImage src={user.avatar || undefined} />
-                                <AvatarFallback className="text-lg">{user.name.charAt(0).toUpperCase()}</AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <h3 className="text-xl font-semibold">{user.name}</h3>
-                                <p className="text-gray-600">{user.email}</p>
-                                <div className="flex space-x-2 mt-2">
-                                  <Badge className={getRoleColor(user.role)}>{user.role}</Badge>
-                                  <Badge className={getStatusColor(user.status)}>{user.status}</Badge>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Contact Information */}
-                            <div>
-                              <h4 className="text-lg font-semibold mb-3">Contact Information</h4>
-                              <div className="grid grid-cols-2 gap-4 text-sm">
-                                <div className="flex items-center space-x-2">
-                                  <Mail className="h-4 w-4 text-gray-400" />
-                                  <span>{user.email}</span>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <Phone className="h-4 w-4 text-gray-400" />
-                                  <span>{user.phone}</span>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <Calendar className="h-4 w-4 text-gray-400" />
-                                  <span>Joined: {formatDate(user.joinDate)}</span>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <Calendar className="h-4 w-4 text-gray-400" />
-                                  <span>Last login: {formatDateTime(user.lastLogin)}</span>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Address */}
-                            <div>
-                              <h4 className="text-lg font-semibold mb-3">Address</h4>
-                              <div className="flex items-start space-x-2 text-sm">
-                                <MapPin className="h-4 w-4 text-gray-400 mt-0.5" />
-                                <div>
-                                  {user.address.street}<br />
-                                  {user.address.city}, {user.address.state} {user.address.zip}<br />
-                                  {user.address.country}
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Activity Summary */}
-                            <div>
-                              <h4 className="text-lg font-semibold mb-3">Activity Summary</h4>
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="bg-gray-50 p-4 rounded-lg">
-                                  <div className="text-2xl font-bold text-green-600">{user.totalOrders}</div>
-                                  <div className="text-sm text-gray-600">Total Orders</div>
-                                </div>
-                                <div className="bg-gray-50 p-4 rounded-lg">
-                                  <div className="text-2xl font-bold text-green-600">${user.totalSpent.toFixed(2)}</div>
-                                  <div className="text-sm text-gray-600">Total Spent</div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <DialogFooter>
-                            <Button variant="outline">Edit User</Button>
-                            <Button variant="outline" className="text-red-600">Suspend User</Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEditUser(user)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDeleteUser(user._id)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+            {!loading && users.length === 0 && (
+              <div className="text-center py-8">
+                <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">No users found</p>
+              </div>
+            )}
           </CardContent>
         </Card>
+
+        {/* View User Dialog */}
+        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>User Details</DialogTitle>
+              <DialogDescription>
+                View complete user information
+              </DialogDescription>
+            </DialogHeader>
+            {selectedUser && (
+              <div className="space-y-4">
+                <div className="flex items-center space-x-4">
+                  <div className="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center">
+                    <User className="h-8 w-8 text-gray-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold">{selectedUser.name}</h3>
+                    <p className="text-sm text-gray-600">{selectedUser.email}</p>
+                    <Badge className={getRoleColor(selectedUser.role)}>
+                      {selectedUser.role}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-medium text-sm text-gray-700">Contact Information</h4>
+                    <p className="text-sm">{selectedUser.email}</p>
+                    {selectedUser.phone && (
+                      <p className="text-sm">{selectedUser.phone}</p>
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-sm text-gray-700">Account Status</h4>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        checked={selectedUser.isActive !== false}
+                        disabled
+                      />
+                      <span className="text-sm">
+                        {selectedUser.isActive !== false ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-medium text-sm text-gray-700">Member Since</h4>
+                    <p className="text-sm">{formatDate(selectedUser.createdAt)}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-sm text-gray-700">Last Updated</h4>
+                    <p className="text-sm">{formatDate(selectedUser.updatedAt)}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-medium text-sm text-gray-700">User ID</h4>
+                  <p className="text-sm font-mono bg-gray-100 p-2 rounded">
+                    {selectedUser._id}
+                  </p>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit User Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit User</DialogTitle>
+              <DialogDescription>
+                Update user information and permissions
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleUpdateUser} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Name</label>
+                <Input
+                  value={editData.name}
+                  onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Email</label>
+                <Input
+                  type="email"
+                  value={editData.email}
+                  onChange={(e) => setEditData({ ...editData, email: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Phone</label>
+                <Input
+                  value={editData.phone}
+                  onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
+                  placeholder="Optional"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Role</label>
+                <Select value={editData.role} onValueChange={(value: 'user' | 'admin') => setEditData({ ...editData, role: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">User</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={editData.isActive}
+                  onCheckedChange={(checked) => setEditData({ ...editData, isActive: checked })}
+                />
+                <label className="text-sm font-medium">Active Account</label>
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  Update User
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   )

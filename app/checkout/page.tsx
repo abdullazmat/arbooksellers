@@ -224,7 +224,7 @@ export default function CheckoutPage() {
                         <h3 className="font-medium text-foreground">{item.title}</h3>
                         <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                       </div>
-                      <span className="font-semibold text-foreground">${(item.price * item.quantity).toFixed(2)}</span>
+                      <span className="font-semibold text-foreground">PKR {(item.price * item.quantity).toFixed(2)}</span>
                     </div>
                   ))}
                 </div>

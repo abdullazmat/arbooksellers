@@ -1,109 +1,192 @@
 'use client'
 
-import { createContext, useContext, useReducer, useEffect, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { useRouter } from 'next/navigation'
+import { useToast } from '@/hooks/use-toast'
 
 interface User {
-  id: string
-  email: string
+  _id: string
   name: string
+  email: string
   role: 'user' | 'admin'
+  phone?: string
+  addresses: Array<{
+    type: 'home' | 'work' | 'other'
+    address: string
+    city: string
+    state: string
+    zipCode: string
+    country: string
+    isDefault: boolean
+  }>
+  createdAt: string
 }
 
-interface AuthState {
+interface AuthContextType {
   user: User | null
+  token: string | null
   isLoading: boolean
-  isAuthenticated: boolean
+  signIn: (email: string, password: string) => Promise<boolean>
+  signUp: (name: string, email: string, password: string, phone?: string) => Promise<boolean>
+  signOut: () => void
+  updateUser: (userData: Partial<User>) => void
 }
 
-type AuthAction =
-  | { type: 'LOGIN'; payload: User }
-  | { type: 'LOGOUT' }
-  | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'LOAD_USER'; payload: User | null }
-
-const AuthContext = createContext<{
-  user: User | null
-  login: (userData: User) => void
-  logout: () => void
-  isLoading: boolean
-} | undefined>(undefined)
-
-function authReducer(state: AuthState, action: AuthAction): AuthState {
-  switch (action.type) {
-    case 'LOGIN':
-      return {
-        ...state,
-        user: action.payload,
-        isAuthenticated: true,
-        isLoading: false
-      }
-    
-    case 'LOGOUT':
-      return {
-        ...state,
-        user: null,
-        isAuthenticated: false,
-        isLoading: false
-      }
-    
-    case 'SET_LOADING':
-      return {
-        ...state,
-        isLoading: action.payload
-      }
-    
-    case 'LOAD_USER':
-      return {
-        ...state,
-        user: action.payload,
-        isAuthenticated: !!action.payload,
-        isLoading: false
-      }
-    
-    default:
-      return state
-  }
-}
+const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(authReducer, {
-    user: null,
-    isLoading: true,
-    isAuthenticated: false
-  })
+  const [user, setUser] = useState<User | null>(null)
+  const [token, setToken] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
+  const { toast } = useToast()
 
+  // Check for existing token on mount
   useEffect(() => {
-    const savedUser = localStorage.getItem('user')
-    if (savedUser) {
+    const storedToken = localStorage.getItem('token')
+    const storedUser = localStorage.getItem('user')
+    
+    if (storedToken && storedUser) {
       try {
-        const parsedUser = JSON.parse(savedUser)
-        dispatch({ type: 'LOAD_USER', payload: parsedUser })
+        setToken(storedToken)
+        setUser(JSON.parse(storedUser))
       } catch (error) {
-        console.error('Error loading user from localStorage:', error)
-        dispatch({ type: 'LOAD_USER', payload: null })
+        console.error('Error parsing stored user data:', error)
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
       }
-    } else {
-      dispatch({ type: 'LOAD_USER', payload: null })
     }
+    setIsLoading(false)
   }, [])
 
-  const login = (userData: User) => {
-    dispatch({ type: 'LOGIN', payload: userData })
-    localStorage.setItem('user', JSON.stringify(userData))
+  const signIn = async (email: string, password: string): Promise<boolean> => {
+    try {
+      setIsLoading(true)
+      
+      const response = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        toast({
+          title: 'Login Failed',
+          description: data.error || 'Invalid email or password',
+          variant: 'destructive',
+        })
+        return false
+      }
+
+      setUser(data.user)
+      setToken(data.token)
+      
+      localStorage.setItem('token', data.token)
+      localStorage.setItem('user', JSON.stringify(data.user))
+
+      toast({
+        title: 'Login Successful',
+        description: `Welcome back, ${data.user.name}!`,
+      })
+
+      return true
+    } catch (error) {
+      console.error('Sign in error:', error)
+      toast({
+        title: 'Login Failed',
+        description: 'An error occurred during login',
+        variant: 'destructive',
+      })
+      return false
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const logout = () => {
+  const signUp = async (name: string, email: string, password: string, phone?: string): Promise<boolean> => {
+    try {
+      setIsLoading(true)
+      
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password, phone }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        toast({
+          title: 'Registration Failed',
+          description: data.error || 'Failed to create account',
+          variant: 'destructive',
+        })
+        return false
+      }
+
+      setUser(data.user)
+      setToken(data.token)
+      
+      localStorage.setItem('token', data.token)
+      localStorage.setItem('user', JSON.stringify(data.user))
+
+      toast({
+        title: 'Registration Successful',
+        description: `Welcome, ${data.user.name}! Your account has been created.`,
+      })
+
+      return true
+    } catch (error) {
+      console.error('Sign up error:', error)
+      toast({
+        title: 'Registration Failed',
+        description: 'An error occurred during registration',
+        variant: 'destructive',
+      })
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const signOut = () => {
+    setUser(null)
+    setToken(null)
+    localStorage.removeItem('token')
     localStorage.removeItem('user')
-    dispatch({ type: 'LOGOUT' })
+    
+    toast({
+      title: 'Signed Out',
+      description: 'You have been successfully signed out',
+    })
+    
+    router.push('/')
+  }
+
+  const updateUser = (userData: Partial<User>) => {
+    if (user) {
+      const updatedUser = { ...user, ...userData }
+      setUser(updatedUser)
+      localStorage.setItem('user', JSON.stringify(updatedUser))
+    }
   }
 
   return (
     <AuthContext.Provider
       value={{
-        user: state.user,
-        login,
-        logout,
-        isLoading: state.isLoading
+        user,
+        token,
+        isLoading,
+        signIn,
+        signUp,
+        signOut,
+        updateUser,
       }}
     >
       {children}
@@ -113,7 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext)
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider')
   }
   return context

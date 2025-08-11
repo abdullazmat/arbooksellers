@@ -142,10 +142,10 @@ export default function CartPage() {
                         
                         <div className="text-right">
                           <div className="text-lg font-bold text-green-600">
-                            ${(item.price * item.quantity).toFixed(2)}
+                            PKR {(item.price * item.quantity).toFixed(2)}
                           </div>
                           <div className="text-sm text-gray-500">
-                            ${item.price.toFixed(2)} each
+                            PKR {item.price.toFixed(2)} each
                           </div>
                         </div>
                       </div>

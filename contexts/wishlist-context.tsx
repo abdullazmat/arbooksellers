@@ -1,96 +1,203 @@
 'use client'
 
-import { createContext, useContext, useReducer, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { useAuth } from './auth-context'
+import { useToast } from '@/hooks/use-toast'
 
 interface WishlistItem {
-  id: string
+  product: string
   title: string
   price: number
   image: string
+  author: string
 }
 
-interface WishlistState {
+interface WishlistContextType {
   items: WishlistItem[]
+  isLoading: boolean
+  addItem: (productId: string, productData: Omit<WishlistItem, 'product'>) => Promise<void>
+  removeItem: (productId: string) => Promise<void>
+  clearWishlist: () => Promise<void>
+  isInWishlist: (productId: string) => boolean
+  loadWishlist: () => Promise<void>
 }
 
-type WishlistAction =
-  | { type: 'ADD_ITEM'; payload: WishlistItem }
-  | { type: 'REMOVE_ITEM'; payload: string }
-  | { type: 'LOAD_WISHLIST'; payload: WishlistItem[] }
-  | { type: 'CLEAR_WISHLIST' }
+const WishlistContext = createContext<WishlistContextType | null>(null)
 
-const WishlistContext = createContext<{
-  state: WishlistState
-  addItem: (item: WishlistItem) => void
-  removeItem: (id: string) => void
-  clearWishlist: () => void
-  isInWishlist: (id: string) => boolean
-  items: WishlistItem[] // Expose items directly
-} | null>(null)
+export function WishlistProvider({ children }: { children: ReactNode }) {
+  const [items, setItems] = useState<WishlistItem[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const { user, token } = useAuth()
+  const { toast } = useToast()
 
-function wishlistReducer(state: WishlistState, action: WishlistAction): WishlistState {
-  switch (action.type) {
-    case 'ADD_ITEM': {
-      if (state.items.find(item => item.id === action.payload.id)) {
-        return state // Item already in wishlist
-      }
-      return { items: [...state.items, action.payload] }
-    }
-    case 'REMOVE_ITEM':
-      return { items: state.items.filter(item => item.id !== action.payload) }
-    case 'LOAD_WISHLIST':
-      return { items: action.payload }
-    case 'CLEAR_WISHLIST':
-      return { items: [] }
-    default:
-      return state
-  }
-}
-
-export function WishlistProvider({ children }: { children: React.ReactNode }) {
-  const [state, dispatch] = useReducer(wishlistReducer, { items: [] })
-
+  // Load wishlist when user logs in
   useEffect(() => {
-    const savedWishlist = localStorage.getItem('wishlist')
-    if (savedWishlist) {
-      try {
-        const parsedWishlist = JSON.parse(savedWishlist)
-        dispatch({ type: 'LOAD_WISHLIST', payload: parsedWishlist })
-      } catch (error) {
-        console.error('Error loading wishlist from localStorage:', error)
-      }
+    if (user && token) {
+      loadWishlist()
+    } else {
+      setItems([])
     }
-  }, [])
+  }, [user, token])
 
-  useEffect(() => {
-    localStorage.setItem('wishlist', JSON.stringify(state.items))
-  }, [state.items])
+  const loadWishlist = async () => {
+    if (!user || !token) return
 
-  const addItem = (item: WishlistItem) => {
-    dispatch({ type: 'ADD_ITEM', payload: item })
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/wishlist', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setItems(data.wishlist || [])
+      } else {
+        console.error('Failed to load wishlist')
+      }
+    } catch (error) {
+      console.error('Error loading wishlist:', error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const removeItem = (id: string) => {
-    dispatch({ type: 'REMOVE_ITEM', payload: id })
+  const addItem = async (productId: string, productData: Omit<WishlistItem, 'product'>) => {
+    if (!user || !token) {
+      toast({
+        title: 'Login Required',
+        description: 'Please log in to add items to your wishlist',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/wishlist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ productId }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setItems(data.wishlist)
+        toast({
+          title: 'Added to Wishlist',
+          description: `${productData.title} has been added to your wishlist`,
+        })
+      } else {
+        toast({
+          title: 'Error',
+          description: data.error || 'Failed to add item to wishlist',
+          variant: 'destructive',
+        })
+      }
+    } catch (error) {
+      console.error('Error adding to wishlist:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to add item to wishlist',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const clearWishlist = () => {
-    dispatch({ type: 'CLEAR_WISHLIST' })
+  const removeItem = async (productId: string) => {
+    if (!user || !token) return
+
+    try {
+      setIsLoading(true)
+      const response = await fetch(`/api/wishlist?productId=${productId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setItems(data.wishlist)
+        toast({
+          title: 'Removed from Wishlist',
+          description: 'Item has been removed from your wishlist',
+        })
+      } else {
+        toast({
+          title: 'Error',
+          description: data.error || 'Failed to remove item from wishlist',
+          variant: 'destructive',
+        })
+      }
+    } catch (error) {
+      console.error('Error removing from wishlist:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to remove item from wishlist',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const isInWishlist = (id: string) => {
-    return state.items.some(item => item.id === id)
+  const clearWishlist = async () => {
+    if (!user || !token) return
+
+    try {
+      setIsLoading(true)
+      // Note: You might want to add a clear all endpoint to your API
+      // For now, we'll remove items one by one
+      const promises = items.map(item => 
+        fetch(`/api/wishlist?productId=${item.product}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        })
+      )
+
+      await Promise.all(promises)
+      setItems([])
+      toast({
+        title: 'Wishlist Cleared',
+        description: 'All items have been removed from your wishlist',
+      })
+    } catch (error) {
+      console.error('Error clearing wishlist:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to clear wishlist',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const isInWishlist = (productId: string) => {
+    return items.some(item => item.product === productId)
   }
 
   return (
     <WishlistContext.Provider
       value={{
-        state,
+        items,
+        isLoading,
         addItem,
         removeItem,
         clearWishlist,
         isInWishlist,
-        items: state.items, // Expose items directly
+        loadWishlist,
       }}
     >
       {children}

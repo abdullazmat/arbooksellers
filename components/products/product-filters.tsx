@@ -162,8 +162,8 @@ export function ProductFilters({ filters, onChange }: ProductFiltersProps) {
               />
             </div>
             <div className="flex items-center justify-between text-sm text-gray-600">
-              <span>${filters.priceRange[0]}</span>
-              <span>${filters.priceRange[1]}</span>
+              <span>PKR {filters.priceRange[0]}</span>
+              <span>PKR {filters.priceRange[1]}</span>
             </div>
           </div>
         </CardContent>

@@ -1,21 +1,20 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Star, Heart, ShoppingCart, Minus, Plus, Share2, Truck, Shield, RotateCcw } from 'lucide-react'
+import { Star, Heart, ShoppingCart, ArrowLeft, Minus, Plus } from 'lucide-react'
 import { useCart } from '@/contexts/cart-context'
 import { useWishlist } from '@/contexts/wishlist-context'
+import { useAuth } from '@/contexts/auth-context'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 
 interface Product {
-  id: string
+  _id: string
   title: string
   author: string
   price: number
@@ -26,6 +25,7 @@ interface Product {
   category: string
   language: string
   inStock: boolean
+  stockQuantity: number
   description: string
   fullDescription: string
   specifications: {
@@ -36,238 +36,179 @@ interface Product {
     weight: string
     binding: string
   }
+  tags: string[]
+  featured: boolean
+  discountPercentage?: number
 }
 
-const productData: Record<string, Product> = {
-  '1': {
-    id: '1',
-    title: 'The Noble Quran - Arabic & English',
-    author: 'Translation by Dr. Muhammad Taqi-ud-Din',
-    price: 29.99,
-    originalPrice: 39.99,
-    images: [
-      '/placeholder-34zy2.png',
-      '/placeholder.svg?height=400&width=400',
-      '/placeholder.svg?height=400&width=400'
-    ],
-    rating: 4.9,
-    reviews: 1250,
-    category: 'quran',
-    language: 'Arabic/English',
-    inStock: true,
-    description: 'Complete Quran with accurate English translation and Arabic text',
-    fullDescription: 'This beautiful edition of the Noble Quran features the original Arabic text alongside an accurate English translation by Dr. Muhammad Taqi-ud-Din Al-Hilali and Dr. Muhammad Muhsin Khan. The translation is known for its clarity and adherence to the original meaning, making it an excellent choice for both Arabic speakers and English readers seeking to understand the Quran. The book includes helpful footnotes and references to provide context and deeper understanding of the verses.',
-    specifications: {
-      publisher: 'Darussalam Publishers',
-      pages: 1056,
-      isbn: '978-9960-892-64-2',
-      dimensions: '6.5 x 9.5 inches',
-      weight: '2.8 lbs',
-      binding: 'Hardcover'
-    }
-  },
-  '2': {
-    id: '2',
-    title: 'Sahih Al-Bukhari Complete Set',
-    author: 'Imam Al-Bukhari',
-    price: 89.99,
-    originalPrice: 120.00,
-    images: [
-      '/sahih-bukhari-books.png',
-      '/placeholder.svg?height=400&width=400',
-      '/placeholder.svg?height=400&width=400'
-    ],
-    rating: 4.8,
-    reviews: 890,
-    category: 'hadith',
-    language: 'Arabic/English',
-    inStock: true,
-    description: 'The most authentic collection of Prophet Muhammad\'s sayings',
-    fullDescription: 'Sahih al-Bukhari is a collection of hadith compiled by Imam Muhammad al-Bukhari. It is considered the most authentic book after the Quran by the majority of Muslims. This complete set contains all 7,563 hadith, carefully authenticated and organized by topic. Each hadith includes the chain of narration and has been verified for authenticity according to the strictest standards.',
-    specifications: {
-      publisher: 'Darussalam Publishers',
-      pages: 4200,
-      isbn: '978-9960-717-31-3',
-      dimensions: '7 x 10 inches',
-      weight: '12 lbs',
-      binding: 'Hardcover Set (9 Volumes)'
-    }
-  }
-}
-
-const relatedProducts = [
-  {
-    id: '3',
-    title: 'Stories of the Prophets for Children',
-    author: 'Ibn Kathir (Adapted)',
-    price: 19.99,
-    image: '/islamic-children-book-prophets.png',
-    rating: 4.7
-  },
-  {
-    id: '4',
-    title: 'The Sealed Nectar - Biography of Prophet',
-    author: 'Safi-ur-Rahman al-Mubarakpuri',
-    price: 24.99,
-    image: '/placeholder-au4fi.png',
-    rating: 4.9
-  },
-  {
-    id: '5',
-    title: 'Fortress of the Muslim - Duas & Supplications',
-    author: 'Sa\'id bin Wahf Al-Qahtani',
-    price: 12.99,
-    image: '/fortress-muslim-duas-book.png',
-    rating: 4.8
-  }
-]
-
-const reviews = [
-  {
-    id: 1,
-    name: 'Ahmed Hassan',
-    rating: 5,
-    date: '2024-01-10',
-    comment: 'Excellent quality and authentic translation. The Arabic text is clear and the English translation is very accurate. Highly recommended for anyone wanting to understand the Quran better.',
-    verified: true
-  },
-  {
-    id: 2,
-    name: 'Fatima Al-Zahra',
-    rating: 5,
-    date: '2024-01-08',
-    comment: 'Beautiful book with high-quality printing. The binding is sturdy and will last for years. Perfect for daily reading and study.',
-    verified: true
-  },
-  {
-    id: 3,
-    name: 'Omar Abdullah',
-    rating: 4,
-    date: '2024-01-05',
-    comment: 'Good translation and presentation. The footnotes are helpful for understanding context. Delivery was fast and packaging was excellent.',
-    verified: true
-  }
-]
-
-export default function ProductDetailPage() {
-  const params = useParams()
-  const productId = params.id as string
+export default function ProductDetailPage({ params }: { params: { id: string } }) {
   const [product, setProduct] = useState<Product | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
+  
   const { addItem } = useCart()
   const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist()
+  const { user } = useAuth()
   const { toast } = useToast()
 
   useEffect(() => {
-    const productInfo = productData[productId]
-    if (productInfo) {
-      setProduct(productInfo)
-    }
-  }, [productId])
+    fetchProduct()
+  }, [params.id])
 
-  if (!product) {
-    return (
-      <div className="min-h-screen">
-        <Header />
-        <div className="container mx-auto px-4 py-16 text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h1>
-          <p className="text-gray-600 mb-8">The product you're looking for doesn't exist.</p>
-          <Button asChild>
-            <Link href="/products">Browse All Products</Link>
-          </Button>
-        </div>
-        <Footer />
-      </div>
-    )
+  const fetchProduct = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/products/${params.id}`)
+      
+      if (!response.ok) {
+        throw new Error('Product not found')
+      }
+      
+      const data = await response.json()
+      setProduct(data.product)
+    } catch (err) {
+      console.error('Error fetching product:', err)
+      setError('Failed to load product')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleAddToCart = () => {
-    for (let i = 0; i < quantity; i++) {
-      addItem({
-        id: product.id,
-        title: product.title,
-        price: product.price,
-        image: product.images[0],
-        quantity: 1
-      })
-    }
+    if (!product) return
+    
+    addItem({
+      id: product._id,
+      title: product.title,
+      price: product.price,
+      image: product.images[0] || '/placeholder.svg',
+    })
+    
     toast({
-      title: "Added to cart",
-      description: `${quantity} x ${product.title} added to your cart.`,
+      title: 'Added to cart',
+      description: `${product.title} has been added to your cart`,
     })
   }
 
-  const handleWishlistToggle = () => {
-    if (isInWishlist(product.id)) {
-      removeFromWishlist(product.id)
+  const handleWishlistToggle = async () => {
+    if (!user) {
       toast({
-        title: "Removed from wishlist",
-        description: `${product.title} has been removed from your wishlist.`,
+        title: 'Login Required',
+        description: 'Please log in to add items to your wishlist',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    if (!product) return
+
+    if (isInWishlist(product._id)) {
+      await removeFromWishlist(product._id)
+      toast({
+        title: 'Removed from wishlist',
+        description: `${product.title} has been removed from your wishlist`,
       })
     } else {
-      addToWishlist({
-        id: product.id,
+      await addToWishlist(product._id, {
         title: product.title,
         price: product.price,
-        image: product.images[0],
-        author: product.author
+        image: product.images[0] || '/placeholder.svg',
+        author: product.author,
       })
       toast({
-        title: "Added to wishlist",
-        description: `${product.title} has been added to your wishlist.`,
+        title: 'Added to wishlist',
+        description: `${product.title} has been added to your wishlist`,
       })
     }
   }
 
+  if (loading) {
+    return (
+      <>
+        <Header />
+        <main className="min-h-screen container mx-auto px-4 py-16">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading product...</p>
+          </div>
+        </main>
+        <Footer />
+      </>
+    )
+  }
+
+  if (error || !product) {
+    return (
+      <>
+        <Header />
+        <main className="min-h-screen container mx-auto px-4 py-16">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h1>
+            <p className="text-gray-600 mb-8">{error || 'The product you are looking for does not exist.'}</p>
+            <Button asChild>
+              <Link href="/products">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Products
+              </Link>
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </>
+    )
+  }
+
   return (
-    <div className="min-h-screen">
+    <>
       <Header />
-      
-      <main className="container mx-auto px-4 py-8">
+      <main className="min-h-screen container mx-auto px-4 py-8">
         {/* Breadcrumb */}
-        <nav className="flex items-center space-x-2 text-sm text-gray-600 mb-8">
-          <Link href="/" className="hover:text-green-600">Home</Link>
-          <span>/</span>
-          <Link href="/products" className="hover:text-green-600">Products</Link>
-          <span>/</span>
-          <span className="text-gray-900">{product.title}</span>
+        <nav className="mb-8">
+          <Link href="/products" className="text-gray-500 hover:text-gray-700 flex items-center">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Products
+          </Link>
         </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Product Images */}
           <div className="space-y-4">
-            <div className="aspect-square overflow-hidden rounded-lg border">
+            <div className="aspect-square overflow-hidden rounded-lg">
               <img
-                src={product.images[selectedImage] || "/placeholder.svg"}
+                src={product.images[selectedImage] || '/placeholder.svg'}
                 alt={product.title}
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="flex space-x-2">
-              {product.images.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`w-20 h-20 rounded-lg border-2 overflow-hidden ${
-                    selectedImage === index ? 'border-green-600' : 'border-gray-200'
-                  }`}
-                >
-                  <img
-                    src={image || "/placeholder.svg"}
-                    alt={`${product.title} ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
+            
+            {product.images.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto">
+                {product.images.map((image, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImage(index)}
+                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 ${
+                      selectedImage === index ? 'border-green-500' : 'border-gray-200'
+                    }`}
+                  >
+                    <img
+                      src={image || '/placeholder.svg'}
+                      alt={`${product.title} ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Info */}
           <div className="space-y-6">
             <div>
               <Badge variant="secondary" className="mb-2">
-                {product.category.replace('-', ' ').toUpperCase()}
+                {product.category}
               </Badge>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.title}</h1>
               <p className="text-lg text-gray-600 mb-4">by {product.author}</p>
@@ -285,225 +226,123 @@ export default function ProductDetailPage() {
                     />
                   ))}
                 </div>
-                <span className="text-gray-600">
-                  {product.rating} ({product.reviews} reviews)
-                </span>
+                <span className="text-sm text-gray-600">({product.reviews} reviews)</span>
               </div>
+            </div>
 
-              <div className="flex items-center space-x-4 mb-6">
-                <span className="text-3xl font-bold text-green-600">
-                  ${product.price}
-                </span>
-                {product.originalPrice && (
-                  <span className="text-xl text-gray-500 line-through">
-                    ${product.originalPrice}
-                  </span>
-                )}
-                {product.originalPrice && (
-                  <Badge className="bg-red-500">
-                    {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
-                  </Badge>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-4">
+                <div className="text-3xl font-bold text-green-600">
+                  PKR {product.price.toFixed(2)}
+                </div>
+                {product.originalPrice && product.originalPrice > product.price && (
+                  <div className="text-lg text-gray-500 line-through">
+                    PKR {product.originalPrice.toFixed(2)}
+                  </div>
                 )}
               </div>
 
-              <p className="text-gray-700 mb-6">{product.description}</p>
+              <p className="text-gray-700 leading-relaxed">{product.description}</p>
 
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="flex items-center border rounded-lg">
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     disabled={quantity <= 1}
                   >
                     <Minus className="h-4 w-4" />
                   </Button>
-                  <span className="px-4 py-2 font-medium">{quantity}</span>
+                  <span className="w-12 text-center">{quantity}</span>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
                     onClick={() => setQuantity(quantity + 1)}
+                    disabled={!product.inStock}
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
-                <span className="text-sm text-gray-600">
-                  {product.inStock ? 'In Stock' : 'Out of Stock'}
-                </span>
-              </div>
 
-              <div className="flex space-x-4 mb-8">
                 <Button
-                  size="lg"
-                  className="flex-1 bg-green-600 hover:bg-green-700"
                   onClick={handleAddToCart}
                   disabled={!product.inStock}
+                  className="flex-1 bg-green-600 hover:bg-green-700"
                 >
-                  <ShoppingCart className="mr-2 h-5 w-5" />
+                  <ShoppingCart className="mr-2 h-4 w-4" />
                   Add to Cart
                 </Button>
+
                 <Button
-                  size="lg"
                   variant="outline"
                   onClick={handleWishlistToggle}
-                  className={isInWishlist(product.id) ? 'text-red-500 border-red-500' : ''}
+                  className={isInWishlist(product._id) ? 'text-red-500 border-red-200' : ''}
                 >
-                  <Heart className={`h-5 w-5 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
-                </Button>
-                <Button size="lg" variant="outline">
-                  <Share2 className="h-5 w-5" />
+                  <Heart className={`h-4 w-4 ${isInWishlist(product._id) ? 'fill-current' : ''}`} />
                 </Button>
               </div>
 
-              {/* Features */}
-              <div className="grid grid-cols-3 gap-4 pt-6 border-t">
-                <div className="text-center">
-                  <Truck className="h-6 w-6 mx-auto mb-2 text-green-600" />
-                  <p className="text-sm font-medium">Free Shipping</p>
-                  <p className="text-xs text-gray-600">On orders over $50</p>
-                </div>
-                <div className="text-center">
-                  <Shield className="h-6 w-6 mx-auto mb-2 text-green-600" />
-                  <p className="text-sm font-medium">Authentic</p>
-                  <p className="text-xs text-gray-600">Verified publishers</p>
-                </div>
-                <div className="text-center">
-                  <RotateCcw className="h-6 w-6 mx-auto mb-2 text-green-600" />
-                  <p className="text-sm font-medium">30-Day Returns</p>
-                  <p className="text-xs text-gray-600">Easy returns</p>
-                </div>
-              </div>
+              {!product.inStock && (
+                <Badge variant="secondary" className="text-red-600">
+                  Out of Stock
+                </Badge>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Product Details Tabs */}
-        <Tabs defaultValue="description" className="mb-16">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="description">Description</TabsTrigger>
-            <TabsTrigger value="specifications">Specifications</TabsTrigger>
-            <TabsTrigger value="reviews">Reviews ({product.reviews})</TabsTrigger>
-          </TabsList>
+        {/* Product Details */}
+        <div className="mt-16">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Product Details</h2>
           
-          <TabsContent value="description" className="mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <Card>
               <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4">About This Book</h3>
+                <h3 className="text-lg font-semibold mb-4">Description</h3>
                 <p className="text-gray-700 leading-relaxed">{product.fullDescription}</p>
               </CardContent>
             </Card>
-          </TabsContent>
-          
-          <TabsContent value="specifications" className="mt-6">
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Product Specifications</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <span className="font-medium text-gray-900">Publisher:</span>
-                    <span className="ml-2 text-gray-700">{product.specifications.publisher}</span>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-900">Pages:</span>
-                    <span className="ml-2 text-gray-700">{product.specifications.pages}</span>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-900">ISBN:</span>
-                    <span className="ml-2 text-gray-700">{product.specifications.isbn}</span>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-900">Dimensions:</span>
-                    <span className="ml-2 text-gray-700">{product.specifications.dimensions}</span>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-900">Weight:</span>
-                    <span className="ml-2 text-gray-700">{product.specifications.weight}</span>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-900">Binding:</span>
-                    <span className="ml-2 text-gray-700">{product.specifications.binding}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="reviews" className="mt-6">
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-6">Customer Reviews</h3>
-                <div className="space-y-6">
-                  {reviews.map((review) => (
-                    <div key={review.id} className="border-b pb-6 last:border-b-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-2">
-                          <span className="font-medium">{review.name}</span>
-                          {review.verified && (
-                            <Badge variant="secondary" className="text-xs">Verified Purchase</Badge>
-                          )}
-                        </div>
-                        <span className="text-sm text-gray-600">{review.date}</span>
-                      </div>
-                      <div className="flex items-center mb-2">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`h-4 w-4 ${
-                              i < review.rating
-                                ? 'text-yellow-400 fill-current'
-                                : 'text-gray-300'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <p className="text-gray-700">{review.comment}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
 
-        {/* Related Products */}
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-8">Related Products</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {relatedProducts.map((relatedProduct) => (
-              <Card key={relatedProduct.id} className="group hover:shadow-lg transition-shadow">
-                <CardContent className="p-0">
-                  <div className="relative overflow-hidden rounded-t-lg">
-                    <img
-                      src={relatedProduct.image || "/placeholder.svg"}
-                      alt={relatedProduct.title}
-                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Specifications</h3>
+                <dl className="space-y-2">
+                  <div className="flex justify-between">
+                    <dt className="text-gray-600">Publisher:</dt>
+                    <dd className="font-medium">{product.specifications.publisher}</dd>
                   </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">
-                      <Link href={`/products/${relatedProduct.id}`} className="hover:text-green-600 transition-colors">
-                        {relatedProduct.title}
-                      </Link>
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-2">{relatedProduct.author}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold text-green-600">
-                        ${relatedProduct.price}
-                      </span>
-                      <div className="flex items-center">
-                        <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                        <span className="text-sm text-gray-600 ml-1">{relatedProduct.rating}</span>
-                      </div>
-                    </div>
+                  <div className="flex justify-between">
+                    <dt className="text-gray-600">Pages:</dt>
+                    <dd className="font-medium">{product.specifications.pages}</dd>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
+                  <div className="flex justify-between">
+                    <dt className="text-gray-600">ISBN:</dt>
+                    <dd className="font-medium">{product.specifications.isbn}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-gray-600">Dimensions:</dt>
+                    <dd className="font-medium">{product.specifications.dimensions}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-gray-600">Weight:</dt>
+                    <dd className="font-medium">{product.specifications.weight}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-gray-600">Binding:</dt>
+                    <dd className="font-medium">{product.specifications.binding}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-gray-600">Language:</dt>
+                    <dd className="font-medium">{product.language}</dd>
+                  </div>
+                </dl>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </main>
-
       <Footer />
-    </div>
+    </>
   )
 }

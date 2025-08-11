@@ -25,7 +25,7 @@ import { ShoppingCart, Heart, User, Search, Menu, Home, BookOpen, Info, LayoutDa
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
-  const { user, logout } = useAuth()
+  const { user, signOut } = useAuth()
   const { items: cartItems } = useCart()
   const { items: wishlistItems } = useWishlist()
   const pathname = usePathname()
@@ -125,7 +125,7 @@ export function Header() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout}>
+                  <DropdownMenuItem onClick={signOut}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Log out
                   </DropdownMenuItem>
