@@ -27,7 +27,6 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
-    const category = searchParams.get('category');
     const search = searchParams.get('search');
     const featured = searchParams.get('featured');
 
@@ -35,9 +34,6 @@ export async function GET(request: NextRequest) {
 
     // Build query
     const query: any = {};
-    if (category && category !== 'all') {
-      query.category = category;
-    }
     if (featured === 'true') {
       query.featured = true;
     }
@@ -46,7 +42,10 @@ export async function GET(request: NextRequest) {
         { title: { $regex: search, $options: 'i' } },
         { author: { $regex: search, $options: 'i' } },
         { description: { $regex: search, $options: 'i' } },
-      ];
+        { size: { $regex: search, $options: 'i' } },
+        { paper: { $regex: search, $options: 'i' } },
+        { binding: { $regex: search, $options: 'i' } },
+      ]
     }
 
     // Get products

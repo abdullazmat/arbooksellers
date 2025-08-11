@@ -1,269 +1,120 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
-import { Badge } from '@/components/ui/badge'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Separator } from '@/components/ui/separator'
-import { Filter, X } from 'lucide-react'
+import { Search, Filter, X } from 'lucide-react'
 
 interface ProductFiltersProps {
-  filters: {
-    category: string
-    priceRange: [number, number]
-    language: string
-    author: string
-    inStock: boolean
-  }
-  onChange: (filters: any) => void
+  onFiltersChange: (filters: any) => void
+  onReset: () => void
 }
 
-const categories = [
-  { value: 'quran', label: 'Quran & Tafsir', count: 45 },
-  { value: 'hadith', label: 'Hadith Collections', count: 32 },
-  { value: 'fiqh', label: 'Islamic Jurisprudence', count: 28 },
-  { value: 'aqeedah', label: 'Islamic Creed', count: 18 },
-  { value: 'seerah', label: 'Prophet Biography', count: 25 },
-  { value: 'children', label: 'Children Books', count: 22 },
-  { value: 'general', label: 'General Islamic', count: 35 },
-]
+export function ProductFilters({ onFiltersChange, onReset }: ProductFiltersProps) {
+  const [searchTerm, setSearchTerm] = useState('')
+  const [priceRange, setPriceRange] = useState([0, 10000])
+  const [featuredOnly, setFeaturedOnly] = useState(false)
+  const [hasFilters, setHasFilters] = useState(false)
 
-const languages = [
-  { value: 'arabic', label: 'Arabic', count: 28 },
-  { value: 'english', label: 'English', count: 45 },
-  { value: 'urdu', label: 'Urdu', count: 15 },
-  { value: 'multilingual', label: 'Multilingual', count: 12 },
-]
-
-const authors = [
-  'Dr. Muhammad Taqi-ud-Din',
-  'Imam Al-Bukhari',
-  'Safiur Rahman Mubarakpuri',
-  'Dr. Muhammad Hamidullah',
-  'Various Authors',
-]
-
-export function ProductFilters({ filters, onChange }: ProductFiltersProps) {
-  const [localFilters, setLocalFilters] = useState(filters)
-
-  const handleFilterChange = (key: string, value: any) => {
-    const newFilters = { ...localFilters, [key]: value }
-    setLocalFilters(newFilters)
-    onChange(newFilters)
-  }
-
-  const handlePriceRangeChange = (value: number[]) => {
-    handleFilterChange('priceRange', [value[0], value[1]])
-  }
-
-  const handleCategoryChange = (category: string) => {
-    handleFilterChange('category', category === filters.category ? '' : category)
-  }
-
-  const handleLanguageChange = (language: string) => {
-    handleFilterChange('language', language === filters.language ? '' : language)
-  }
-
-  const handleAuthorChange = (author: string) => {
-    handleFilterChange('author', author === filters.author ? '' : author)
-  }
-
-  const clearFilters = () => {
-    const clearedFilters = {
-      category: '',
-      priceRange: [0, 200],
-      language: '',
-      author: '',
-      inStock: false,
+  useEffect(() => {
+    const filters = {
+      search: searchTerm,
+      minPrice: priceRange[0],
+      maxPrice: priceRange[1],
+      featured: featuredOnly,
     }
-    setLocalFilters(clearedFilters)
-    onChange(clearedFilters)
+    
+    const hasActiveFilters = searchTerm || priceRange[0] > 0 || priceRange[1] < 10000 || featuredOnly
+    setHasFilters(hasActiveFilters)
+    
+    onFiltersChange(filters)
+  }, [searchTerm, priceRange, featuredOnly, onFiltersChange])
+
+  const handleReset = () => {
+    setSearchTerm('')
+    setPriceRange([0, 10000])
+    setFeaturedOnly(false)
+    onReset()
   }
 
-  const hasActiveFilters = Object.values(filters).some(value => 
-    value !== '' && value !== false && 
-    !(Array.isArray(value) && value[0] === 0 && value[1] === 200)
-  )
+  const formatPrice = (value: number) => {
+    return new Intl.NumberFormat('en-PK', {
+      style: 'currency',
+      currency: 'PKR',
+    }).format(value)
+  }
 
   return (
-    <Card className="sticky top-8">
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Filter className="h-4 w-4" />
-            <CardTitle className="text-lg">Filters</CardTitle>
-          </div>
-          {hasActiveFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearFilters}
-              className="h-6 px-2 text-xs"
-            >
-              <X className="h-3 w-3 mr-1" />
-              Clear
-            </Button>
-          )}
-        </div>
+    <Card className="sticky top-4">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Filter className="h-5 w-5" />
+          Filters
+        </CardTitle>
         <CardDescription>
-          Refine your search results
+          Refine your product search
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Categories */}
-        <div>
-          <h3 className="font-medium text-sm mb-3">Categories</h3>
-          <div className="space-y-2">
-            {categories.map((category) => (
-              <div key={category.value} className="flex items-center space-x-2">
-                <Checkbox
-                  id={category.value}
-                  checked={filters.category === category.value}
-                  onCheckedChange={() => handleCategoryChange(category.value)}
-                />
-                <label
-                  htmlFor={category.value}
-                  className="text-sm cursor-pointer flex-1 flex items-center justify-between"
-                >
-                  <span>{category.label}</span>
-                  <Badge variant="secondary" className="text-xs">
-                    {category.count}
-                  </Badge>
-                </label>
-              </div>
-            ))}
+        {/* Search */}
+        <div className="space-y-2">
+          <Label htmlFor="search">Search Products</Label>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              id="search"
+              placeholder="Search by title, author, description, size, paper, or binding..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
           </div>
         </div>
-
-        <Separator />
 
         {/* Price Range */}
-        <div>
-          <h3 className="font-medium text-sm mb-3">Price Range</h3>
-          <div className="space-y-4">
+        <div className="space-y-2">
+          <Label>Price Range</Label>
+          <div className="px-2">
             <Slider
-              value={filters.priceRange}
-              onValueChange={handlePriceRangeChange}
-              max={200}
+              value={priceRange}
+              onValueChange={setPriceRange}
+              max={10000}
               min={0}
-              step={5}
+              step={100}
               className="w-full"
             />
-            <div className="flex justify-between text-sm text-gray-600">
-              <span>PKR {filters.priceRange[0]}</span>
-              <span>PKR {filters.priceRange[1]}</span>
-            </div>
+          </div>
+          <div className="flex justify-between text-sm text-gray-600">
+            <span>{formatPrice(priceRange[0])}</span>
+            <span>{formatPrice(priceRange[1])}</span>
           </div>
         </div>
 
-        <Separator />
-
-        {/* Languages */}
-        <div>
-          <h3 className="font-medium text-sm mb-3">Languages</h3>
-          <div className="space-y-2">
-            {languages.map((language) => (
-              <div key={language.value} className="flex items-center space-x-2">
-                <Checkbox
-                  id={language.value}
-                  checked={filters.language === language.value}
-                  onCheckedChange={() => handleLanguageChange(language.value)}
-                />
-                <label
-                  htmlFor={language.value}
-                  className="text-sm cursor-pointer flex-1 flex items-center justify-between"
-                >
-                  <span>{language.label}</span>
-                  <Badge variant="secondary" className="text-xs">
-                    {language.count}
-                  </Badge>
-                </label>
-              </div>
-            ))}
-          </div>
+        {/* Featured Only */}
+        <div className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            id="featured"
+            checked={featuredOnly}
+            onChange={(e) => setFeaturedOnly(e.target.checked)}
+            className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+          />
+          <Label htmlFor="featured">Featured Products Only</Label>
         </div>
 
-        <Separator />
-
-        {/* Authors */}
-        <div>
-          <h3 className="font-medium text-sm mb-3">Popular Authors</h3>
-          <div className="space-y-2">
-            {authors.map((author) => (
-              <div key={author} className="flex items-center space-x-2">
-                <Checkbox
-                  id={author}
-                  checked={filters.author === author}
-                  onCheckedChange={() => handleAuthorChange(author)}
-                />
-                <label
-                  htmlFor={author}
-                  className="text-sm cursor-pointer flex-1"
-                >
-                  {author}
-                </label>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <Separator />
-
-        {/* Availability */}
-        <div>
-          <h3 className="font-medium text-sm mb-3">Availability</h3>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="inStock"
-              checked={filters.inStock}
-              onCheckedChange={(checked) => handleFilterChange('inStock', checked)}
-            />
-            <label
-              htmlFor="inStock"
-              className="text-sm cursor-pointer"
-            >
-              In Stock Only
-            </label>
-          </div>
-        </div>
-
-        {/* Active Filters Summary */}
-        {hasActiveFilters && (
-          <>
-            <Separator />
-            <div>
-              <h3 className="font-medium text-sm mb-3">Active Filters</h3>
-              <div className="flex flex-wrap gap-2">
-                {filters.category && (
-                  <Badge variant="outline" className="text-xs">
-                    Category: {categories.find(c => c.value === filters.category)?.label}
-                  </Badge>
-                )}
-                {filters.language && (
-                  <Badge variant="outline" className="text-xs">
-                    Language: {languages.find(l => l.value === filters.language)?.label}
-                  </Badge>
-                )}
-                {filters.author && (
-                  <Badge variant="outline" className="text-xs">
-                    Author: {filters.author}
-                  </Badge>
-                )}
-                {filters.inStock && (
-                  <Badge variant="outline" className="text-xs">
-                    In Stock Only
-                  </Badge>
-                )}
-                {(filters.priceRange[0] > 0 || filters.priceRange[1] < 200) && (
-                  <Badge variant="outline" className="text-xs">
-                    Price: PKR {filters.priceRange[0]} - {filters.priceRange[1]}
-                  </Badge>
-                )}
-              </div>
-            </div>
-          </>
+        {/* Reset Button */}
+        {hasFilters && (
+          <Button
+            variant="outline"
+            onClick={handleReset}
+            className="w-full"
+          >
+            <X className="mr-2 h-4 w-4" />
+            Clear Filters
+          </Button>
         )}
       </CardContent>
     </Card>
