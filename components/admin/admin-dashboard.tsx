@@ -20,6 +20,7 @@ import {
   XCircle
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { formatPrice } from '@/lib/utils'
 
 interface DashboardStats {
   totalSales: number
@@ -144,10 +145,7 @@ export function AdminDashboard() {
   }
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-PK', {
-      style: 'currency',
-      currency: 'PKR',
-    }).format(amount)
+    return formatPrice(amount)
   }
 
   const formatDate = (dateString: string) => {
@@ -219,7 +217,9 @@ export function AdminDashboard() {
             <DollarSign className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(stats.totalSales)}</div>
+            <div className="text-2xl font-bold text-green-600">
+              {formatPrice(stats.totalSales)}
+            </div>
             <p className="text-xs text-gray-600">
               <ArrowUpRight className="inline h-3 w-3 text-green-600" />
               +12% from last month
@@ -347,7 +347,7 @@ export function AdminDashboard() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium">{formatCurrency(order.total)}</p>
+                        <p className="font-medium">{formatPrice(order.total)}</p>
                         <Badge className={getStatusColor(order.orderStatus)}>
                           {order.orderStatus}
                         </Badge>
@@ -398,7 +398,7 @@ export function AdminDashboard() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium">{formatCurrency(product.revenue)}</p>
+                        <p className="font-medium">{formatPrice(product.revenue)}</p>
                       </div>
                     </div>
                   ))}
@@ -445,7 +445,7 @@ export function AdminDashboard() {
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Average Order Value</span>
                       <span className="font-medium">
-                        {stats.totalOrders > 0 ? formatCurrency(stats.totalSales / stats.totalOrders) : formatCurrency(0)}
+                        {stats.totalOrders > 0 ? formatPrice(stats.totalSales / stats.totalOrders) : formatPrice(0)}
                       </span>
                     </div>
                     <div className="flex justify-between">

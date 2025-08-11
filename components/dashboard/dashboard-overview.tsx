@@ -94,10 +94,7 @@ export function DashboardOverview() {
   }
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-PK', {
-      style: 'currency',
-      currency: 'PKR',
-    }).format(amount)
+    return formatPrice(amount)
   }
 
   const formatDate = (dateString: string) => {

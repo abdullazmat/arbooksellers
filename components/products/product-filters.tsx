@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
 import { Search, Filter, X } from 'lucide-react'
+import { formatPrice } from '@/lib/utils'
+import React from 'react'
 
 interface ProductFiltersProps {
   onFiltersChange: (filters: any) => void
@@ -18,33 +20,51 @@ export function ProductFilters({ onFiltersChange, onReset }: ProductFiltersProps
   const [priceRange, setPriceRange] = useState([0, 10000])
   const [featuredOnly, setFeaturedOnly] = useState(false)
   const [hasFilters, setHasFilters] = useState(false)
+  const isMounted = React.useRef(true)
+
+  // Cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      isMounted.current = false
+    }
+  }, [])
+
+  // Memoize the filters object to prevent unnecessary re-renders
+  const filters = useCallback(() => ({
+    search: searchTerm,
+    minPrice: priceRange[0],
+    maxPrice: priceRange[1],
+    featured: featuredOnly,
+  }), [searchTerm, priceRange, featuredOnly])
+
+  // Memoize the hasActiveFilters calculation
+  const hasActiveFilters = useCallback(() => {
+    return Boolean(searchTerm || priceRange[0] > 0 || priceRange[1] < 10000 || featuredOnly)
+  }, [searchTerm, priceRange, featuredOnly])
 
   useEffect(() => {
-    const filters = {
-      search: searchTerm,
-      minPrice: priceRange[0],
-      maxPrice: priceRange[1],
-      featured: featuredOnly,
-    }
+    if (!isMounted.current) return
     
-    const hasActiveFilters = searchTerm || priceRange[0] > 0 || priceRange[1] < 10000 || featuredOnly
-    setHasFilters(hasActiveFilters)
+    const currentFilters = filters()
+    const currentHasFilters = hasActiveFilters()
     
-    onFiltersChange(filters)
-  }, [searchTerm, priceRange, featuredOnly, onFiltersChange])
+    setHasFilters(currentHasFilters)
+    
+    // Debounce the filter change to prevent excessive API calls
+    const timeoutId = setTimeout(() => {
+      if (isMounted.current) {
+        onFiltersChange(currentFilters)
+      }
+    }, 300)
+    
+    return () => clearTimeout(timeoutId)
+  }, [filters, hasActiveFilters, onFiltersChange])
 
   const handleReset = () => {
     setSearchTerm('')
     setPriceRange([0, 10000])
     setFeaturedOnly(false)
     onReset()
-  }
-
-  const formatPrice = (value: number) => {
-    return new Intl.NumberFormat('en-PK', {
-      style: 'currency',
-      currency: 'PKR',
-    }).format(value)
   }
 
   return (

@@ -18,6 +18,7 @@ import {
   ArrowDownRight
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { formatPrice } from '@/lib/utils'
 
 interface DashboardStats {
   totalSales: number
@@ -134,10 +135,7 @@ export default function AdminDashboard() {
   }
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-PK', {
-      style: 'currency',
-      currency: 'PKR',
-    }).format(amount)
+    return formatPrice(amount)
   }
 
   const formatDate = (dateString: string) => {

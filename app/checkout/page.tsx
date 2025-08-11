@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea'
 import Image from 'next/image'
 import { CheckCircle, Loader2, Truck, DollarSign, ShieldCheck, ShoppingCart } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { formatPrice } from '@/lib/utils'
 
 export default function CheckoutPage() {
   const { items: cartItems, total: cartTotal, clearCart } = useCart()
@@ -115,7 +116,7 @@ export default function CheckoutPage() {
     }
   }
 
-  const shippingCost = cartTotal >= 50 ? 0 : 5.00 // Free shipping over PKR 50
+  const shippingCost = cartTotal >= 50 ? 0 : 5.00 // Free shipping over Rs 50
   const taxRate = 0.08 // Example tax rate
   const taxAmount = cartTotal * taxRate
   const finalTotal = cartTotal + shippingCost + taxAmount
@@ -224,26 +225,26 @@ export default function CheckoutPage() {
                         <h3 className="font-medium text-foreground">{item.title}</h3>
                         <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                       </div>
-                      <span className="font-semibold text-foreground">PKR {(item.price * item.quantity).toFixed(2)}</span>
+                      <span className="font-semibold text-foreground">{formatPrice(item.price * item.quantity)}</span>
                     </div>
                   ))}
                 </div>
                 <div className="border-t pt-4 space-y-2">
                   <div className="flex justify-between text-muted-foreground">
                     <span>Subtotal</span>
-                    <span>PKR {cartTotal.toFixed(2)}</span>
+                    <span>{formatPrice(cartTotal)}</span>
                   </div>
                   <div className="flex justify-between text-muted-foreground">
                     <span>Shipping</span>
-                    <span>{shippingCost === 0 ? 'Free' : `PKR ${shippingCost.toFixed(2)}`}</span>
+                    <span>{shippingCost === 0 ? 'Free' : formatPrice(shippingCost)}</span>
                   </div>
                   <div className="flex justify-between text-muted-foreground">
                     <span>Tax</span>
-                    <span>PKR {taxAmount.toFixed(2)}</span>
+                    <span>{formatPrice(taxAmount)}</span>
                   </div>
                   <div className="flex justify-between font-medium text-lg">
                     <span>Total</span>
-                    <span>PKR {finalTotal.toFixed(2)}</span>
+                    <span>{formatPrice(finalTotal)}</span>
                   </div>
                 </div>
               </CardContent>

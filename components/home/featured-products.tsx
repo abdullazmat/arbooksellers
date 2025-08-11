@@ -1,6 +1,11 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Star, ShoppingCart, Heart } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Star, ShoppingCart, Heart, Eye } from 'lucide-react'
+import { useCart } from '@/contexts/cart-context'
+import { useWishlist } from '@/contexts/wishlist-context'
+import { useToast } from '@/hooks/use-toast'
+import { formatPrice } from '@/lib/utils'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -96,7 +101,7 @@ export default function FeaturedProducts() {
                 </h3>
                 <p className="text-sm text-muted-foreground">{product.category}</p>
                 <div className="flex items-center justify-between">
-                  <span className="text-xl font-bold text-islamic-green-700">PKR {product.price.toFixed(2)}</span>
+                  <span className="text-xl font-bold text-islamic-green-700">{formatPrice(product.price)}</span>
                   <div className="flex items-center gap-1 text-sm text-islamic-gold-500">
                     <Star className="h-4 w-4 fill-islamic-gold-500" />
                     <span>{product.rating.toFixed(1)} ({product.reviews})</span>

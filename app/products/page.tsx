@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { ProductFilters } from '@/components/products/product-filters'
 import { ProductGrid } from '@/components/products/product-grid'
 import { ProductSort } from '@/components/products/product-sort'
@@ -82,12 +82,12 @@ export default function ProductsPage() {
     }
   }
 
-  const handleFiltersChange = (newFilters: any) => {
+  const handleFiltersChange = useCallback((newFilters: any) => {
     setFilters(newFilters)
     setCurrentPage(1) // Reset to first page when filters change
-  }
+  }, [])
 
-  const handleResetFilters = () => {
+  const handleResetFilters = useCallback(() => {
     setFilters({
       search: '',
       minPrice: 0,
@@ -95,12 +95,12 @@ export default function ProductsPage() {
       featured: false,
     })
     setCurrentPage(1)
-  }
+  }, [])
 
-  const handleSortChange = (newSort: string) => {
+  const handleSortChange = useCallback((newSort: string) => {
     setSortBy(newSort)
     setCurrentPage(1) // Reset to first page when sort changes
-  }
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50">

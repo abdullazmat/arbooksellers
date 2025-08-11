@@ -10,6 +10,7 @@ import { useCart } from "@/contexts/cart-context";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+import { formatPrice } from '@/lib/utils'
 
 export default function WishlistPage() {
   const { items, removeItem, clearWishlist, isLoading } = useWishlist();
@@ -188,8 +189,10 @@ export default function WishlistPage() {
                       {item.title}
                     </Link>
                   </h3>
-
                   <p className="text-sm text-gray-600 mb-3">by {item.author}</p>
+                  <p className="text-sm text-gray-600">
+                    {formatPrice(item.price)}
+                  </p>
 
                   <div className="flex items-center justify-between">
                     <div className="text-lg font-bold text-green-600">

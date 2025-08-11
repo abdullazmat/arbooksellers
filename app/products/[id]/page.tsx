@@ -12,6 +12,7 @@ import { useWishlist } from '@/contexts/wishlist-context'
 import { useAuth } from '@/contexts/auth-context'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
+import { formatPrice } from '@/lib/utils'
 
 interface Product {
   _id: string
@@ -232,12 +233,12 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
 
             <div className="space-y-4">
               <div className="flex items-center space-x-4">
-                <div className="text-3xl font-bold text-green-600">
-                  PKR {product.price.toFixed(2)}
+                <div className="text-3xl font-bold text-green-600 mb-2">
+                  {formatPrice(product.price)}
                 </div>
                 {product.originalPrice && product.originalPrice > product.price && (
-                  <div className="text-lg text-gray-500 line-through">
-                    PKR {product.originalPrice.toFixed(2)}
+                  <div className="text-lg text-gray-500 line-through mb-2">
+                    {formatPrice(product.originalPrice)}
                   </div>
                 )}
               </div>

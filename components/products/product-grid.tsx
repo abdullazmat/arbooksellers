@@ -8,6 +8,7 @@ import { Heart, ShoppingCart, Star, Eye } from 'lucide-react'
 import { useCart } from '@/contexts/cart-context'
 import { useWishlist } from '@/contexts/wishlist-context'
 import { useToast } from '@/hooks/use-toast'
+import { formatPrice } from '@/lib/utils'
 import Link from 'next/link'
 
 interface Product {
@@ -72,13 +73,6 @@ export function ProductGrid({ products, viewMode }: ProductGridProps) {
     }
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-PK', {
-      style: 'currency',
-      currency: 'PKR',
-    }).format(amount)
-  }
-
   if (viewMode === 'list') {
     return (
       <div className="space-y-4">
@@ -141,11 +135,11 @@ export function ProductGrid({ products, viewMode }: ProductGridProps) {
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-3">
                     <div className="text-2xl font-bold text-green-600">
-                      {formatCurrency(product.price)}
+                      {formatPrice(product.price)}
                     </div>
                     {product.originalPrice && product.originalPrice > product.price && (
                       <div className="text-lg text-gray-500 line-through">
-                        {formatCurrency(product.originalPrice)}
+                        {formatPrice(product.originalPrice)}
                       </div>
                     )}
                   </div>
@@ -265,11 +259,11 @@ export function ProductGrid({ products, viewMode }: ProductGridProps) {
             {/* Price */}
             <div className="flex items-center gap-2 mb-4">
               <span className="text-xl font-bold text-green-600">
-                {formatCurrency(product.price)}
+                {formatPrice(product.price)}
               </span>
               {product.originalPrice && product.originalPrice > product.price && (
                 <span className="text-sm text-gray-500 line-through">
-                  {formatCurrency(product.originalPrice)}
+                  {formatPrice(product.originalPrice)}
                 </span>
               )}
             </div>

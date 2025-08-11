@@ -9,6 +9,7 @@ import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from 'lucide-react'
 import { useCart } from '@/contexts/cart-context'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
+import { formatPrice } from '@/lib/utils'
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, clearCart, total } = useCart()
@@ -142,10 +143,10 @@ export default function CartPage() {
                         
                         <div className="text-right">
                           <div className="text-lg font-bold text-green-600">
-                            PKR {(item.price * item.quantity).toFixed(2)}
+                            {formatPrice(item.price * item.quantity)}
                           </div>
                           <div className="text-sm text-gray-500">
-                            PKR {item.price.toFixed(2)} each
+                            {formatPrice(item.price)} each
                           </div>
                         </div>
                       </div>
@@ -178,7 +179,7 @@ export default function CartPage() {
                 <div className="space-y-3 mb-4">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Subtotal</span>
-                    <span className="font-medium">PKR {total.toFixed(2)}</span>
+                    <span className="font-medium">{formatPrice(total)}</span>
                   </div>
                   
                   <div className="flex justify-between">
@@ -187,21 +188,21 @@ export default function CartPage() {
                       {shipping === 0 ? (
                         <Badge className="bg-green-100 text-green-800">Free</Badge>
                       ) : (
-                        `PKR ${shipping.toFixed(2)}`
+                        formatPrice(shipping)
                       )}
                     </span>
                   </div>
                   
                   <div className="flex justify-between">
                     <span className="text-gray-600">Tax</span>
-                    <span className="font-medium">PKR {tax.toFixed(2)}</span>
+                    <span className="font-medium">{formatPrice(tax)}</span>
                   </div>
                   
                   <div className="border-t pt-3">
                     <div className="flex justify-between">
                       <span className="text-lg font-semibold">Total</span>
                       <span className="text-lg font-bold text-green-600">
-                        PKR {finalTotal.toFixed(2)}
+                        {formatPrice(finalTotal)}
                       </span>
                     </div>
                   </div>
@@ -210,7 +211,7 @@ export default function CartPage() {
                 {total < 50 && (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
                     <p className="text-sm text-yellow-800">
-                      Add PKR {(50 - total).toFixed(2)} more for free shipping!
+                      Add {formatPrice(50 - total)} more for free shipping!
                     </p>
                   </div>
                 )}
@@ -233,7 +234,7 @@ export default function CartPage() {
                 <div className="mt-6 pt-6 border-t space-y-3">
                   <div className="flex items-center text-sm text-gray-600">
                     <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                    Free shipping on orders over PKR 50
+                    Free shipping on orders over {formatPrice(50)}
                   </div>
                   <div className="flex items-center text-sm text-gray-600">
                     <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>

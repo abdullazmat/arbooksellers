@@ -20,6 +20,7 @@ interface WishlistContextType {
   clearWishlist: () => Promise<void>
   isInWishlist: (productId: string) => boolean
   loadWishlist: () => Promise<void>
+  refreshWishlist: () => Promise<void>
 }
 
 const WishlistContext = createContext<WishlistContextType | null>(null)
@@ -27,21 +28,36 @@ const WishlistContext = createContext<WishlistContextType | null>(null)
 export function WishlistProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<WishlistItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [hasLoaded, setHasLoaded] = useState(false)
   const { user, token } = useAuth()
   const { toast } = useToast()
 
   // Load wishlist when user logs in
   useEffect(() => {
-    if (user && token) {
+    console.log('Wishlist effect triggered:', { user: !!user, token: !!token, isLoading, hasLoaded })
+    
+    if (user && token && !isLoading && !hasLoaded) {
+      console.log('Loading wishlist...')
       loadWishlist()
-    } else {
+    } else if (!user) {
+      console.log('No user, clearing wishlist')
       setItems([])
+      setHasLoaded(false)
     }
-  }, [user, token])
+  }, [user, token, isLoading, hasLoaded])
 
   const loadWishlist = async () => {
-    if (!user || !token) return
+    if (!user || !token) {
+      console.log('Cannot load wishlist: user or token not available')
+      return
+    }
 
+    if (hasLoaded) {
+      console.log('Wishlist already loaded, skipping')
+      return
+    }
+
+    console.log('Making wishlist API call...')
     try {
       setIsLoading(true)
       const response = await fetch('/api/wishlist', {
@@ -50,17 +66,32 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         },
       })
 
+      console.log('Wishlist API response:', response.status, response.statusText)
+
       if (response.ok) {
         const data = await response.json()
+        console.log('Wishlist data received:', data)
         setItems(data.wishlist || [])
+        setHasLoaded(true)
+      } else if (response.status === 401) {
+        console.log('Unauthorized access to wishlist, clearing items')
+        setItems([])
+        setHasLoaded(false)
       } else {
-        console.error('Failed to load wishlist')
+        console.error('Failed to load wishlist:', response.status, response.statusText)
+        // Don't clear items on other errors, just log the error
       }
     } catch (error) {
       console.error('Error loading wishlist:', error)
+      // Don't clear items on network errors, just log the error
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const refreshWishlist = async () => {
+    setHasLoaded(false)
+    await loadWishlist()
   }
 
   const addItem = async (productId: string, productData: Omit<WishlistItem, 'product'>) => {
@@ -88,10 +119,20 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
 
       if (response.ok) {
         setItems(data.wishlist)
+        setHasLoaded(true)
         toast({
           title: 'Added to Wishlist',
           description: `${productData.title} has been added to your wishlist`,
         })
+      } else if (response.status === 401) {
+        toast({
+          title: 'Session Expired',
+          description: 'Please log in again to continue',
+          variant: 'destructive',
+        })
+        // Clear items and reset loaded state
+        setItems([])
+        setHasLoaded(false)
       } else {
         toast({
           title: 'Error',
@@ -102,8 +143,8 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Error adding to wishlist:', error)
       toast({
-        title: 'Error',
-        description: 'Failed to add item to wishlist',
+        title: 'Network Error',
+        description: 'Failed to add item to wishlist. Please try again.',
         variant: 'destructive',
       })
     } finally {
@@ -131,6 +172,15 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
           title: 'Removed from Wishlist',
           description: 'Item has been removed from your wishlist',
         })
+      } else if (response.status === 401) {
+        toast({
+          title: 'Session Expired',
+          description: 'Please log in again to continue',
+          variant: 'destructive',
+        })
+        // Clear items and reset loaded state
+        setItems([])
+        setHasLoaded(false)
       } else {
         toast({
           title: 'Error',
@@ -141,8 +191,8 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Error removing from wishlist:', error)
       toast({
-        title: 'Error',
-        description: 'Failed to remove item from wishlist',
+        title: 'Network Error',
+        description: 'Failed to remove item from wishlist. Please try again.',
         variant: 'destructive',
       })
     } finally {
@@ -198,6 +248,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         clearWishlist,
         isInWishlist,
         loadWishlist,
+        refreshWishlist,
       }}
     >
       {children}

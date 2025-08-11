@@ -8,16 +8,9 @@ import { Footer } from '@/components/layout/footer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { 
-  CheckCircle, 
-  Package, 
-  Truck, 
-  Home, 
-  ShoppingBag,
-  Mail,
-  Phone,
-  MapPin
-} from 'lucide-react'
+import { CheckCircle, ShoppingBag, Home, Download, Truck, Package, MapPin, Mail, Phone } from 'lucide-react'
+import React from 'react'
+import { formatPrice } from '@/lib/utils'
 
 interface OrderDetails {
   orderNumber: string
@@ -49,12 +42,17 @@ export default function OrderConfirmationPage() {
   const searchParams = useSearchParams()
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null)
   const [loading, setLoading] = useState(true)
+  
+  // Generate a stable order number that won't change between renders
+  const orderNumber = React.useMemo(() => {
+    return `ORD-${Math.floor(Math.random() * 100000000).toString().padStart(8, '0')}`
+  }, [])
 
   useEffect(() => {
     // In a real app, you would fetch order details from the API
     // For now, we'll simulate the order data
     const mockOrder: OrderDetails = {
-      orderNumber: `ORD-${Date.now().toString().slice(-8)}`,
+      orderNumber: orderNumber,
       items: [
         {
           title: 'The Noble Quran - Arabic & English',
@@ -66,7 +64,7 @@ export default function OrderConfirmationPage() {
           title: 'Sahih Al-Bukhari Complete Set',
           price: 89.99,
           quantity: 1,
-          image: '/sahih-bukhari-books.png'
+          image: '/quran-islamic-books.png'
         }
       ],
       shippingAddress: {
@@ -170,14 +168,11 @@ export default function OrderConfirmationPage() {
                         />
                         <div className="flex-1">
                           <h3 className="font-medium text-gray-900">{item.title}</h3>
-                          <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-medium text-gray-900">
-                            PKR {(item.price * item.quantity).toFixed(2)}
+                          <p className="text-sm text-gray-600">
+                            Qty: {item.quantity} × {formatPrice(item.price)}
                           </p>
-                          <p className="text-sm text-gray-500">
-                            PKR {item.price.toFixed(2)} each
+                          <p className="text-sm font-medium">
+                            {formatPrice(item.price * item.quantity)}
                           </p>
                         </div>
                       </div>
@@ -241,31 +236,23 @@ export default function OrderConfirmationPage() {
                   <CardDescription>Order #{orderDetails.orderNumber}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-2">
+                  <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Subtotal</span>
-                      <span className="font-medium">PKR {orderDetails.subtotal.toFixed(2)}</span>
+                      <span>Subtotal</span>
+                      <span>{formatPrice((orderDetails.total * 0.9))}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Shipping</span>
-                      <span className="font-medium">
-                        {orderDetails.shippingCost === 0 ? (
-                          <Badge className="bg-green-100 text-green-800">Free</Badge>
-                        ) : (
-                          `PKR ${orderDetails.shippingCost.toFixed(2)}`
-                        )}
-                      </span>
+                      <span>Shipping</span>
+                      <span>{formatPrice((orderDetails.total * 0.05))}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Tax</span>
-                      <span className="font-medium">PKR {orderDetails.tax.toFixed(2)}</span>
+                      <span>Tax</span>
+                      <span>{formatPrice((orderDetails.total * 0.05))}</span>
                     </div>
                     <div className="border-t pt-2">
-                      <div className="flex justify-between">
-                        <span className="text-lg font-semibold">Total</span>
-                        <span className="text-lg font-bold text-green-600">
-                          PKR {orderDetails.total.toFixed(2)}
-                        </span>
+                      <div className="flex justify-between font-semibold">
+                        <span>Total</span>
+                        <span>{formatPrice(orderDetails.total)}</span>
                       </div>
                     </div>
                   </div>

@@ -251,7 +251,7 @@ export default function AdminSupportPage() {
     // Add reply to ticket
     if (selectedTicket) {
       selectedTicket.replies.push({
-        id: Date.now().toString(),
+        id: `reply-${Math.random().toString(36).substr(2, 9)}`,
         from: 'admin',
         message: replyMessage,
         timestamp: new Date().toISOString()

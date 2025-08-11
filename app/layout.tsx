@@ -32,9 +32,9 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${amiri.variable}`}>
-      <body>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+    <html lang="en" className={`${inter.variable} ${amiri.variable}`} suppressHydrationWarning>
+      <body suppressHydrationWarning={true}>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <AuthProvider>
             <CartProvider>
               <WishlistProvider>

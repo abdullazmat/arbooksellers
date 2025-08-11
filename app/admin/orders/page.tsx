@@ -24,6 +24,16 @@ import {
   DollarSign
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { 
+  Pagination, 
+  PaginationContent, 
+  PaginationEllipsis, 
+  PaginationItem, 
+  PaginationLink, 
+  PaginationNext, 
+  PaginationPrevious 
+} from '@/components/ui/pagination'
+import { formatPrice } from '@/lib/utils'
 
 interface Order {
   _id: string
@@ -147,10 +157,7 @@ export default function AdminOrdersPage() {
   }
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-PK', {
-      style: 'currency',
-      currency: 'PKR',
-    }).format(amount)
+    return formatPrice(amount)
   }
 
   const formatDate = (dateString: string) => {
@@ -315,9 +322,9 @@ export default function AdminOrdersPage() {
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
-                          <div className="font-medium">{formatCurrency(order.total)}</div>
+                          <div className="font-medium">{formatPrice(order.total)}</div>
                           <div className="text-gray-500">
-                            {order.items.length} × {formatCurrency(order.subtotal / order.items.length)}
+                            {order.items.length} × {formatPrice(order.subtotal / order.items.length)}
                           </div>
                         </div>
                       </TableCell>
@@ -370,27 +377,101 @@ export default function AdminOrdersPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-6">
-                <div className="text-sm text-gray-700">
-                  Page {currentPage} of {totalPages}
-                </div>
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage === totalPages}
-                  >
-                    Next
-                  </Button>
+              <div className="mt-6">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          setCurrentPage(Math.max(1, currentPage - 1))
+                        }}
+                        className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
+                      />
+                    </PaginationItem>
+                    
+                    {/* First page */}
+                    {currentPage > 3 && (
+                      <PaginationItem>
+                        <PaginationLink 
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            setCurrentPage(1)
+                          }}
+                        >
+                          1
+                        </PaginationLink>
+                      </PaginationItem>
+                    )}
+                    
+                    {/* Ellipsis */}
+                    {currentPage > 4 && (
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )}
+                    
+                    {/* Page numbers around current page */}
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const pageNum = Math.max(1, Math.min(totalPages, currentPage - 2 + i))
+                      if (pageNum > 0 && pageNum <= totalPages) {
+                        return (
+                          <PaginationItem key={pageNum}>
+                            <PaginationLink 
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault()
+                                setCurrentPage(pageNum)
+                              }}
+                              isActive={pageNum === currentPage}
+                            >
+                              {pageNum}
+                            </PaginationLink>
+                          </PaginationItem>
+                        )
+                      }
+                      return null
+                    })}
+                    
+                    {/* Ellipsis */}
+                    {currentPage < totalPages - 3 && (
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )}
+                    
+                    {/* Last page */}
+                    {currentPage < totalPages - 2 && (
+                      <PaginationItem>
+                        <PaginationLink 
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            setCurrentPage(totalPages)
+                          }}
+                        >
+                          {totalPages}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )}
+                    
+                    <PaginationItem>
+                      <PaginationNext 
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          setCurrentPage(Math.min(totalPages, currentPage + 1))
+                        }}
+                        className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+                
+                <div className="text-center text-sm text-gray-600 mt-4">
+                  Page {currentPage} of {totalPages} • {orders.length} orders per page
                 </div>
               </div>
             )}
