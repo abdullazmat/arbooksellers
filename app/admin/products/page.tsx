@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { ImageUpload } from '@/components/ui/image-upload'
 import { 
   Table, 
   TableBody, 
@@ -55,7 +56,7 @@ interface ProductFormData {
   originalPrice: string
   stockQuantity: string
   description: string
-  images: string
+  images: string[]
   featured: boolean
   inStock: boolean
   size: string
@@ -81,7 +82,7 @@ export default function AdminProductsPage() {
     originalPrice: '',
     stockQuantity: '',
     description: '',
-    images: '',
+    images: [],
     featured: false,
     inStock: true,
     size: '',
@@ -143,7 +144,7 @@ export default function AdminProductsPage() {
       originalPrice: '',
       stockQuantity: '',
       description: '',
-      images: '',
+      images: [],
       featured: false,
       inStock: true,
       size: '',
@@ -167,7 +168,7 @@ export default function AdminProductsPage() {
       originalPrice: product.originalPrice?.toString() || '',
       stockQuantity: product.stockQuantity.toString(),
       description: product.description || '',
-      images: product.images?.join(', ') || '',
+      images: product.images || [],
       featured: product.featured,
       inStock: product.inStock,
       size: product.size || '',
@@ -196,7 +197,7 @@ export default function AdminProductsPage() {
         originalPrice: formData.originalPrice ? parseFloat(formData.originalPrice) : undefined,
         stockQuantity: parseInt(formData.stockQuantity),
         pages: formData.pages ? parseInt(formData.pages) : undefined,
-        images: formData.images.split(',').map(img => img.trim()).filter(img => img),
+        images: formData.images,
       }
 
       const url = selectedProduct 
@@ -378,8 +379,19 @@ export default function AdminProductsPage() {
                     <TableRow key={product._id}>
                       <TableCell>
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                            <Package className="h-5 w-5 text-gray-600" />
+                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                            {product.images && product.images.length > 0 ? (
+                              <img
+                                src={product.images[0]}
+                                alt={product.title}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.src = '/placeholder.jpg'
+                                }}
+                              />
+                            ) : (
+                              <Package className="h-5 w-5 text-gray-600" />
+                            )}
                           </div>
                           <div>
                             <div className="font-medium text-gray-900">{product.title}</div>
@@ -583,12 +595,12 @@ export default function AdminProductsPage() {
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <Label htmlFor="images">Image URLs (comma-separated)</Label>
-                  <Input
-                    id="images"
-                    value={formData.images}
-                    onChange={(e) => setFormData({ ...formData, images: e.target.value })}
-                    placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
+                  <Label htmlFor="images">Images</Label>
+                  <ImageUpload
+                    images={formData.images}
+                    onChange={(newImages: string[]) => setFormData({ ...formData, images: newImages })}
+                    maxImages={5}
+                    useCloudUpload={true}
                   />
                 </div>
               </div>
@@ -735,12 +747,12 @@ export default function AdminProductsPage() {
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <Label htmlFor="edit-images">Image URLs (comma-separated)</Label>
-                  <Input
-                    id="edit-images"
-                    value={formData.images}
-                    onChange={(e) => setFormData({ ...formData, images: e.target.value })}
-                    placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
+                  <Label htmlFor="edit-images">Images</Label>
+                  <ImageUpload
+                    images={formData.images}
+                    onChange={(newImages: string[]) => setFormData({ ...formData, images: newImages })}
+                    maxImages={5}
+                    useCloudUpload={true}
                   />
                 </div>
               </div>
@@ -865,17 +877,24 @@ export default function AdminProductsPage() {
                 {selectedProduct.images && selectedProduct.images.length > 0 && (
                   <div>
                     <Label className="text-sm font-medium text-gray-500">Images</Label>
-                    <div className="flex flex-wrap gap-2 mt-2">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-3">
                       {selectedProduct.images.map((image, index) => (
-                        <div key={index} className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
-                          <img 
-                            src={image} 
-                            alt={`Product ${index + 1}`} 
-                            className="w-full h-full object-cover rounded-lg"
-                            onError={(e) => {
-                              e.currentTarget.src = '/placeholder.jpg'
-                            }}
-                          />
+                        <div key={index} className="image-preview-item">
+                          <div className="aspect-square rounded-lg overflow-hidden border border-gray-200">
+                            <img 
+                              src={image} 
+                              alt={`Product ${index + 1}`} 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src = '/placeholder.jpg'
+                              }}
+                            />
+                          </div>
+                          <div className="image-preview-info">
+                            <p className="text-center">
+                              {image.startsWith('data:') ? 'Uploaded Image' : 'External URL'}
+                            </p>
+                          </div>
                         </div>
                       ))}
                     </div>
