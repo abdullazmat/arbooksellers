@@ -4,12 +4,13 @@ import Product from '@/models/Product';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
 
-    const product = await Product.findById(params.id).lean();
+    const { id } = await params;
+    const product = await Product.findById(id).lean();
 
     if (!product) {
       return NextResponse.json(

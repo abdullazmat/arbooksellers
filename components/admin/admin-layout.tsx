@@ -63,6 +63,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'Content', href: '/admin/content', icon: FileText },
     { name: 'Reviews', href: '/admin/reviews', icon: MessageSquare },
+    { name: 'Newsletter', href: '/admin/newsletter', icon: MessageSquare },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
   ]
 

@@ -146,81 +146,93 @@ export default function WishlistPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {items.map((item) => (
-            <Card
-              key={item.product}
-              className="group hover:shadow-lg transition-shadow duration-300"
-            >
-              <CardContent className="p-0">
-                <div className="relative overflow-hidden rounded-t-lg">
-                  <img
-                    src={item.image || "/placeholder.svg"}
-                    alt={item.title}
-                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
+          {items.map((item) => {
+            // Ensure product ID is a string - handle both string and object cases
+            let productId: string;
+            if (typeof item.product === 'string') {
+              productId = item.product;
+            } else if (item.product && typeof item.product === 'object' && '_id' in item.product) {
+              productId = (item.product as any)._id.toString();
+            } else {
+              productId = String(item.product || '');
+            }
+            
+            return (
+              <Card
+                key={productId}
+                className="group hover:shadow-lg transition-shadow duration-300"
+              >
+                <CardContent className="p-0">
+                  <div className="relative overflow-hidden rounded-t-lg">
+                    <img
+                      src={item.image || "/placeholder.svg"}
+                      alt={item.title}
+                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
 
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute top-2 right-2 h-8 w-8 p-0 bg-white/90 hover:bg-white text-red-500"
-                    onClick={() => handleRemoveItem(item.product, item.title)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-
-                  <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <Button
+                      variant="ghost"
                       size="sm"
-                      className="w-full bg-green-600 hover:bg-green-700"
-                      onClick={() => handleAddToCart(item)}
+                      className="absolute top-2 right-2 h-8 w-8 p-0 bg-white/90 hover:bg-white text-red-500"
+                      onClick={() => handleRemoveItem(productId, item.title)}
                     >
-                      <ShoppingCart className="h-4 w-4 mr-1" />
-                      Add to Cart
+                      <Trash2 className="h-4 w-4" />
                     </Button>
-                  </div>
-                </div>
 
-                <div className="p-4">
-                  <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">
-                    <Link
-                      href={`/products/${item.product}`}
-                      className="hover:text-green-600 transition-colors"
-                    >
-                      {item.title}
-                    </Link>
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-3">by {item.author}</p>
-                  <p className="text-sm text-gray-600">
-                    {formatPrice(item.price)}
-                  </p>
-
-                  <div className="flex items-center justify-between">
-                    <div className="text-lg font-bold text-green-600">
-                      PKR {item.price.toFixed(2)}
-                    </div>
-
-                    <div className="flex items-center space-x-2">
+                    <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <Button
-                        variant="outline"
                         size="sm"
+                        className="w-full bg-green-600 hover:bg-green-700"
                         onClick={() => handleAddToCart(item)}
                       >
-                        <ShoppingCart className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => handleRemoveItem(item.product, item.title)}
-                      >
-                        <Heart className="h-4 w-4 fill-current" />
+                        <ShoppingCart className="h-4 w-4 mr-1" />
+                        Add to Cart
                       </Button>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+
+                  <div className="p-4">
+                    <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">
+                      <Link
+                        href={`/products/${productId}`}
+                        className="hover:text-green-600 transition-colors"
+                      >
+                        {item.title}
+                      </Link>
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-3">by {item.author}</p>
+                    <p className="text-sm text-gray-600">
+                      {formatPrice(item.price)}
+                    </p>
+
+                    <div className="flex items-center justify-between">
+                      <div className="text-lg font-bold text-green-600">
+                        {formatPrice(item.price)}
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleAddToCart(item)}
+                        >
+                          <ShoppingCart className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => handleRemoveItem(productId, item.title)}
+                        >
+                          <Heart className="h-4 w-4 fill-current" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         <div className="mt-12 text-center">

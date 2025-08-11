@@ -5,7 +5,7 @@ import { useAuth } from './auth-context'
 import { useToast } from '@/hooks/use-toast'
 
 interface WishlistItem {
-  product: string
+  product: string | { _id: string } | any // Handle both string ID and populated object
   title: string
   price: number
   image: string
@@ -31,6 +31,16 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   const [hasLoaded, setHasLoaded] = useState(false)
   const { user, token } = useAuth()
   const { toast } = useToast()
+
+  // Helper function to safely extract product ID
+  const getProductId = (item: WishlistItem): string => {
+    if (typeof item.product === 'string') {
+      return item.product;
+    } else if (item.product && typeof item.product === 'object' && '_id' in item.product) {
+      return (item.product as any)._id.toString();
+    }
+    return String(item.product || '');
+  }
 
   // Load wishlist when user logs in
   useEffect(() => {
@@ -208,7 +218,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
       // Note: You might want to add a clear all endpoint to your API
       // For now, we'll remove items one by one
       const promises = items.map(item => 
-        fetch(`/api/wishlist?productId=${item.product}`, {
+        fetch(`/api/wishlist?productId=${getProductId(item)}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -235,7 +245,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   }
 
   const isInWishlist = (productId: string) => {
-    return items.some(item => item.product === productId)
+    return items.some(item => getProductId(item) === productId)
   }
 
   return (

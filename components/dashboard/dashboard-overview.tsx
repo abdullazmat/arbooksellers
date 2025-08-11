@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { useToast } from '@/hooks/use-toast'
+import { formatPrice } from '@/lib/utils'
 import Link from 'next/link'
 
 interface DashboardStats {

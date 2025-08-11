@@ -1,6 +1,7 @@
 import dbConnect from '../lib/db';
 import Product from '../models/Product';
 import User from '../models/User';
+import Newsletter from '../models/Newsletter';
 
 const products = [
   {
@@ -15,19 +16,18 @@ const products = [
     ],
     rating: 4.9,
     reviews: 1250,
-    category: 'quran',
-    language: 'Multilingual',
     inStock: true,
     stockQuantity: 50,
     description: 'Complete Quran with accurate English translation and Arabic text',
     fullDescription: 'This beautiful edition of the Noble Quran features the original Arabic text alongside an accurate English translation by Dr. Muhammad Taqi-ud-Din Al-Hilali and Dr. Muhammad Muhsin Khan. The translation is known for its clarity and adherence to the original meaning, making it an excellent choice for both Arabic speakers and English readers seeking to understand the Quran. The book includes helpful footnotes and references to provide context and deeper understanding of the verses.',
+    size: '6.5 x 9.5 inches',
+    pages: 1056,
+    paper: 'Premium Paper',
+    binding: 'Hardcover',
     specifications: {
       publisher: 'Darussalam Publishers',
-      pages: 1056,
       isbn: '978-9960-892-64-2',
-      dimensions: '6.5 x 9.5 inches',
       weight: '2.8 lbs',
-      binding: 'Hardcover'
     },
     tags: ['quran', 'translation', 'arabic', 'english', 'holy book'],
     featured: true
@@ -44,19 +44,18 @@ const products = [
     ],
     rating: 4.8,
     reviews: 890,
-    category: 'hadith',
-    language: 'Multilingual',
     inStock: true,
     stockQuantity: 25,
     description: 'The most authentic collection of Prophet Muhammad\'s sayings',
     fullDescription: 'Sahih al-Bukhari is a collection of hadith compiled by Imam Muhammad al-Bukhari. It is considered the most authentic book after the Quran by the majority of Muslims. This complete set contains all 7,563 hadith, carefully authenticated and organized by topic. Each hadith includes the chain of narration and has been verified for authenticity according to the strictest standards.',
+    size: '7 x 10 inches',
+    pages: 4200,
+    paper: 'Bible Paper',
+    binding: 'Hardcover Set (9 Volumes)',
     specifications: {
       publisher: 'Darussalam Publishers',
-      pages: 4200,
       isbn: '978-9960-717-31-3',
-      dimensions: '7 x 10 inches',
       weight: '12 lbs',
-      binding: 'Hardcover Set (9 Volumes)'
     },
     tags: ['hadith', 'bukhari', 'authentic', 'prophet', 'sayings'],
     featured: true
@@ -73,19 +72,18 @@ const products = [
     ],
     rating: 4.7,
     reviews: 756,
-    category: 'seerah',
-    language: 'English',
     inStock: true,
     stockQuantity: 40,
     description: 'Award-winning biography of Prophet Muhammad (PBUH)',
     fullDescription: 'The Sealed Nectar is an award-winning biography of Prophet Muhammad (PBUH) that provides a comprehensive and authentic account of his life. This book covers the Prophet\'s life from birth to death, including his childhood, prophethood, migration to Medina, and the establishment of the first Islamic state. The author has meticulously researched and presented the information in a clear, engaging manner.',
+    size: '6 x 9 inches',
+    pages: 512,
+    paper: 'Standard Paper',
+    binding: 'Hardcover',
     specifications: {
       publisher: 'Darussalam Publishers',
-      pages: 512,
       isbn: '978-9960-899-55-8',
-      dimensions: '6 x 9 inches',
       weight: '1.8 lbs',
-      binding: 'Hardcover'
     },
     tags: ['seerah', 'prophet', 'biography', 'muhammad', 'islamic history'],
     featured: true
@@ -102,22 +100,21 @@ const products = [
     ],
     rating: 4.6,
     reviews: 432,
-    category: 'children',
-    language: 'English',
     inStock: true,
     stockQuantity: 60,
     description: 'Engaging Islamic stories for children with beautiful illustrations',
     fullDescription: 'This beautifully illustrated book contains stories of the prophets from Islamic tradition, specially written for children. Each story is presented in an engaging way that helps children understand Islamic values and morals. The book includes stories of Prophet Adam, Noah, Abraham, Moses, Jesus, and Muhammad (peace be upon them all).',
+    size: '8.5 x 11 inches',
+    pages: 128,
+    paper: 'Glossy Paper',
+    binding: 'Hardcover',
     specifications: {
       publisher: 'Islamic Foundation',
-      pages: 128,
       isbn: '978-086037-123-4',
-      dimensions: '8.5 x 11 inches',
       weight: '1.2 lbs',
-      binding: 'Hardcover'
     },
     tags: ['children', 'prophets', 'stories', 'education', 'islamic values'],
-    featured: false
+    featured: true
   },
   {
     title: 'Tafsir Ibn Kathir - Commentary on the Quran',
@@ -131,22 +128,21 @@ const products = [
     ],
     rating: 4.9,
     reviews: 234,
-    category: 'quran',
-    language: 'Multilingual',
     inStock: true,
     stockQuantity: 15,
     description: 'Comprehensive commentary on the Quran by Ibn Kathir',
     fullDescription: 'Tafsir Ibn Kathir is one of the most comprehensive and authentic commentaries on the Quran. This monumental work provides detailed explanations of Quranic verses, including historical context, linguistic analysis, and relevant hadith. The commentary is based on authentic sources and provides deep insights into the meaning and wisdom of the Quran.',
+    size: '7 x 10 inches',
+    pages: 6000,
+    paper: 'Bible Paper',
+    binding: 'Hardcover Set (10 Volumes)',
     specifications: {
       publisher: 'Darussalam Publishers',
-      pages: 6000,
       isbn: '978-9960-892-75-8',
-      dimensions: '7 x 10 inches',
       weight: '15 lbs',
-      binding: 'Hardcover Set (10 Volumes)'
     },
     tags: ['tafsir', 'quran', 'commentary', 'ibn kathir', 'islamic scholarship'],
-    featured: false
+    featured: true
   },
   {
     title: 'Fortress of the Muslim - Book of Invocations',
@@ -160,22 +156,21 @@ const products = [
     ],
     rating: 4.8,
     reviews: 567,
-    category: 'general',
-    language: 'Multilingual',
     inStock: true,
     stockQuantity: 80,
     description: 'Comprehensive collection of authentic Islamic supplications',
     fullDescription: 'Fortress of the Muslim is a comprehensive collection of authentic supplications (duas) from the Quran and Sunnah. This book contains prayers for various occasions and situations in daily life, including morning and evening supplications, prayers for entering and leaving places, and supplications for different life events.',
+    size: '5.5 x 8 inches',
+    pages: 256,
+    paper: 'Standard Paper',
+    binding: 'Paperback',
     specifications: {
       publisher: 'Darussalam Publishers',
-      pages: 256,
       isbn: '978-9960-892-91-8',
-      dimensions: '5.5 x 8 inches',
       weight: '0.8 lbs',
-      binding: 'Paperback'
     },
     tags: ['duas', 'supplications', 'prayers', 'daily', 'islamic practice'],
-    featured: false
+    featured: true
   },
   {
     title: 'Islamic Calligraphy - Art of Arabic Writing',
@@ -189,22 +184,21 @@ const products = [
     ],
     rating: 4.5,
     reviews: 189,
-    category: 'general',
-    language: 'English',
     inStock: true,
     stockQuantity: 30,
     description: 'Beautiful Islamic calligraphy art book with Quranic verses',
     fullDescription: 'This stunning book showcases the art of Islamic calligraphy through beautiful reproductions of Quranic verses and Islamic phrases. The book includes historical information about the development of Arabic calligraphy, different styles, and techniques used by master calligraphers throughout Islamic history.',
+    size: '9 x 12 inches',
+    pages: 180,
+    paper: 'Premium Glossy Paper',
+    binding: 'Hardcover',
     specifications: {
       publisher: 'Islamic Art Foundation',
-      pages: 180,
       isbn: '978-086037-456-7',
-      dimensions: '9 x 12 inches',
       weight: '2.5 lbs',
-      binding: 'Hardcover'
     },
     tags: ['calligraphy', 'art', 'arabic', 'quranic verses', 'islamic art'],
-    featured: false
+    featured: true
   },
   {
     title: 'Islamic Studies - A Comprehensive Guide',
@@ -218,22 +212,60 @@ const products = [
     ],
     rating: 4.7,
     reviews: 321,
-    category: 'general',
-    language: 'English',
     inStock: true,
     stockQuantity: 35,
     description: 'Comprehensive guide to Islamic studies and theology',
     fullDescription: 'This comprehensive guide covers various aspects of Islamic studies including theology, jurisprudence, history, and contemporary issues. Written by renowned Islamic scholar Dr. Muhammad Hamidullah, this book provides a thorough understanding of Islamic principles and their application in modern times.',
+    size: '6 x 9 inches',
+    pages: 480,
+    paper: 'Standard Paper',
+    binding: 'Hardcover',
     specifications: {
       publisher: 'Islamic Research Institute',
-      pages: 480,
       isbn: '978-086037-789-2',
-      dimensions: '6 x 9 inches',
       weight: '1.6 lbs',
-      binding: 'Hardcover'
     },
     tags: ['islamic studies', 'theology', 'jurisprudence', 'scholarship', 'education'],
-    featured: false
+    featured: true
+  }
+];
+
+const newsletterSubscriptions = [
+  {
+    email: 'ahmed.hassan@example.com',
+    name: 'Ahmed Hassan',
+    subscribed: true,
+    subscribedAt: new Date('2024-01-15'),
+    tags: ['quran', 'hadith']
+  },
+  {
+    email: 'fatima.ali@example.com',
+    name: 'Fatima Ali',
+    subscribed: true,
+    subscribedAt: new Date('2024-02-20'),
+    tags: ['children', 'education']
+  },
+  {
+    email: 'omar.khan@example.com',
+    name: 'Omar Khan',
+    subscribed: true,
+    subscribedAt: new Date('2024-03-10'),
+    tags: ['islamic studies', 'theology']
+  },
+  {
+    email: 'aisha.rahman@example.com',
+    name: 'Aisha Rahman',
+    subscribed: false,
+    subscribedAt: new Date('2024-01-05'),
+    unsubscribedAt: new Date('2024-02-15'),
+    tags: ['general']
+  },
+  {
+    email: 'muhammad.ibrahim@example.com',
+    name: 'Muhammad Ibrahim',
+    subscribed: true,
+    subscribedAt: new Date('2024-03-25'),
+    tags: ['tafsir', 'quran']
   }
 ];
 
@@ -241,13 +273,20 @@ async function seedDatabase() {
   try {
     await dbConnect();
     
-    // Drop the existing collection to avoid index conflicts
+    // Drop the existing collections to avoid index conflicts
     await Product.collection.drop();
     console.log('Dropped existing products collection');
+    
+    await Newsletter.collection.drop();
+    console.log('Dropped existing newsletter collection');
     
     // Insert new products
     const insertedProducts = await Product.insertMany(products);
     console.log(`Inserted ${insertedProducts.length} products`);
+    
+    // Insert newsletter subscriptions
+    const insertedNewsletters = await Newsletter.insertMany(newsletterSubscriptions);
+    console.log(`Inserted ${insertedNewsletters.length} newsletter subscriptions`);
     
     // Create a default admin user
     const adminEmail = 'admin@islamicbooks.com';

@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     await dbConnect();
 
-    let wishlist = await Wishlist.findOne({ user: auth.userId }).populate('items.product');
+    let wishlist = await Wishlist.findOne({ user: auth.userId });
     
     if (!wishlist) {
       // Create empty wishlist if it doesn't exist

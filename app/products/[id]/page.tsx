@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, use } from 'react'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Button } from '@/components/ui/button'
@@ -17,32 +17,28 @@ import { formatPrice } from '@/lib/utils'
 interface Product {
   _id: string
   title: string
-  author: string
+  author?: string
   price: number
   originalPrice?: number
   images: string[]
-  rating: number
-  reviews: number
-  category: string
-  language: string
+  rating?: number
+  reviews?: number
   inStock: boolean
   stockQuantity: number
-  description: string
-  fullDescription: string
-  specifications: {
-    publisher: string
-    pages: number
-    isbn: string
-    dimensions: string
-    weight: string
-    binding: string
-  }
-  tags: string[]
+  description?: string
+  fullDescription?: string
+  size?: string
+  pages?: number
+  paper?: string
+  binding?: string
+  specifications?: Record<string, any>
+  tags?: string[]
   featured: boolean
   discountPercentage?: number
 }
 
-export default function ProductDetailPage({ params }: { params: { id: string } }) {
+export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -56,12 +52,12 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
 
   useEffect(() => {
     fetchProduct()
-  }, [params.id])
+  }, [id])
 
   const fetchProduct = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/products/${params.id}`)
+      const response = await fetch(`/api/products/${id}`)
       
       if (!response.ok) {
         throw new Error('Product not found')
@@ -116,7 +112,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
         title: product.title,
         price: product.price,
         image: product.images[0] || '/placeholder.svg',
-        author: product.author,
+        author: product.author || 'Unknown',
       })
       toast({
         title: 'Added to wishlist',
@@ -208,11 +204,10 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
           {/* Product Info */}
           <div className="space-y-6">
             <div>
-              <Badge variant="secondary" className="mb-2">
-                {product.category}
-              </Badge>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.title}</h1>
-              <p className="text-lg text-gray-600 mb-4">by {product.author}</p>
+              {product.author && (
+                <p className="text-lg text-gray-600 mb-4">by {product.author}</p>
+              )}
               
               <div className="flex items-center space-x-2 mb-4">
                 <div className="flex items-center">
@@ -220,14 +215,14 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                     <Star
                       key={i}
                       className={`h-5 w-5 ${
-                        i < Math.floor(product.rating)
+                        i < Math.floor(product.rating || 0)
                           ? 'text-yellow-400 fill-current'
                           : 'text-gray-300'
                       }`}
                     />
                   ))}
                 </div>
-                <span className="text-sm text-gray-600">({product.reviews} reviews)</span>
+                <span className="text-sm text-gray-600">({product.reviews || 0} reviews)</span>
               </div>
             </div>
 
@@ -243,7 +238,9 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                 )}
               </div>
 
-              <p className="text-gray-700 leading-relaxed">{product.description}</p>
+              {product.description && (
+                <p className="text-gray-700 leading-relaxed">{product.description}</p>
+              )}
 
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
@@ -301,42 +298,52 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             <Card>
               <CardContent className="p-6">
                 <h3 className="text-lg font-semibold mb-4">Description</h3>
-                <p className="text-gray-700 leading-relaxed">{product.fullDescription}</p>
+                {product.fullDescription ? (
+                  <p className="text-gray-700 leading-relaxed">{product.fullDescription}</p>
+                ) : (
+                  <p className="text-gray-500 italic">No detailed description available</p>
+                )}
               </CardContent>
             </Card>
 
             <Card>
               <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Specifications</h3>
-                <dl className="space-y-2">
-                  <div className="flex justify-between">
-                    <dt className="text-gray-600">Publisher:</dt>
-                    <dd className="font-medium">{product.specifications.publisher}</dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt className="text-gray-600">Pages:</dt>
-                    <dd className="font-medium">{product.specifications.pages}</dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt className="text-gray-600">ISBN:</dt>
-                    <dd className="font-medium">{product.specifications.isbn}</dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt className="text-gray-600">Dimensions:</dt>
-                    <dd className="font-medium">{product.specifications.dimensions}</dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt className="text-gray-600">Weight:</dt>
-                    <dd className="font-medium">{product.specifications.weight}</dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt className="text-gray-600">Binding:</dt>
-                    <dd className="font-medium">{product.specifications.binding}</dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt className="text-gray-600">Language:</dt>
-                    <dd className="font-medium">{product.language}</dd>
-                  </div>
+                <h3 className="text-lg font-semibold mb-4">Product Information</h3>
+                <dl className="space-y-3">
+                  {product.size && (
+                    <div className="flex justify-between">
+                      <dt className="text-gray-600">Size:</dt>
+                      <dd className="font-medium">{product.size}</dd>
+                    </div>
+                  )}
+                  {product.pages && (
+                    <div className="flex justify-between">
+                      <dt className="text-gray-600">Pages:</dt>
+                      <dd className="font-medium">{product.pages}</dd>
+                    </div>
+                  )}
+                  {product.paper && (
+                    <div className="flex justify-between">
+                      <dt className="text-gray-600">Paper:</dt>
+                      <dd className="font-medium">{product.paper}</dd>
+                    </div>
+                  )}
+                  {product.binding && (
+                    <div className="flex justify-between">
+                      <dt className="text-gray-600">Binding:</dt>
+                      <dd className="font-medium">{product.binding}</dd>
+                    </div>
+                  )}
+                  {product.specifications && Object.keys(product.specifications).length > 0 && (
+                    <>
+                      {Object.entries(product.specifications).map(([key, value]) => (
+                        <div key={key} className="flex justify-between">
+                          <dt className="text-gray-600 capitalize">{key}:</dt>
+                          <dd className="font-medium">{String(value)}</dd>
+                        </div>
+                      ))}
+                    </>
+                  )}
                 </dl>
               </CardContent>
             </Card>
