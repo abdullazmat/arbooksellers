@@ -1,24 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAuth } from '@/lib/auth';
+import { verifyToken } from '@/lib/auth';
 
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const auth = verifyAuth(request);
+    const token = request.headers.get('authorization')?.replace('Bearer ', '');
     
-    if (!auth || auth.role !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Token required' },
+        { status: 401 }
+      );
+    }
+
+    const decoded = await verifyToken(token);
+    
+    if (!decoded) {
+      return NextResponse.json(
+        { error: 'Invalid token' },
+        { status: 401 }
+      );
+    }
+
+    if (decoded.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Admin access required' },
+        { status: 403 }
+      );
     }
 
     return NextResponse.json({
-      message: 'Token is valid',
+      message: 'Token valid',
       user: {
-        id: auth.userId,
-        email: auth.email,
-        role: auth.role,
+        userId: decoded.userId,
+        email: decoded.email,
+        role: decoded.role,
       },
     });
+
   } catch (error: any) {
-    console.error('Admin auth verify error:', error);
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    console.error('Token verification error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 } 

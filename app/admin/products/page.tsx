@@ -1,18 +1,19 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { AdminLayout } from '@/components/admin/admin-layout'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Textarea } from '@/components/ui/textarea'
-import { Switch } from '@/components/ui/switch'
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table'
 import { 
   Plus, 
   Search, 
@@ -20,7 +21,7 @@ import {
   Trash2, 
   Eye,
   Package,
-  Loader2
+  Filter
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
@@ -30,16 +31,11 @@ interface Product {
   author: string
   price: number
   originalPrice?: number
-  images: string[]
-  rating: number
-  reviews: number
   category: string
   language: string
   inStock: boolean
   stockQuantity: number
-  description: string
   featured: boolean
-  discountPercentage?: number
   createdAt: string
 }
 
@@ -47,37 +43,32 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('all')
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
-  const [formData, setFormData] = useState({
-    title: '',
-    author: '',
-    price: '',
-    originalPrice: '',
-    category: '',
-    language: '',
-    stockQuantity: '',
-    description: '',
-    images: '',
-    featured: false,
-    inStock: true,
-  })
-  const router = useRouter()
+  const [categoryFilter, setCategoryFilter] = useState('all')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
   const { toast } = useToast()
 
   useEffect(() => {
     fetchProducts()
-  }, [])
+  }, [currentPage, searchTerm, categoryFilter])
 
   const fetchProducts = async () => {
     try {
       setLoading(true)
       const token = localStorage.getItem('adminToken')
-      
-      const params = new URLSearchParams()
-      if (searchTerm) params.append('search', searchTerm)
-      if (selectedCategory !== 'all') params.append('category', selectedCategory)
+
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: '20',
+      })
+
+      if (searchTerm) {
+        params.append('search', searchTerm)
+      }
+
+      if (categoryFilter !== 'all') {
+        params.append('category', categoryFilter)
+      }
 
       const response = await fetch(`/api/admin/products?${params.toString()}`, {
         headers: {
@@ -91,6 +82,7 @@ export default function AdminProductsPage() {
 
       const data = await response.json()
       setProducts(data.products)
+      setTotalPages(data.pagination.pages)
     } catch (error) {
       console.error('Error fetching products:', error)
       toast({
@@ -103,61 +95,10 @@ export default function AdminProductsPage() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    try {
-      const token = localStorage.getItem('adminToken')
-      const productData = {
-        ...formData,
-        price: parseFloat(formData.price),
-        originalPrice: formData.originalPrice ? parseFloat(formData.originalPrice) : undefined,
-        stockQuantity: parseInt(formData.stockQuantity),
-        images: formData.images.split(',').map(img => img.trim()).filter(img => img),
-      }
-
-      const url = editingProduct 
-        ? `/api/admin/products/${editingProduct._id}`
-        : '/api/admin/products'
-      
-      const method = editingProduct ? 'PUT' : 'POST'
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(productData),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to save product')
-      }
-
-      const data = await response.json()
-      
-      toast({
-        title: 'Success',
-        description: editingProduct ? 'Product updated successfully' : 'Product created successfully',
-      })
-
-      setIsAddDialogOpen(false)
-      setEditingProduct(null)
-      resetForm()
-      fetchProducts()
-    } catch (error) {
-      console.error('Error saving product:', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to save product',
-        variant: 'destructive',
-      })
+  const handleDeleteProduct = async (productId: string) => {
+    if (!confirm('Are you sure you want to delete this product?')) {
+      return
     }
-  }
-
-  const handleDelete = async (productId: string) => {
-    if (!confirm('Are you sure you want to delete this product?')) return
 
     try {
       const token = localStorage.getItem('adminToken')
@@ -188,40 +129,6 @@ export default function AdminProductsPage() {
     }
   }
 
-  const handleEdit = (product: Product) => {
-    setEditingProduct(product)
-    setFormData({
-      title: product.title,
-      author: product.author,
-      price: product.price.toString(),
-      originalPrice: product.originalPrice?.toString() || '',
-      category: product.category,
-      language: product.language,
-      stockQuantity: product.stockQuantity.toString(),
-      description: product.description,
-      images: product.images.join(', '),
-      featured: product.featured,
-      inStock: product.inStock,
-    })
-    setIsAddDialogOpen(true)
-  }
-
-  const resetForm = () => {
-    setFormData({
-      title: '',
-      author: '',
-      price: '',
-      originalPrice: '',
-      category: '',
-      language: '',
-      stockQuantity: '',
-      description: '',
-      images: '',
-      featured: false,
-      inStock: true,
-    })
-  }
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-PK', {
       style: 'currency',
@@ -237,6 +144,32 @@ export default function AdminProductsPage() {
     })
   }
 
+  const getCategoryColor = (category: string) => {
+    const colors: Record<string, string> = {
+      quran: 'bg-blue-100 text-blue-800',
+      hadith: 'bg-green-100 text-green-800',
+      fiqh: 'bg-purple-100 text-purple-800',
+      aqeedah: 'bg-orange-100 text-orange-800',
+      seerah: 'bg-red-100 text-red-800',
+      children: 'bg-pink-100 text-pink-800',
+      general: 'bg-gray-100 text-gray-800',
+    }
+    return colors[category] || colors.general
+  }
+
+  if (loading && products.length === 0) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Loading products...</p>
+          </div>
+        </div>
+      </AdminLayout>
+    )
+  }
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -244,175 +177,22 @@ export default function AdminProductsPage() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Products</h1>
-            <p className="text-gray-600">Manage your product inventory</p>
+            <p className="text-gray-600">Manage your product catalog</p>
           </div>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => {
-                setEditingProduct(null)
-                resetForm()
-              }}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Product
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>
-                  {editingProduct ? 'Edit Product' : 'Add New Product'}
-                </DialogTitle>
-                <DialogDescription>
-                  {editingProduct ? 'Update product information' : 'Create a new product'}
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Title</Label>
-                    <Input
-                      id="title"
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="author">Author</Label>
-                    <Input
-                      id="author"
-                      value={formData.author}
-                      onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="price">Price</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      step="0.01"
-                      value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="originalPrice">Original Price (Optional)</Label>
-                    <Input
-                      id="originalPrice"
-                      type="number"
-                      step="0.01"
-                      value={formData.originalPrice}
-                      onChange={(e) => setFormData({ ...formData, originalPrice: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="category">Category</Label>
-                    <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="quran">Quran</SelectItem>
-                        <SelectItem value="hadith">Hadith</SelectItem>
-                        <SelectItem value="fiqh">Fiqh</SelectItem>
-                        <SelectItem value="history">Islamic History</SelectItem>
-                        <SelectItem value="children">Children's Books</SelectItem>
-                        <SelectItem value="general">General</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="language">Language</Label>
-                    <Select value={formData.language} onValueChange={(value) => setFormData({ ...formData, language: value })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select language" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Arabic">Arabic</SelectItem>
-                        <SelectItem value="English">English</SelectItem>
-                        <SelectItem value="Urdu">Urdu</SelectItem>
-                        <SelectItem value="Multilingual">Multilingual</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="stockQuantity">Stock Quantity</Label>
-                    <Input
-                      id="stockQuantity"
-                      type="number"
-                      value={formData.stockQuantity}
-                      onChange={(e) => setFormData({ ...formData, stockQuantity: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="images">Images (comma-separated URLs)</Label>
-                    <Input
-                      id="images"
-                      value={formData.images}
-                      onChange={(e) => setFormData({ ...formData, images: e.target.value })}
-                      placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    rows={4}
-                    required
-                  />
-                </div>
-
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="featured"
-                      checked={formData.featured}
-                      onCheckedChange={(checked) => setFormData({ ...formData, featured: checked })}
-                    />
-                    <Label htmlFor="featured">Featured Product</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="inStock"
-                      checked={formData.inStock}
-                      onCheckedChange={(checked) => setFormData({ ...formData, inStock: checked })}
-                    />
-                    <Label htmlFor="inStock">In Stock</Label>
-                  </div>
-                </div>
-
-                <div className="flex justify-end space-x-2">
-                  <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit">
-                    {editingProduct ? 'Update Product' : 'Create Product'}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <Button className="bg-green-600 hover:bg-green-700">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Product
+          </Button>
         </div>
 
         {/* Filters */}
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex gap-4">
+          <CardHeader>
+            <CardTitle>Filters</CardTitle>
+            <CardDescription>Search and filter products</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -424,24 +204,25 @@ export default function AdminProductsPage() {
                   />
                 </div>
               </div>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="All Categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="quran">Quran</SelectItem>
-                  <SelectItem value="hadith">Hadith</SelectItem>
-                  <SelectItem value="fiqh">Fiqh</SelectItem>
-                  <SelectItem value="history">Islamic History</SelectItem>
-                  <SelectItem value="children">Children's Books</SelectItem>
-                  <SelectItem value="general">General</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button onClick={fetchProducts}>
-                <Search className="mr-2 h-4 w-4" />
-                Search
-              </Button>
+              <div className="flex gap-2">
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  <option value="all">All Categories</option>
+                  <option value="quran">Quran</option>
+                  <option value="hadith">Hadith</option>
+                  <option value="fiqh">Fiqh</option>
+                  <option value="aqeedah">Aqeedah</option>
+                  <option value="seerah">Seerah</option>
+                  <option value="children">Children</option>
+                  <option value="general">General</option>
+                </select>
+                <Button variant="outline" onClick={fetchProducts}>
+                  <Filter className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -455,11 +236,7 @@ export default function AdminProductsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-green-600" />
-              </div>
-            ) : (
+            <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -469,7 +246,7 @@ export default function AdminProductsPage() {
                     <TableHead>Stock</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Created</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -477,71 +254,66 @@ export default function AdminProductsPage() {
                     <TableRow key={product._id}>
                       <TableCell>
                         <div className="flex items-center space-x-3">
-                          <img
-                            src={product.images[0] || '/placeholder.jpg'}
-                            alt={product.title}
-                            className="h-12 w-12 object-cover rounded"
-                          />
+                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                            <Package className="h-5 w-5 text-gray-600" />
+                          </div>
                           <div>
-                            <p className="font-medium">{product.title}</p>
-                            <p className="text-sm text-gray-600">{product.author}</p>
+                            <div className="font-medium text-gray-900">{product.title}</div>
+                            <div className="text-sm text-gray-500">by {product.author}</div>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">{product.category}</Badge>
+                        <Badge className={getCategoryColor(product.category)}>
+                          {product.category}
+                        </Badge>
                       </TableCell>
                       <TableCell>
-                        <div>
-                          <p className="font-medium">{formatCurrency(product.price)}</p>
-                          {product.originalPrice && (
-                            <p className="text-sm text-gray-500 line-through">
+                        <div className="text-sm">
+                          <div className="font-medium">{formatCurrency(product.price)}</div>
+                          {product.originalPrice && product.originalPrice > product.price && (
+                            <div className="text-xs text-gray-500 line-through">
                               {formatCurrency(product.originalPrice)}
-                            </p>
+                            </div>
                           )}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="text-center">
-                          <p className="font-medium">{product.stockQuantity}</p>
-                          <Badge variant={product.inStock ? "default" : "destructive"}>
+                        <div className="text-sm">
+                          <div className="font-medium">{product.stockQuantity}</div>
+                          <div className="text-xs text-gray-500">
                             {product.inStock ? 'In Stock' : 'Out of Stock'}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          {product.featured && (
+                            <Badge variant="secondary">Featured</Badge>
+                          )}
+                          <Badge variant={product.inStock ? 'default' : 'destructive'}>
+                            {product.inStock ? 'Active' : 'Inactive'}
                           </Badge>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex flex-col space-y-1">
-                          {product.featured && (
-                            <Badge className="bg-yellow-100 text-yellow-800">Featured</Badge>
-                          )}
-                          <Badge variant="outline">{product.language}</Badge>
+                        <div className="text-sm text-gray-500">
+                          {formatDate(product.createdAt)}
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <p className="text-sm text-gray-600">
-                          {formatDate(product.createdAt)}
-                        </p>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => router.push(`/products/${product._id}`)}
-                          >
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end space-x-2">
+                          <Button variant="ghost" size="sm">
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEdit(product)}
-                          >
+                          <Button variant="ghost" size="sm">
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button
+                          <Button 
+                            variant="ghost" 
                             size="sm"
-                            variant="outline"
-                            onClick={() => handleDelete(product._id)}
+                            onClick={() => handleDeleteProduct(product._id)}
+                            className="text-red-600 hover:text-red-700"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -551,11 +323,32 @@ export default function AdminProductsPage() {
                   ))}
                 </TableBody>
               </Table>
-            )}
-            {!loading && products.length === 0 && (
-              <div className="text-center py-8">
-                <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">No products found</p>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-6">
+                <div className="text-sm text-gray-700">
+                  Page {currentPage} of {totalPages}
+                </div>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>

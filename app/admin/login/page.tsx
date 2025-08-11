@@ -1,13 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Shield, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import Image from 'next/image'
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('')
@@ -17,12 +18,22 @@ export default function AdminLoginPage() {
   const router = useRouter()
   const { toast } = useToast()
 
+  useEffect(() => {
+    // Check if admin is already logged in
+    const adminToken = localStorage.getItem('adminToken')
+    const adminUser = localStorage.getItem('adminUser')
+
+    if (adminToken && adminUser) {
+      router.push('/admin')
+    }
+  }, [router])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!email || !password) {
       toast({
-        title: 'Error',
+        title: 'Validation Error',
         description: 'Please fill in all fields',
         variant: 'destructive',
       })
@@ -43,15 +54,10 @@ export default function AdminLoginPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        toast({
-          title: 'Login Failed',
-          description: data.error || 'Invalid credentials',
-          variant: 'destructive',
-        })
-        return
+        throw new Error(data.error || 'Login failed')
       }
 
-      // Store admin token and user info
+      // Store admin token and user data
       localStorage.setItem('adminToken', data.token)
       localStorage.setItem('adminUser', JSON.stringify(data.user))
 
@@ -61,11 +67,11 @@ export default function AdminLoginPage() {
       })
 
       router.push('/admin')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Admin login error:', error)
       toast({
         title: 'Login Failed',
-        description: 'An error occurred during login',
+        description: error.message || 'Invalid credentials',
         variant: 'destructive',
       })
     } finally {
@@ -74,23 +80,30 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <img
-            src="/logo.png"
-            alt="Islamic Books"
-            className="h-16 w-16 mx-auto mb-4"
-          />
-          <h2 className="text-3xl font-bold text-gray-900">Admin Login</h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Sign in to access the admin panel
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Logo and Header */}
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <Image
+              src="/logo.png"
+              alt="Islamic Books"
+              width={80}
+              height={80}
+              className="rounded-lg"
+            />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Panel</h1>
+          <p className="text-gray-600">Access your administrative dashboard</p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Sign In</CardTitle>
+        {/* Login Form */}
+        <Card className="shadow-xl border-0">
+          <CardHeader className="text-center pb-4">
+            <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
+              <Shield className="h-6 w-6 text-green-600" />
+            </div>
+            <CardTitle className="text-2xl">Sign In</CardTitle>
             <CardDescription>
               Enter your admin credentials to continue
             </CardDescription>
@@ -98,7 +111,7 @@ export default function AdminLoginPage() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email Address</Label>
                 <Input
                   id="email"
                   type="email"
@@ -106,6 +119,7 @@ export default function AdminLoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  className="h-11"
                 />
               </div>
 
@@ -119,18 +133,19 @@ export default function AdminLoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    className="h-11 pr-10"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    className="absolute right-0 top-0 h-11 px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
+                      <EyeOff className="h-4 w-4 text-gray-500" />
                     ) : (
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-4 w-4 text-gray-500" />
                     )}
                   </Button>
                 </div>
@@ -138,13 +153,13 @@ export default function AdminLoginPage() {
 
               <Button
                 type="submit"
-                className="w-full bg-green-600 hover:bg-green-700"
+                className="w-full h-11 bg-green-600 hover:bg-green-700"
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
+                    Signing In...
                   </>
                 ) : (
                   'Sign In'
@@ -152,15 +167,34 @@ export default function AdminLoginPage() {
               </Button>
             </form>
 
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-900 mb-2">Demo Credentials:</h4>
-              <p className="text-xs text-gray-600">
-                Email: admin@islamicbooks.com<br />
-                Password: admin123
-              </p>
+            {/* Demo Credentials */}
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <h3 className="text-sm font-medium text-blue-900 mb-2">Demo Credentials</h3>
+              <div className="text-xs text-blue-700 space-y-1">
+                <p><strong>Email:</strong> admin@islamicbooks.com</p>
+                <p><strong>Password:</strong> admin123</p>
+              </div>
+            </div>
+
+            {/* Back to Main Site */}
+            <div className="mt-6 text-center">
+              <Button
+                variant="ghost"
+                onClick={() => router.push('/')}
+                className="text-gray-600 hover:text-gray-900"
+              >
+                ← Back to Main Site
+              </Button>
             </div>
           </CardContent>
         </Card>
+
+        {/* Footer */}
+        <div className="text-center mt-8">
+          <p className="text-sm text-gray-500">
+            © 2024 Islamic Books. All rights reserved.
+          </p>
+        </div>
       </div>
     </div>
   )
