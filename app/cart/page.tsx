@@ -178,7 +178,7 @@ export default function CartPage() {
                 <div className="space-y-3 mb-4">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Subtotal</span>
-                    <span className="font-medium">${total.toFixed(2)}</span>
+                    <span className="font-medium">PKR {total.toFixed(2)}</span>
                   </div>
                   
                   <div className="flex justify-between">
@@ -187,21 +187,21 @@ export default function CartPage() {
                       {shipping === 0 ? (
                         <Badge className="bg-green-100 text-green-800">Free</Badge>
                       ) : (
-                        `$${shipping.toFixed(2)}`
+                        `PKR ${shipping.toFixed(2)}`
                       )}
                     </span>
                   </div>
                   
                   <div className="flex justify-between">
                     <span className="text-gray-600">Tax</span>
-                    <span className="font-medium">${tax.toFixed(2)}</span>
+                    <span className="font-medium">PKR {tax.toFixed(2)}</span>
                   </div>
                   
                   <div className="border-t pt-3">
                     <div className="flex justify-between">
                       <span className="text-lg font-semibold">Total</span>
                       <span className="text-lg font-bold text-green-600">
-                        ${finalTotal.toFixed(2)}
+                        PKR {finalTotal.toFixed(2)}
                       </span>
                     </div>
                   </div>
@@ -210,7 +210,7 @@ export default function CartPage() {
                 {total < 50 && (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
                     <p className="text-sm text-yellow-800">
-                      Add ${(50 - total).toFixed(2)} more for free shipping!
+                      Add PKR {(50 - total).toFixed(2)} more for free shipping!
                     </p>
                   </div>
                 )}
@@ -233,7 +233,7 @@ export default function CartPage() {
                 <div className="mt-6 pt-6 border-t space-y-3">
                   <div className="flex items-center text-sm text-gray-600">
                     <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                    Free shipping on orders over $50
+                    Free shipping on orders over PKR 50
                   </div>
                   <div className="flex items-center text-sm text-gray-600">
                     <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>

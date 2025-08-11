@@ -14,8 +14,7 @@ import {
   Menu,
   X,
   FileText,
-  MessageSquare,
-  Tag
+  MessageSquare
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
@@ -64,7 +63,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'Content', href: '/admin/content', icon: FileText },
     { name: 'Reviews', href: '/admin/reviews', icon: MessageSquare },
-    { name: 'Coupons', href: '/admin/coupons', icon: Tag },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
   ]
 

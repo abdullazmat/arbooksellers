@@ -115,7 +115,7 @@ export default function CheckoutPage() {
     }
   }
 
-  const shippingCost = cartTotal >= 50 ? 0 : 5.00 // Free shipping over $50
+  const shippingCost = cartTotal >= 50 ? 0 : 5.00 // Free shipping over PKR 50
   const taxRate = 0.08 // Example tax rate
   const taxAmount = cartTotal * taxRate
   const finalTotal = cartTotal + shippingCost + taxAmount
@@ -231,19 +231,19 @@ export default function CheckoutPage() {
                 <div className="border-t pt-4 space-y-2">
                   <div className="flex justify-between text-muted-foreground">
                     <span>Subtotal</span>
-                    <span>${cartTotal.toFixed(2)}</span>
+                    <span>PKR {cartTotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-muted-foreground">
                     <span>Shipping</span>
-                    <span>{shippingCost === 0 ? 'Free' : `$${shippingCost.toFixed(2)}`}</span>
+                    <span>{shippingCost === 0 ? 'Free' : `PKR ${shippingCost.toFixed(2)}`}</span>
                   </div>
                   <div className="flex justify-between text-muted-foreground">
-                    <span>Tax ({taxRate * 100}%)</span>
-                    <span>${taxAmount.toFixed(2)}</span>
+                    <span>Tax</span>
+                    <span>PKR {taxAmount.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between font-bold text-lg text-foreground pt-2 border-t mt-2">
+                  <div className="flex justify-between font-medium text-lg">
                     <span>Total</span>
-                    <span>${finalTotal.toFixed(2)}</span>
+                    <span>PKR {finalTotal.toFixed(2)}</span>
                   </div>
                 </div>
               </CardContent>
