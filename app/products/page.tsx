@@ -1,12 +1,14 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { ProductFilters } from '@/components/products/product-filters'
+import { Header } from '@/components/layout/header'
+import { Footer } from '@/components/layout/footer'
 import { ProductGrid } from '@/components/products/product-grid'
 import { ProductSort } from '@/components/products/product-sort'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Search, Filter, Grid3X3, List } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Search, Grid3X3, List, X } from 'lucide-react'
 
 interface Product {
   _id: string
@@ -38,7 +40,6 @@ export default function ProductsPage() {
   })
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const [showFilters, setShowFilters] = useState(false)
 
   useEffect(() => {
     fetchProducts()
@@ -87,26 +88,25 @@ export default function ProductsPage() {
     setCurrentPage(1) // Reset to first page when filters change
   }, [])
 
-  const handleResetFilters = useCallback(() => {
-    setFilters({
-      search: '',
-      minPrice: 0,
-      maxPrice: 10000,
-      featured: false,
-    })
-    setCurrentPage(1)
-  }, [])
-
   const handleSortChange = useCallback((newSort: string) => {
     setSortBy(newSort)
     setCurrentPage(1) // Reset to first page when sort changes
   }, [])
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+    <>
+      <Header />
+      
+      {/* Page Header */}
       <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="container mx-auto px-4 py-8">
+          {/* Breadcrumb */}
+          <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-4">
+            <a href="/" className="hover:text-green-600 transition-colors">Home</a>
+            <span>/</span>
+            <span className="text-gray-900 font-medium">Products</span>
+          </nav>
+          
           <div className="text-center">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
               Islamic Books & Literature
@@ -119,81 +119,90 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Filters Sidebar */}
-          <div className="lg:w-80">
-            <div className="lg:hidden mb-4">
-              <Button
-                variant="outline"
-                onClick={() => setShowFilters(!showFilters)}
-                className="w-full"
-              >
-                <Filter className="mr-2 h-4 w-4" />
-                {showFilters ? 'Hide Filters' : 'Show Filters'}
-              </Button>
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-6 lg:py-8">
+        {/* Main Content */}
+        <div className="w-full">
+          {/* Toolbar */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <ProductSort value={sortBy} onChange={handleSortChange} />
+              
+              {/* View Mode Toggle */}
+              <div className="flex items-center border rounded-lg p-1">
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className="h-8 w-8 p-0"
+                >
+                  <Grid3X3 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className="h-8 w-8 p-0"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-            
-            <div className={`lg:block ${showFilters ? 'block' : 'hidden'}`}>
-              <ProductFilters
-                onFiltersChange={handleFiltersChange}
-                onReset={handleResetFilters}
-              />
-            </div>
-          </div>
 
-          {/* Main Content */}
-          <div className="flex-1">
-            {/* Toolbar */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-              <div className="flex items-center gap-4">
-                <ProductSort value={sortBy} onChange={handleSortChange} />
-                
-                {/* View Mode Toggle */}
-                <div className="flex items-center border rounded-lg p-1">
-                  <Button
-                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('grid')}
-                    className="h-8 w-8 p-0"
-                  >
-                    <Grid3X3 className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={viewMode === 'list' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('list')}
-                    className="h-8 w-8 p-0"
-                  >
-                    <List className="h-4 w-4" />
-                  </Button>
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              {/* Search Input */}
+              <div className="flex-1 sm:flex-none sm:w-64">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search products..."
+                    value={filters.search}
+                    onChange={(e) => handleFiltersChange({...filters, search: e.target.value})}
+                    className="pl-10 pr-8 h-9"
+                  />
+                  {filters.search && (
+                    <button
+                      onClick={() => handleFiltersChange({...filters, search: ''})}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </div>
 
-              <div className="text-sm text-gray-600">
+              {/* Products Count */}
+              <div className="text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg whitespace-nowrap">
                 {products.length} products found
               </div>
             </div>
+          </div>
 
             {/* Products Grid */}
             {loading ? (
-              <div className="flex items-center justify-center h-64">
+              <div className="flex items-center justify-center h-64 bg-gray-50 rounded-lg">
                 <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
-                  <p className="mt-2 text-gray-600">Loading products...</p>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+                  <p className="text-lg text-gray-600">Loading products...</p>
+                  <p className="text-sm text-gray-500 mt-2">Please wait while we fetch the latest collection</p>
                 </div>
               </div>
             ) : products.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Search className="h-12 w-12 text-gray-400 mb-4" />
-                  <CardTitle className="text-xl mb-2">No products found</CardTitle>
-                  <CardDescription className="text-center mb-4">
-                    Try adjusting your search criteria or filters to find what you're looking for.
+              <Card className="border-2 border-dashed border-gray-200">
+                <CardContent className="flex flex-col items-center justify-center py-16">
+                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                    <Search className="h-10 w-10 text-gray-400" />
+                  </div>
+                  <CardTitle className="text-2xl mb-2 text-center">No products found</CardTitle>
+                  <CardDescription className="text-center mb-6 max-w-md">
+                    We couldn't find any products matching your current filters. 
+                    Try adjusting your search criteria or clearing some filters.
                   </CardDescription>
-                  <Button onClick={handleResetFilters} variant="outline">
-                    Clear All Filters
-                  </Button>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button onClick={() => setFilters({...filters, search: ''})} variant="outline" size="lg">
+                      Clear Search
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ) : (
@@ -206,17 +215,18 @@ export default function ProductsPage() {
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex items-center justify-center mt-8">
-                <div className="flex space-x-2">
+                <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-2">
                   <Button
                     variant="outline"
                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
+                    className="w-full sm:w-auto"
                   >
                     Previous
                   </Button>
                   
-                  <div className="flex items-center px-4">
-                    <span className="text-sm text-gray-600">
+                  <div className="flex items-center px-4 py-2 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-600 font-medium">
                       Page {currentPage} of {totalPages}
                     </span>
                   </div>
@@ -225,6 +235,7 @@ export default function ProductsPage() {
                     variant="outline"
                     onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
+                    className="w-full sm:w-auto"
                   >
                     Next
                   </Button>
@@ -232,8 +243,9 @@ export default function ProductsPage() {
               </div>
             )}
           </div>
-        </div>
-      </div>
-    </div>
+        </main>
+
+      <Footer />
+    </>
   )
 }

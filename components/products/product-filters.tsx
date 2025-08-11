@@ -5,9 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Slider } from '@/components/ui/slider'
-import { Search, Filter, X } from 'lucide-react'
-import { formatPrice } from '@/lib/utils'
+import { Search, X } from 'lucide-react'
 import React from 'react'
 
 interface ProductFiltersProps {
@@ -17,8 +15,6 @@ interface ProductFiltersProps {
 
 export function ProductFilters({ onFiltersChange, onReset }: ProductFiltersProps) {
   const [searchTerm, setSearchTerm] = useState('')
-  const [priceRange, setPriceRange] = useState([0, 10000])
-  const [featuredOnly, setFeaturedOnly] = useState(false)
   const [hasFilters, setHasFilters] = useState(false)
   const isMounted = React.useRef(true)
 
@@ -32,15 +28,15 @@ export function ProductFilters({ onFiltersChange, onReset }: ProductFiltersProps
   // Memoize the filters object to prevent unnecessary re-renders
   const filters = useCallback(() => ({
     search: searchTerm,
-    minPrice: priceRange[0],
-    maxPrice: priceRange[1],
-    featured: featuredOnly,
-  }), [searchTerm, priceRange, featuredOnly])
+    minPrice: 0,
+    maxPrice: 10000,
+    featured: false,
+  }), [searchTerm])
 
   // Memoize the hasActiveFilters calculation
   const hasActiveFilters = useCallback(() => {
-    return Boolean(searchTerm || priceRange[0] > 0 || priceRange[1] < 10000 || featuredOnly)
-  }, [searchTerm, priceRange, featuredOnly])
+    return Boolean(searchTerm)
+  }, [searchTerm])
 
   useEffect(() => {
     if (!isMounted.current) return
@@ -62,26 +58,24 @@ export function ProductFilters({ onFiltersChange, onReset }: ProductFiltersProps
 
   const handleReset = () => {
     setSearchTerm('')
-    setPriceRange([0, 10000])
-    setFeaturedOnly(false)
     onReset()
   }
 
   return (
-    <Card className="sticky top-4">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Filter className="h-5 w-5" />
-          Filters
+    <Card>
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Search className="h-5 w-5" />
+          Search Products
         </CardTitle>
         <CardDescription>
-          Refine your product search
+          Find Islamic books by title, author, description, size, paper, or binding
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
         {/* Search */}
         <div className="space-y-2">
-          <Label htmlFor="search">Search Products</Label>
+          <Label htmlFor="search" className="text-sm font-medium">Search Products</Label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
@@ -94,47 +88,18 @@ export function ProductFilters({ onFiltersChange, onReset }: ProductFiltersProps
           </div>
         </div>
 
-        {/* Price Range */}
-        <div className="space-y-2">
-          <Label>Price Range</Label>
-          <div className="px-2">
-            <Slider
-              value={priceRange}
-              onValueChange={setPriceRange}
-              max={10000}
-              min={0}
-              step={100}
-              className="w-full"
-            />
-          </div>
-          <div className="flex justify-between text-sm text-gray-600">
-            <span>{formatPrice(priceRange[0])}</span>
-            <span>{formatPrice(priceRange[1])}</span>
-          </div>
-        </div>
-
-        {/* Featured Only */}
-        <div className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            id="featured"
-            checked={featuredOnly}
-            onChange={(e) => setFeaturedOnly(e.target.checked)}
-            className="rounded border-gray-300 text-green-600 focus:ring-green-500"
-          />
-          <Label htmlFor="featured">Featured Products Only</Label>
-        </div>
-
         {/* Reset Button */}
         {hasFilters && (
-          <Button
-            variant="outline"
-            onClick={handleReset}
-            className="w-full"
-          >
-            <X className="mr-2 h-4 w-4" />
-            Clear Filters
-          </Button>
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              onClick={handleReset}
+              size="sm"
+            >
+              <X className="mr-2 h-4 w-4" />
+              Clear Search
+            </Button>
+          </div>
         )}
       </CardContent>
     </Card>
