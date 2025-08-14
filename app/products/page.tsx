@@ -8,7 +8,7 @@ import { ProductSort } from '@/components/products/product-sort'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Search, Grid3X3, List, X } from 'lucide-react'
+import { Search, Grid3X3, X } from 'lucide-react'
 
 interface Product {
   _id: string
@@ -30,7 +30,7 @@ interface Product {
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  
   const [sortBy, setSortBy] = useState('newest')
   const [filters, setFilters] = useState({
     search: '',
@@ -128,25 +128,7 @@ export default function ProductsPage() {
             <div className="flex items-center gap-3 sm:gap-4">
               <ProductSort value={sortBy} onChange={handleSortChange} />
               
-              {/* View Mode Toggle */}
-              <div className="flex items-center border rounded-lg p-1">
-                <Button
-                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('grid')}
-                  className="h-8 w-8 p-0"
-                >
-                  <Grid3X3 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={viewMode === 'list' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('list')}
-                  className="h-8 w-8 p-0"
-                >
-                  <List className="h-4 w-4" />
-                </Button>
-              </div>
+              {/* View Mode Toggle removed */}
             </div>
 
             <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -206,10 +188,7 @@ export default function ProductsPage() {
                 </CardContent>
               </Card>
             ) : (
-              <ProductGrid
-                products={products}
-                viewMode={viewMode}
-              />
+              <ProductGrid products={products} />
             )}
 
             {/* Pagination */}
