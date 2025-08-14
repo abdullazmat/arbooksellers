@@ -80,7 +80,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'Content', href: '/admin/content', icon: FileText },
-    { name: 'Reviews', href: '/admin/reviews', icon: MessageSquare },
     { name: 'Comments', href: '/admin/comments', icon: MessageSquare },
     { name: 'Newsletter', href: '/admin/newsletter', icon: MessageSquare },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
