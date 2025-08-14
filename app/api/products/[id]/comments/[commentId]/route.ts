@@ -59,12 +59,12 @@ export async function PUT(
     comment.rating = rating || comment.rating
     comment.isEdited = true
     comment.editedAt = new Date()
-    comment.isApproved = false // Reset approval status after edit
+    comment.isApproved = true // Reset approval status after edit
 
     await comment.save()
 
     return NextResponse.json({
-      message: 'Comment updated successfully and awaiting approval',
+      message: 'Comment updated successfully',
       comment,
     })
 

@@ -133,9 +133,6 @@ export default function ProductComments({ productId }: ProductCommentsProps) {
     e.preventDefault();
     if (!editingComment) return;
 
-    console.log('Submitting edit for comment:', editingComment._id);
-    console.log('Edit form data:', editForm);
-
     try {
       setSubmitting(true);
       const response = await authenticatedFetch(
@@ -146,17 +143,10 @@ export default function ProductComments({ productId }: ProductCommentsProps) {
         }
       );
 
-      console.log('Edit response status:', response.status);
-      console.log('Edit response ok:', response.ok);
-
       if (!response.ok) {
         const error = await response.json();
-        console.log('Edit error response:', error);
         throw new Error(error.error || "Failed to update comment");
       }
-
-      const responseData = await response.json();
-      console.log('Edit success response:', responseData);
 
       toast({
         title: "Comment Updated",
@@ -168,7 +158,6 @@ export default function ProductComments({ productId }: ProductCommentsProps) {
       setEditForm({ content: "", rating: 5 });
       fetchComments();
     } catch (error: any) {
-      console.error('Edit comment error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to update comment",
@@ -211,17 +200,12 @@ export default function ProductComments({ productId }: ProductCommentsProps) {
   };
 
   const openEditForm = (comment: Comment) => {
-    console.log('Opening edit form for comment:', comment);
-    console.log('Comment content:', comment.content);
-    console.log('Comment rating:', comment.rating);
-    
     setEditingComment(comment);
     setEditForm({
       content: comment.content,
       rating: comment.rating,
     });
     
-    console.log('Edit form state set to:', { content: comment.content, rating: comment.rating });
     setShowEditForm(true);
   };
 
@@ -394,10 +378,6 @@ export default function ProductComments({ productId }: ProductCommentsProps) {
                           size="sm"
                           variant="outline"
                           onClick={() => {
-                            console.log('Edit button clicked for comment:', comment._id)
-                            console.log('Comment userId:', comment.userId)
-                            console.log('Current user _id:', user._id)
-                            console.log('User ID match:', comment.userId === user._id)
                             openEditForm(comment)
                           }}
                         >

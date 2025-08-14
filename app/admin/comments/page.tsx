@@ -1,190 +1,269 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from 'react'
-import { AdminLayout } from '@/components/admin/admin-layout'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
-import { useToast } from '@/hooks/use-toast'
-import { Search, MessageSquare, Check, X, Edit, Trash2, Eye, Star } from 'lucide-react'
-import { formatDate } from '@/lib/utils'
-import { authenticatedFetch } from '@/lib/api'
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { AdminLayout } from "@/components/admin/admin-layout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Search,
+  MessageSquare,
+  Check,
+  X,
+  Edit,
+  Trash2,
+  Eye,
+  Star,
+} from "lucide-react";
+import { formatDate } from "@/lib/utils";
+import { authenticatedFetch } from "@/lib/api";
 
 interface Comment {
-  _id: string
-  productId: string
-  userId: string
-  userName: string
-  userEmail: string
-  content: string
-  rating: number
-  isApproved: boolean
-  isEdited: boolean
-  editedAt?: string
-  createdAt: string
-  updatedAt: string
+  _id: string;
+  productId: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  content: string;
+  rating: number;
+  isApproved: boolean;
+  isEdited: boolean;
+  editedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  product?: {
+    _id: string;
+    name: string;
+    price: number;
+    images: string[];
+  };
 }
 
 export default function AdminCommentsPage() {
-  const { toast } = useToast()
-  const [comments, setComments] = useState<Comment[]>([])
-  const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState<'all' | 'approved' | 'pending'>('all')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [total, setTotal] = useState(0)
-  const [selectedComment, setSelectedComment] = useState<Comment | null>(null)
+  const router = useRouter();
+  const { toast } = useToast();
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<"all" | "approved" | "pending">("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [selectedComment, setSelectedComment] = useState<Comment | null>(null);
 
   const fetchComments = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const params = new URLSearchParams({
         page: currentPage.toString(),
-        limit: '20',
+        limit: "20",
         ...(search && { search }),
-        ...(filter !== 'all' && { isApproved: filter === 'approved' ? 'true' : 'false' })
-      })
+        ...(filter !== "all" && {
+          isApproved: filter === "approved" ? "true" : "false",
+        }),
+      });
 
-      const response = await authenticatedFetch(`/api/admin/comments?${params}`)
-      if (!response.ok) throw new Error('Failed to fetch comments')
+      const response = await authenticatedFetch(
+        `/api/admin/comments?${params}`
+      );
+      if (!response.ok) throw new Error("Failed to fetch comments");
 
-      const data = await response.json()
-      setComments(data.comments)
-      setTotalPages(data.pagination.pages)
-      setTotal(data.pagination.total)
+      const data = await response.json();
+
+      // Fetch product details for each comment
+      const commentsWithProducts = await Promise.all(
+        data.comments.map(async (comment: Comment) => {
+          try {
+            const productResponse = await authenticatedFetch(
+              `/api/products/${comment.productId}`
+            );
+            if (productResponse.ok) {
+              const productData = await productResponse.json();
+              return { ...comment, product: productData.product };
+            }
+          } catch (error) {
+            console.error(
+              `Failed to fetch product ${comment.productId}:`,
+              error
+            );
+          }
+          return comment;
+        })
+      );
+
+      setComments(commentsWithProducts);
+      setTotalPages(data.pagination.pages);
+      setTotal(data.pagination.total);
     } catch (error) {
-      console.error('Error fetching comments:', error)
+      console.error("Error fetching comments:", error);
       toast({
-        title: 'Error',
-        description: 'Failed to fetch comments',
-        variant: 'destructive',
-      })
+        title: "Error",
+        description: "Failed to fetch comments",
+        variant: "destructive",
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchComments()
-  }, [currentPage, search, filter])
+    fetchComments();
+  }, [currentPage, search, filter]);
 
   const handleSearch = (value: string) => {
-    setSearch(value)
-    setCurrentPage(1)
-  }
+    setSearch(value);
+    setCurrentPage(1);
+  };
 
-  const handleFilterChange = (newFilter: 'all' | 'approved' | 'pending') => {
-    setFilter(newFilter)
-    setCurrentPage(1)
-  }
+  const handleFilterChange = (newFilter: "all" | "approved" | "pending") => {
+    setFilter(newFilter);
+    setCurrentPage(1);
+  };
 
   const handleApproveComment = async (commentId: string) => {
     try {
-      const response = await authenticatedFetch(`/api/admin/comments/${commentId}/approve`, {
-        method: 'POST',
-      })
+      const response = await authenticatedFetch(
+        `/api/admin/comments/${commentId}/approve`,
+        {
+          method: "POST",
+        }
+      );
 
       if (response.ok) {
         toast({
-          title: 'Success',
-          description: 'Comment approved successfully',
-        })
-        fetchComments()
+          title: "Success",
+          description: "Comment approved successfully",
+        });
+        fetchComments();
       } else {
-        throw new Error('Failed to approve comment')
+        throw new Error("Failed to approve comment");
       }
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to approve comment',
-        variant: 'destructive',
-      })
+        title: "Error",
+        description: "Failed to approve comment",
+        variant: "destructive",
+      });
     }
-  }
+  };
 
   const handleRejectComment = async (commentId: string) => {
     try {
-      const response = await authenticatedFetch(`/api/admin/comments/${commentId}/reject`, {
-        method: 'POST',
-      })
+      const response = await authenticatedFetch(
+        `/api/admin/comments/${commentId}/reject`,
+        {
+          method: "POST",
+        }
+      );
 
       if (response.ok) {
         toast({
-          title: 'Success',
-          description: 'Comment rejected successfully',
-        })
-        fetchComments()
+          title: "Success",
+          description: "Comment rejected successfully",
+        });
+        fetchComments();
       } else {
-        throw new Error('Failed to reject comment')
+        throw new Error("Failed to reject comment");
       }
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to reject comment',
-        variant: 'destructive',
-      })
+        title: "Error",
+        description: "Failed to reject comment",
+        variant: "destructive",
+      });
     }
-  }
+  };
 
   const handleDeleteComment = async (commentId: string) => {
-    if (!confirm('Are you sure you want to delete this comment? This action cannot be undone.')) return
+    if (
+      !confirm(
+        "Are you sure you want to delete this comment? This action cannot be undone."
+      )
+    )
+      return;
 
     try {
-      const response = await authenticatedFetch(`/api/admin/comments/${commentId}`, {
-        method: 'DELETE',
-      })
+      const response = await authenticatedFetch(
+        `/api/admin/comments/${commentId}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       if (response.ok) {
         toast({
-          title: 'Success',
-          description: 'Comment deleted successfully',
-        })
-        fetchComments()
+          title: "Success",
+          description: "Comment deleted successfully",
+        });
+        fetchComments();
       } else {
-        throw new Error('Failed to delete comment')
+        throw new Error("Failed to delete comment");
       }
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to delete comment',
-        variant: 'destructive',
-      })
+        title: "Error",
+        description: "Failed to delete comment",
+        variant: "destructive",
+      });
     }
-  }
+  };
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
         className={`h-4 w-4 ${
-          i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+          i < rating ? "text-yellow-400 fill-current" : "text-gray-300"
         }`}
       />
-    ))
-  }
+    ));
+  };
 
   const stats = {
     total: total,
-    approved: comments.filter(c => c.isApproved).length,
-    pending: comments.filter(c => !c.isApproved).length,
-    thisMonth: comments.filter(c => {
-      const date = new Date(c.createdAt)
-      const now = new Date()
-      return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()
-    }).length
-  }
+    approved: comments.filter((c) => c.isApproved).length,
+    pending: comments.filter((c) => !c.isApproved).length,
+    thisMonth: comments.filter((c) => {
+      const date = new Date(c.createdAt);
+      const now = new Date();
+      return (
+        date.getMonth() === now.getMonth() &&
+        date.getFullYear() === now.getFullYear()
+      );
+    }).length,
+  };
 
   return (
     <AdminLayout>
       <div className="p-6 space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Comment Management</h1>
-            <p className="text-gray-600 mt-2">Manage product reviews and comments</p>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Comment Management
+            </h1>
+            <p className="text-gray-600 mt-2">
+              Manage product reviews and comments
+            </p>
           </div>
         </div>
 
@@ -192,7 +271,9 @@ export default function AdminCommentsPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Comments</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Comments
+              </CardTitle>
               <MessageSquare className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -205,7 +286,9 @@ export default function AdminCommentsPage() {
               <MessageSquare className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.approved}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {stats.approved}
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -214,7 +297,9 @@ export default function AdminCommentsPage() {
               <MessageSquare className="h-4 w-4 text-yellow-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+              <div className="text-2xl font-bold text-yellow-600">
+                {stats.pending}
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -223,7 +308,9 @@ export default function AdminCommentsPage() {
               <MessageSquare className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{stats.thisMonth}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {stats.thisMonth}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -243,20 +330,20 @@ export default function AdminCommentsPage() {
               </div>
               <div className="flex gap-2">
                 <Button
-                  variant={filter === 'all' ? 'default' : 'outline'}
-                  onClick={() => handleFilterChange('all')}
+                  variant={filter === "all" ? "default" : "outline"}
+                  onClick={() => handleFilterChange("all")}
                 >
                   All
                 </Button>
                 <Button
-                  variant={filter === 'approved' ? 'default' : 'outline'}
-                  onClick={() => handleFilterChange('approved')}
+                  variant={filter === "approved" ? "default" : "outline"}
+                  onClick={() => handleFilterChange("approved")}
                 >
                   Approved
                 </Button>
                 <Button
-                  variant={filter === 'pending' ? 'default' : 'outline'}
-                  onClick={() => handleFilterChange('pending')}
+                  variant={filter === "pending" ? "default" : "outline"}
+                  onClick={() => handleFilterChange("pending")}
                 >
                   Pending
                 </Button>
@@ -302,11 +389,68 @@ export default function AdminCommentsPage() {
                           <TableCell>
                             <div>
                               <p className="font-medium">{comment.userName}</p>
-                              <p className="text-sm text-gray-500">{comment.userEmail}</p>
+                              <p className="text-sm text-gray-500">
+                                {comment.userEmail}
+                              </p>
                             </div>
                           </TableCell>
                           <TableCell>
-                            <p className="text-sm text-gray-600">Product ID: {comment.productId}</p>
+                            {comment.product ? (
+                              <div className="flex items-center space-x-3">
+                                {comment.product.images &&
+                                  comment.product.images.length > 0 && (
+                                    <div className="relative">
+                                      <img
+                                        src={comment.product.images[0]}
+                                        alt={comment.product.name}
+                                        className="w-10 h-10 object-cover rounded-md"
+                                        onError={(e) => {
+                                          const target =
+                                            e.target as HTMLImageElement;
+                                          target.style.display = "none";
+                                        }}
+                                      />
+                                    </div>
+                                  )}
+                                <div className="flex-1 min-w-0">
+                                  <p
+                                    className="text-sm font-medium text-gray-900 truncate hover:text-green-600 cursor-pointer"
+                                    onClick={() =>
+                                      router.push(
+                                        `/products/${comment.productId}`
+                                      )
+                                    }
+                                  >
+                                    {comment.product.name}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    Rs{" "}
+                                    {comment.product.price.toLocaleString(
+                                      "en-IN"
+                                    )}
+                                  </p>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() =>
+                                    router.push(
+                                      `/products/${comment.productId}`
+                                    )
+                                  }
+                                  className="ml-2"
+                                >
+                                  View
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="text-sm text-gray-500">
+                                <p>Product ID: {comment.productId}</p>
+                                <p className="text-xs text-red-500">
+                                  Product not found
+                                </p>
+                              </div>
+                            )}
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-1">
@@ -319,15 +463,22 @@ export default function AdminCommentsPage() {
                                 {comment.content}
                               </p>
                               {comment.isEdited && (
-                                <Badge variant="secondary" className="text-xs mt-1">
+                                <Badge
+                                  variant="secondary"
+                                  className="text-xs mt-1"
+                                >
                                   Edited
                                 </Badge>
                               )}
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge variant={comment.isApproved ? 'default' : 'secondary'}>
-                              {comment.isApproved ? 'Approved' : 'Pending'}
+                            <Badge
+                              variant={
+                                comment.isApproved ? "default" : "secondary"
+                              }
+                            >
+                              {comment.isApproved ? "Approved" : "Pending"}
                             </Badge>
                           </TableCell>
                           <TableCell>
@@ -353,7 +504,9 @@ export default function AdminCommentsPage() {
                                 <Button
                                   size="sm"
                                   variant="default"
-                                  onClick={() => handleApproveComment(comment._id)}
+                                  onClick={() =>
+                                    handleApproveComment(comment._id)
+                                  }
                                 >
                                   <Check className="h-4 w-4" />
                                 </Button>
@@ -361,7 +514,9 @@ export default function AdminCommentsPage() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => handleRejectComment(comment._id)}
+                                  onClick={() =>
+                                    handleRejectComment(comment._id)
+                                  }
                                 >
                                   <X className="h-4 w-4" />
                                 </Button>
@@ -386,97 +541,114 @@ export default function AdminCommentsPage() {
                     <Pagination>
                       <PaginationContent>
                         <PaginationItem>
-                          <PaginationPrevious 
+                          <PaginationPrevious
                             href="#"
                             onClick={(e) => {
-                              e.preventDefault()
-                              setCurrentPage(Math.max(1, currentPage - 1))
+                              e.preventDefault();
+                              setCurrentPage(Math.max(1, currentPage - 1));
                             }}
-                            className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
+                            className={
+                              currentPage === 1
+                                ? "pointer-events-none opacity-50"
+                                : ""
+                            }
                           />
                         </PaginationItem>
-                        
+
                         {/* First page */}
                         {currentPage > 3 && (
                           <PaginationItem>
-                            <PaginationLink 
+                            <PaginationLink
                               href="#"
                               onClick={(e) => {
-                                e.preventDefault()
-                                setCurrentPage(1)
+                                e.preventDefault();
+                                setCurrentPage(1);
                               }}
                             >
                               1
                             </PaginationLink>
                           </PaginationItem>
                         )}
-                        
+
                         {/* Ellipsis */}
                         {currentPage > 4 && (
                           <PaginationItem>
                             <PaginationEllipsis />
                           </PaginationItem>
                         )}
-                        
+
                         {/* Page numbers around current page */}
-                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                          const pageNum = Math.max(1, Math.min(totalPages, currentPage - 2 + i))
-                          if (pageNum > 0 && pageNum <= totalPages) {
-                            return (
-                              <PaginationItem key={pageNum}>
-                                <PaginationLink 
-                                  href="#"
-                                  onClick={(e) => {
-                                    e.preventDefault()
-                                    setCurrentPage(pageNum)
-                                  }}
-                                  isActive={pageNum === currentPage}
-                                >
-                                  {pageNum}
-                                </PaginationLink>
-                              </PaginationItem>
-                            )
+                        {Array.from(
+                          { length: Math.min(5, totalPages) },
+                          (_, i) => {
+                            const pageNum = Math.max(
+                              1,
+                              Math.min(totalPages, currentPage - 2 + i)
+                            );
+                            if (pageNum > 0 && pageNum <= totalPages) {
+                              return (
+                                <PaginationItem key={pageNum}>
+                                  <PaginationLink
+                                    href="#"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      setCurrentPage(pageNum);
+                                    }}
+                                    isActive={pageNum === currentPage}
+                                  >
+                                    {pageNum}
+                                  </PaginationLink>
+                                </PaginationItem>
+                              );
+                            }
+                            return null;
                           }
-                          return null
-                        })}
-                        
+                        )}
+
                         {/* Ellipsis */}
                         {currentPage < totalPages - 3 && (
                           <PaginationItem>
                             <PaginationEllipsis />
                           </PaginationItem>
                         )}
-                        
+
                         {/* Last page */}
                         {currentPage < totalPages - 2 && (
                           <PaginationItem>
-                            <PaginationLink 
+                            <PaginationLink
                               href="#"
                               onClick={(e) => {
-                                e.preventDefault()
-                                setCurrentPage(totalPages)
+                                e.preventDefault();
+                                setCurrentPage(totalPages);
                               }}
                             >
                               {totalPages}
                             </PaginationLink>
                           </PaginationItem>
                         )}
-                        
+
                         <PaginationItem>
-                          <PaginationNext 
+                          <PaginationNext
                             href="#"
                             onClick={(e) => {
-                              e.preventDefault()
-                              setCurrentPage(Math.min(totalPages, currentPage + 1))
+                              e.preventDefault();
+                              setCurrentPage(
+                                Math.min(totalPages, currentPage + 1)
+                              );
                             }}
-                            className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
+                            className={
+                              currentPage === totalPages
+                                ? "pointer-events-none opacity-50"
+                                : ""
+                            }
                           />
                         </PaginationItem>
                       </PaginationContent>
                     </Pagination>
-                    
+
                     <div className="text-center text-sm text-gray-600 mt-4">
-                      Page {currentPage} of {totalPages} • {comments.length} comments per page
+                      Page {currentPage} of {totalPages} • {comments.length}{" "}
+                      comments per page
                     </div>
                   </div>
                 )}
@@ -493,52 +665,76 @@ export default function AdminCommentsPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-600">User Name:</label>
+                    <label className="text-sm font-medium text-gray-600">
+                      User Name:
+                    </label>
                     <p className="text-gray-900">{selectedComment.userName}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-600">User Email:</label>
+                    <label className="text-sm font-medium text-gray-600">
+                      User Email:
+                    </label>
                     <p className="text-gray-900">{selectedComment.userEmail}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-600">Product ID:</label>
+                    <label className="text-sm font-medium text-gray-600">
+                      Product ID:
+                    </label>
                     <p className="text-gray-900">{selectedComment.productId}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-600">Rating:</label>
+                    <label className="text-sm font-medium text-gray-600">
+                      Rating:
+                    </label>
                     <div className="flex gap-1 mt-1">
                       {renderStars(selectedComment.rating)}
                     </div>
                   </div>
                 </div>
-                
+
                 <div>
-                  <label className="text-sm font-medium text-gray-600">Comment:</label>
+                  <label className="text-sm font-medium text-gray-600">
+                    Comment:
+                  </label>
                   <p className="text-gray-900 mt-1 p-3 bg-gray-50 rounded-md">
                     {selectedComment.content}
                   </p>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-600">Status:</label>
-                    <Badge variant={selectedComment.isApproved ? 'default' : 'secondary'}>
-                      {selectedComment.isApproved ? 'Approved' : 'Pending'}
+                    <label className="text-sm font-medium text-gray-600">
+                      Status:
+                    </label>
+                    <Badge
+                      variant={
+                        selectedComment.isApproved ? "default" : "secondary"
+                      }
+                    >
+                      {selectedComment.isApproved ? "Approved" : "Pending"}
                     </Badge>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-600">Created:</label>
-                    <p className="text-gray-900">{formatDate(selectedComment.createdAt)}</p>
+                    <label className="text-sm font-medium text-gray-600">
+                      Created:
+                    </label>
+                    <p className="text-gray-900">
+                      {formatDate(selectedComment.createdAt)}
+                    </p>
                   </div>
                   {selectedComment.isEdited && (
                     <div>
-                      <label className="text-sm font-medium text-gray-600">Edited:</label>
-                      <p className="text-gray-900">{formatDate(selectedComment.editedAt!)}</p>
+                      <label className="text-sm font-medium text-gray-600">
+                        Edited:
+                      </label>
+                      <p className="text-gray-900">
+                        {formatDate(selectedComment.editedAt!)}
+                      </p>
                     </div>
                   )}
                 </div>
               </div>
-              
+
               <div className="flex gap-2 mt-6">
                 <Button
                   variant="outline"
@@ -550,8 +746,8 @@ export default function AdminCommentsPage() {
                 {!selectedComment.isApproved ? (
                   <Button
                     onClick={() => {
-                      handleApproveComment(selectedComment._id)
-                      setSelectedComment(null)
+                      handleApproveComment(selectedComment._id);
+                      setSelectedComment(null);
                     }}
                     className="flex-1"
                   >
@@ -562,8 +758,8 @@ export default function AdminCommentsPage() {
                   <Button
                     variant="outline"
                     onClick={() => {
-                      handleRejectComment(selectedComment._id)
-                      setSelectedComment(null)
+                      handleRejectComment(selectedComment._id);
+                      setSelectedComment(null);
                     }}
                     className="flex-1"
                   >
@@ -574,8 +770,8 @@ export default function AdminCommentsPage() {
                 <Button
                   variant="destructive"
                   onClick={() => {
-                    handleDeleteComment(selectedComment._id)
-                    setSelectedComment(null)
+                    handleDeleteComment(selectedComment._id);
+                    setSelectedComment(null);
                   }}
                   className="flex-1"
                 >
@@ -588,5 +784,5 @@ export default function AdminCommentsPage() {
         )}
       </div>
     </AdminLayout>
-  )
+  );
 }
