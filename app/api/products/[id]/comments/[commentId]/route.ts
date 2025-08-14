@@ -47,7 +47,7 @@ export async function PUT(
     }
 
     // Check if user owns the comment
-    if (comment.userId !== user.id) {
+    if (comment.userId !== user.userId) {
       return NextResponse.json(
         { error: 'You can only edit your own comments' },
         { status: 403 }
@@ -104,7 +104,7 @@ export async function DELETE(
     }
 
     // Check if user owns the comment
-    if (comment.userId !== user.id) {
+    if (comment.userId !== user.userId) {
       return NextResponse.json(
         { error: 'You can only delete your own comments' },
         { status: 403 }
