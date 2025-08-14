@@ -43,53 +43,31 @@ export default function OrderConfirmationPage() {
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null)
   const [loading, setLoading] = useState(true)
   
-  // Generate a stable order number that won't change between renders
-  const orderNumber = React.useMemo(() => {
-    return `ORD-${Math.floor(Math.random() * 100000000).toString().padStart(8, '0')}`
-  }, [])
-
   useEffect(() => {
-    // In a real app, you would fetch order details from the API
-    // For now, we'll simulate the order data
-    const mockOrder: OrderDetails = {
-      orderNumber: orderNumber,
-      items: [
-        {
-          title: 'The Noble Quran - Arabic & English',
-          price: 29.99,
-          quantity: 1,
-          image: '/quran-islamic-books.png'
-        },
-        {
-          title: 'Sahih Al-Bukhari Complete Set',
-          price: 89.99,
-          quantity: 1,
-          image: '/quran-islamic-books.png'
+    try {
+      const stored = localStorage.getItem('lastOrder')
+      if (stored) {
+        const order = JSON.parse(stored)
+        const details: OrderDetails = {
+          orderNumber: order.orderNumber || `ORD-${order._id?.slice(-8)?.toUpperCase() || Math.floor(Math.random()*1e8).toString().padStart(8,'0')}`,
+          items: order.items?.map((it: any) => ({
+            title: it.title,
+            price: it.price,
+            quantity: it.quantity,
+            image: it.image,
+          })) || [],
+          shippingAddress: order.shippingAddress,
+          paymentMethod: order.paymentMethod === 'cash_on_delivery' ? 'Cash on Delivery' : order.paymentMethod,
+          subtotal: order.subtotal,
+          shippingCost: order.shippingCost,
+          tax: order.tax,
+          total: order.total,
+          estimatedDelivery: '3-5 business days',
         }
-      ],
-      shippingAddress: {
-        fullName: 'John Doe',
-        email: 'john.doe@example.com',
-        phone: '+1 (555) 123-4567',
-        address: '123 Main Street',
-        city: 'New York',
-        state: 'NY',
-        zipCode: '10001',
-        country: 'United States'
-      },
-      paymentMethod: 'Cash on Delivery',
-      subtotal: 119.98,
-      shippingCost: 0,
-      tax: 9.60,
-      total: 129.58,
-      estimatedDelivery: '3-5 business days'
-    }
-
-    // Simulate API delay
-    setTimeout(() => {
-      setOrderDetails(mockOrder)
-      setLoading(false)
-    }, 1000)
+        setOrderDetails(details)
+      }
+    } catch {}
+    setLoading(false)
   }, [])
 
   if (loading) {

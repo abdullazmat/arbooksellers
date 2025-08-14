@@ -23,16 +23,26 @@ export async function GET(request: NextRequest) {
       query.orderStatus = status;
     }
 
-    const orders = await Order.find(query)
+    const orders = await Order.find({ user: auth.userId })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
+      .populate('items.product', 'title images')
       .lean();
+
+    // Transform orders to include orderNumber and normalize address
+    const transformedOrders = orders.map(o => ({
+      ...o,
+      shippingAddress: {
+        ...o.shippingAddress,
+        street: o.shippingAddress.address || o.shippingAddress.street || 'N/A'
+      }
+    }));
 
     const total = await Order.countDocuments(query);
 
     return NextResponse.json({
-      orders,
+      orders: transformedOrders,
       pagination: {
         page,
         limit,

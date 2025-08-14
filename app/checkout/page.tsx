@@ -15,12 +15,14 @@ import { Textarea } from '@/components/ui/textarea'
 import Image from 'next/image'
 import { CheckCircle, Loader2, Truck, DollarSign, ShieldCheck, ShoppingCart } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/contexts/auth-context'
 import { formatPrice } from '@/lib/utils'
 
 export default function CheckoutPage() {
   const { items: cartItems, total: cartTotal, clearCart } = useCart()
   const router = useRouter()
   const { toast } = useToast()
+  const { user, token } = useAuth()
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -36,6 +38,8 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState('cash_on_delivery')
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [registerPassword, setRegisterPassword] = useState('')
+  const [registerConfirmPassword, setRegisterConfirmPassword] = useState('')
 
   useEffect(() => {
     if (cartItems.length === 0) {
@@ -70,6 +74,10 @@ export default function CheckoutPage() {
     if (!formData.state.trim()) newErrors.state = 'State/Province is required.'
     if (!formData.zipCode.trim()) newErrors.zipCode = 'Zip Code is required.'
     if (!formData.country.trim()) newErrors.country = 'Country is required.'
+    if (!user) {
+      if (!registerPassword || registerPassword.length < 6) newErrors.password = 'Password must be at least 6 characters.'
+      if (registerPassword !== registerConfirmPassword) newErrors.confirmPassword = 'Passwords do not match.'
+    }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -87,23 +95,109 @@ export default function CheckoutPage() {
 
     setIsLoading(true)
     try {
-      // Simulate API call for order placement
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      let tokenForOrder: string | null = token
+      let currentUser = user
+      // If not authenticated, register the user silently
+      if (!currentUser) {
+        const signupRes = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formData.fullName,
+            email: formData.email,
+            password: registerPassword,
+            phone: formData.phone,
+          }),
+        })
+        const signupData = await signupRes.json()
+        if (!signupRes.ok) {
+          throw new Error(signupData.error || 'Failed to create account')
+        }
+        // Persist auth and use token for subsequent calls
+        try {
+          localStorage.setItem('token', signupData.token)
+          localStorage.setItem('user', JSON.stringify(signupData.user))
+        } catch {}
+        tokenForOrder = signupData.token
+        currentUser = signupData.user
 
-      // In a real application, you would send formData and cartItems to your backend
-      console.log('Order placed:', {
-        shippingInfo: formData,
+        // Save address as default
+        try {
+          await fetch('/api/user/addresses', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${tokenForOrder}`,
+            },
+            body: JSON.stringify({
+              type: 'home',
+              address: formData.address,
+              city: formData.city,
+              state: formData.state,
+              zipCode: formData.zipCode,
+              country: formData.country,
+              isDefault: true,
+            }),
+          })
+        } catch {}
+      }
+
+      const shippingCost = cartTotal >= 50 ? 0 : 5.0
+      const taxRate = 0.08
+      const taxAmount = cartTotal * taxRate
+      const finalTotal = cartTotal + shippingCost + taxAmount
+
+      const orderPayload = {
+        items: cartItems.map(item => ({
+          product: item.id,
+          title: item.title,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image,
+        })),
+        shippingAddress: {
+          fullName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.zipCode,
+          country: formData.country,
+        },
         paymentMethod,
-        items: cartItems,
-        total: cartTotal,
+        subtotal: cartTotal,
+        shippingCost,
+        tax: taxAmount,
+        total: finalTotal,
+        notes: formData.notes || undefined,
+      }
+
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${tokenForOrder}`,
+        },
+        body: JSON.stringify(orderPayload),
       })
+
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to place order')
+      }
+
+      // Persist last order for confirmation screen
+      try {
+        localStorage.setItem('lastOrder', JSON.stringify(data.order))
+      } catch {}
 
       clearCart()
       toast({
         title: 'Order Placed Successfully!',
         description: 'Your order has been received and will be processed shortly.',
       })
-      router.push('/order-confirmation') // Redirect to a confirmation page
+      router.push('/order-confirmation')
     } catch (error) {
       console.error('Order placement failed:', error)
       toast({
@@ -149,6 +243,28 @@ export default function CheckoutPage() {
         </h1>
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {!user && (
+            <Card className="lg:col-span-3 glass shadow-modern border border-white/20 animate-fade-in-left">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-islamic-green-700">Create Your Account</CardTitle>
+                <CardDescription className="text-muted-foreground">We'll create your account with the details below so you can track your order.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="password">Password <span className="text-red-500">*</span></Label>
+                    <Input id="password" type="password" value={registerPassword} onChange={(e) => setRegisterPassword(e.target.value)} className={errors.password ? 'border-red-500' : ''} />
+                    {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+                  </div>
+                  <div>
+                    <Label htmlFor="confirmPassword">Confirm Password <span className="text-red-500">*</span></Label>
+                    <Input id="confirmPassword" type="password" value={registerConfirmPassword} onChange={(e) => setRegisterConfirmPassword(e.target.value)} className={errors.confirmPassword ? 'border-red-500' : ''} />
+                    {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
           {/* Shipping Information */}
           <Card className="lg:col-span-2 glass shadow-modern border border-white/20 animate-fade-in-left stagger-1">
             <CardHeader>

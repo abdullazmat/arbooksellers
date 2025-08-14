@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Order from '@/models/Order';
 import { verifyToken } from '@/lib/auth';
+import { generateOrderNumber } from '@/lib/utils';
 
 // POST - Create new order
 export async function POST(request: NextRequest) {
@@ -38,6 +39,7 @@ export async function POST(request: NextRequest) {
     const order = new Order({
       ...orderData,
       user: decoded.userId,
+      orderNumber: generateOrderNumber(),
     });
 
     await order.save();
