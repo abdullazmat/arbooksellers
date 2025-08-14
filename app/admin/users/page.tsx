@@ -34,6 +34,7 @@ import {
   PaginationNext, 
   PaginationPrevious 
 } from '@/components/ui/pagination'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 interface AdminUser {
   _id: string
@@ -61,6 +62,7 @@ export default function AdminUsersPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const { toast } = useToast()
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null)
 
   useEffect(() => {
     fetchUsers()
@@ -274,7 +276,7 @@ export default function AdminUsersPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end space-x-2">
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" onClick={() => setSelectedUser(user)}>
                             <Eye className="h-4 w-4" />
                           </Button>
                         </div>
@@ -388,6 +390,78 @@ export default function AdminUsersPage() {
           </CardContent>
         </Card>
       </div>
+      {/* User detail modal */}
+      <UserDetailDialog user={selectedUser} onClose={() => setSelectedUser(null)} />
     </AdminLayout>
   )
 } 
+
+// User detail dialog
+// Rendered at the end to avoid layout shifts
+function UserDetailDialog({ user, onClose }: { user: AdminUser | null; onClose: () => void }) {
+  return (
+    <Dialog open={!!user} onOpenChange={(open) => { if (!open) onClose() }}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>User Details</DialogTitle>
+          <DialogDescription>Complete user information</DialogDescription>
+        </DialogHeader>
+        {user && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-600">Name</p>
+                <p className="font-medium text-gray-900">{user.name}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Email</p>
+                <p className="font-medium text-gray-900">{user.email}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Role</p>
+                <p className="font-medium text-gray-900 capitalize">{user.role}</p>
+              </div>
+              {user.phone && (
+                <div>
+                  <p className="text-sm text-gray-600">Phone</p>
+                  <p className="font-medium text-gray-900">{user.phone}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-sm text-gray-600">Joined</p>
+                <p className="font-medium text-gray-900">{new Date(user.createdAt).toLocaleDateString()}</p>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-600 mb-2">Addresses</p>
+              {user.addresses && user.addresses.length > 0 ? (
+                <div className="space-y-2">
+                  {user.addresses.map((addr, idx) => (
+                    <div key={idx} className="p-3 rounded border text-sm">
+                      <div className="flex justify-between">
+                        <span className="font-medium capitalize">{addr.type}</span>
+                        {addr.isDefault && (
+                          <Badge className="text-xs">Default</Badge>
+                        )}
+                      </div>
+                      <div className="text-gray-700 mt-1">
+                        {addr.address}, {addr.city}, {addr.state}, {addr.country} {addr.zipCode}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No addresses available</p>
+              )}
+            </div>
+
+            <div className="flex justify-end">
+              <Button variant="outline" onClick={onClose}>Close</Button>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  )
+}
