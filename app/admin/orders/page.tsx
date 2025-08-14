@@ -54,8 +54,10 @@ interface Order {
   }>
   shippingAddress: {
     fullName: string
+    address: string
     city: string
     state: string
+    zipCode: string
     country: string
   }
   paymentMethod: string
@@ -75,6 +77,8 @@ export default function AdminOrdersPage() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  const [showOrderModal, setShowOrderModal] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -364,7 +368,14 @@ export default function AdminOrdersPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end space-x-2">
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedOrder(order)
+                              setShowOrderModal(true)
+                            }}
+                          >
                             <Eye className="h-4 w-4" />
                           </Button>
                         </div>
@@ -477,6 +488,138 @@ export default function AdminOrdersPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Order Details Modal */}
+        {showOrderModal && selectedOrder && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Order Details - #{selectedOrder.orderNumber || selectedOrder._id.slice(-8)}
+                  </h2>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setShowOrderModal(false)
+                      setSelectedOrder(null)
+                    }}
+                  >
+                    ✕
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Order Information */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Order Information</h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Order Number:</span>
+                        <span className="font-medium">#{selectedOrder.orderNumber || selectedOrder._id.slice(-8)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Order Date:</span>
+                        <span className="font-medium">{formatDate(selectedOrder.createdAt)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Status:</span>
+                        <Badge className={getStatusColor(selectedOrder.orderStatus)}>
+                          {selectedOrder.orderStatus}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Payment Status:</span>
+                        <Badge className={getPaymentStatusColor(selectedOrder.paymentStatus)}>
+                          {selectedOrder.paymentStatus}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Payment Method:</span>
+                        <span className="font-medium">{selectedOrder.paymentMethod}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Customer Information */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Customer Information</h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Name:</span>
+                        <span className="font-medium">{selectedOrder.shippingAddress.fullName}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Email:</span>
+                        <span className="font-medium">{selectedOrder.user.email}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Shipping Address */}
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Shipping Address</h3>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <p className="text-sm text-gray-900">
+                      {selectedOrder.shippingAddress.address}<br />
+                      {selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state} {selectedOrder.shippingAddress.zipCode}<br />
+                      {selectedOrder.shippingAddress.country}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Order Items */}
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Order Items</h3>
+                  <div className="space-y-3">
+                    {selectedOrder.items.map((item, index) => (
+                      <div key={index} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
+                        <img
+                          src={item.product?.image || '/placeholder.svg'}
+                          alt={item.title}
+                          className="w-16 h-16 object-cover rounded"
+                        />
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900">{item.title}</h4>
+                          <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium text-gray-900">{formatPrice(item.price)}</p>
+                          <p className="text-sm text-gray-600">Total: {formatPrice(item.price * item.quantity)}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Order Summary */}
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Order Summary</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Subtotal:</span>
+                      <span className="font-medium">{formatPrice(selectedOrder.subtotal)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Shipping:</span>
+                      <span className="font-medium">{formatPrice(selectedOrder.shippingCost)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Tax:</span>
+                      <span className="font-medium">{formatPrice(selectedOrder.tax)}</span>
+                    </div>
+                    <div className="flex justify-between text-lg font-bold">
+                      <span className="text-gray-900">Total:</span>
+                      <span className="text-green-600">{formatPrice(selectedOrder.total)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AdminLayout>
   )

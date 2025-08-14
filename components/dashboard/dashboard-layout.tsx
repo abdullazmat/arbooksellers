@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/contexts/auth-context'
-import { User, ShoppingBag, MapPin, Heart, Settings, LogOut, Menu, X, LayoutDashboard } from 'lucide-react'
+import { User, ShoppingBag, MapPin, Heart, LogOut, Menu, X, LayoutDashboard } from 'lucide-react'
 
 const navigation = [
   { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
@@ -15,7 +15,6 @@ const navigation = [
   { name: 'Profile', href: '/dashboard/profile', icon: User },
   { name: 'Addresses', href: '/dashboard/addresses', icon: MapPin },
   { name: 'Wishlist', href: '/wishlist', icon: Heart },
-  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ]
 
 interface DashboardLayoutProps {
@@ -25,7 +24,7 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
-  const { user, logout } = useAuth()
+  const { user, signOut } = useAuth()
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -66,7 +65,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 variant="outline"
                 size="sm"
                 className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50"
-                onClick={logout}
+                onClick={signOut}
               >
                 <LogOut className="mr-2 h-4 w-4" />
                 Sign Out
@@ -125,7 +124,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     variant="outline"
                     size="sm"
                     className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50"
-                    onClick={logout}
+                    onClick={signOut}
                   >
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign Out

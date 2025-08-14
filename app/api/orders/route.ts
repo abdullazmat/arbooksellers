@@ -36,13 +36,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Create order with user ID from token
+    const orderNumber = generateOrderNumber();
+    console.log('Generated order number:', orderNumber);
+    
     const order = new Order({
       ...orderData,
       user: decoded.userId,
-      orderNumber: generateOrderNumber(),
+      orderNumber: orderNumber,
     });
 
+    console.log('Order object before save:', order);
     await order.save();
+    console.log('Order saved successfully with ID:', order._id);
 
     return NextResponse.json({
       message: 'Order created successfully',

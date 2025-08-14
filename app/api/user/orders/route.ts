@@ -11,6 +11,9 @@ export async function GET(request: NextRequest) {
     }
 
     await dbConnect();
+    console.log('Database connected successfully');
+    console.log('Order model:', Order);
+    
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
@@ -30,14 +33,21 @@ export async function GET(request: NextRequest) {
       .populate('items.product', 'title images')
       .lean();
 
+    console.log('Raw orders from database:', orders);
+    console.log('First order orderNumber:', orders[0]?.orderNumber);
+
     // Transform orders to include orderNumber and normalize address
     const transformedOrders = orders.map(o => ({
       ...o,
+      orderNumber: o.orderNumber,
       shippingAddress: {
         ...o.shippingAddress,
         street: o.shippingAddress.address || o.shippingAddress.street || 'N/A'
       }
     }));
+
+    console.log('Transformed orders:', transformedOrders);
+    console.log('First transformed order orderNumber:', transformedOrders[0]?.orderNumber);
 
     const total = await Order.countDocuments(query);
 

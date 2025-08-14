@@ -270,18 +270,6 @@ export function ProfileSettings() {
 
                 <Separator />
 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Account Deletion</h4>
-                    <p className="text-sm text-gray-600">
-                      Permanently delete your account and all data
-                    </p>
-                  </div>
-                  <Button variant="outline" className="text-red-600 hover:text-red-700">
-                    Delete Account
-                  </Button>
-                </div>
-
                 <div className="flex justify-end space-x-3">
                   <Button
                     type="submit"

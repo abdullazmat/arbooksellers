@@ -40,9 +40,10 @@ export default function CheckoutPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [registerPassword, setRegisterPassword] = useState('')
   const [registerConfirmPassword, setRegisterConfirmPassword] = useState('')
+  const [isOrderProcessing, setIsOrderProcessing] = useState(false)
 
   useEffect(() => {
-    if (cartItems.length === 0) {
+    if (cartItems.length === 0 && !isOrderProcessing) {
       router.push('/cart')
       toast({
         title: 'Your cart is empty!',
@@ -50,7 +51,77 @@ export default function CheckoutPage() {
         variant: 'destructive',
       })
     }
-  }, [cartItems, router, toast])
+  }, [cartItems, router, toast, isOrderProcessing])
+
+  // Fetch and auto-fill user's default address
+  useEffect(() => {
+    const fetchUserAddress = async () => {
+      if (user && token) {
+        try {
+          const response = await fetch('/api/user/addresses', {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          })
+          
+          if (response.ok) {
+            const data = await response.json()
+            console.log('Address API response:', data)
+            
+            // Check if the response has the expected structure
+            if (data && Array.isArray(data.addresses)) {
+              const addresses = data.addresses
+              const defaultAddress = addresses.find((addr: any) => addr.isDefault)
+              
+              if (defaultAddress) {
+                setFormData(prev => ({
+                  ...prev,
+                  fullName: user.name || '',
+                  email: user.email || '',
+                  phone: user.phone || '',
+                  address: defaultAddress.address || '',
+                  city: defaultAddress.city || '',
+                  state: defaultAddress.state || '',
+                  zipCode: defaultAddress.zipCode || '',
+                  country: defaultAddress.country || '',
+                }))
+              } else {
+                // No default address, just fill user info
+                setFormData(prev => ({
+                  ...prev,
+                  fullName: user.name || '',
+                  email: user.email || '',
+                  phone: user.phone || '',
+                }))
+              }
+            } else {
+              console.warn('Unexpected address API response structure:', data)
+              // Fallback: just fill user info
+              setFormData(prev => ({
+                ...prev,
+                fullName: user.name || '',
+                email: user.email || '',
+                phone: user.phone || '',
+              }))
+            }
+          } else {
+            console.warn('Address API response not ok:', response.status)
+            // Fallback: just fill user info
+            setFormData(prev => ({
+              ...prev,
+              fullName: user.name || '',
+              email: user.email || '',
+              phone: user.phone || '',
+            }))
+          }
+        } catch (error) {
+          console.error('Error fetching user address:', error)
+        }
+      }
+    }
+
+    fetchUserAddress()
+  }, [user, token])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -94,6 +165,7 @@ export default function CheckoutPage() {
     }
 
     setIsLoading(true)
+    setIsOrderProcessing(true)
     try {
       let tokenForOrder: string | null = token
       let currentUser = user
@@ -121,7 +193,7 @@ export default function CheckoutPage() {
         tokenForOrder = signupData.token
         currentUser = signupData.user
 
-        // Save address as default
+        // Save address as default for new user
         try {
           await fetch('/api/user/addresses', {
             method: 'POST',
@@ -139,7 +211,72 @@ export default function CheckoutPage() {
               isDefault: true,
             }),
           })
-        } catch {}
+        } catch (error) {
+          console.error('Error saving address for new user:', error)
+        }
+      } else {
+        // User is already logged in, check if address exists and update or add
+        try {
+          // First check if user already has this address
+          const existingAddressResponse = await fetch('/api/user/addresses', {
+            headers: {
+              'Authorization': `Bearer ${tokenForOrder}`,
+            },
+          })
+          
+          if (existingAddressResponse.ok) {
+            const existingData = await existingAddressResponse.json()
+            const existingAddresses = existingData.addresses || []
+            
+            // Check if this address already exists (by comparing key fields)
+            const existingAddress = existingAddresses.find((addr: any) => 
+              addr.address === formData.address &&
+              addr.city === formData.city &&
+              addr.state === formData.state &&
+              addr.zipCode === formData.zipCode &&
+              addr.country === formData.country
+            )
+            
+            if (existingAddress) {
+              // Address exists, update it to be default if it's not already
+              if (!existingAddress.isDefault) {
+                await fetch('/api/user/addresses', {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${tokenForOrder}`,
+                  },
+                  body: JSON.stringify({
+                    addressId: existingAddress._id,
+                    addressData: { ...existingAddress, isDefault: true }
+                  }),
+                })
+              }
+              console.log('Existing address updated to default')
+            } else {
+              // Address doesn't exist, add new one
+              await fetch('/api/user/addresses', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${tokenForOrder}`,
+                },
+                body: JSON.stringify({
+                  type: 'home',
+                  address: formData.address,
+                  city: formData.city,
+                  state: formData.state,
+                  zipCode: formData.zipCode,
+                  country: formData.country,
+                  isDefault: true,
+                }),
+              })
+              console.log('New address added as default')
+            }
+          }
+        } catch (error) {
+          console.error('Error managing address for existing user:', error)
+        }
       }
 
       const shippingCost = cartTotal >= 50 ? 0 : 5.0
@@ -187,17 +324,44 @@ export default function CheckoutPage() {
         throw new Error(data.error || 'Failed to place order')
       }
 
+      console.log('Order created successfully:', data)
+      console.log('Order data to be stored:', data.order)
+
       // Persist last order for confirmation screen
       try {
         localStorage.setItem('lastOrder', JSON.stringify(data.order))
-      } catch {}
+        console.log('Order saved to localStorage successfully')
+      } catch (error) {
+        console.error('Error saving order to localStorage:', error)
+      }
 
+      // Clear cart first but keep isOrderProcessing true to prevent redirect
       clearCart()
+      console.log('Cart cleared')
+      
       toast({
         title: 'Order Placed Successfully!',
         description: 'Your order has been received and will be processed shortly.',
       })
-      router.push('/order-confirmation')
+      
+      console.log('Toast shown, pushing to /order-confirmation')
+      
+      // Force redirect immediately and prevent any interference
+      try {
+        router.push('/order-confirmation')
+        console.log('Router.push called')
+      } catch (error) {
+        console.error('Router.push failed, using window.location:', error)
+        window.location.href = '/order-confirmation'
+      }
+      
+      // Fallback redirect in case router.push doesn't work
+      setTimeout(() => {
+        console.log('Fallback redirect triggered')
+        if (window.location.pathname !== '/order-confirmation') {
+          window.location.href = '/order-confirmation'
+        }
+      }, 500)
     } catch (error) {
       console.error('Order placement failed:', error)
       toast({
@@ -207,6 +371,7 @@ export default function CheckoutPage() {
       })
     } finally {
       setIsLoading(false)
+      setIsOrderProcessing(false)
     }
   }
 
