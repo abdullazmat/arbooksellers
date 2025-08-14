@@ -19,12 +19,12 @@ interface Product {
   images: string[]
   inStock: boolean
   featured: boolean
-  rating?: number
-  reviews?: number
   size?: string
   pages?: number
   paper?: string
   binding?: string
+  rating?: number
+  reviews?: number
 }
 
 export default function ProductsPage() {

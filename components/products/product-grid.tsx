@@ -20,12 +20,12 @@ interface Product {
   images: string[]
   inStock: boolean
   featured: boolean
-  rating?: number
-  reviews?: number
   size?: string
   pages?: number
   paper?: string
   binding?: string
+  rating?: number
+  reviews?: number
 }
 
 interface ProductGridProps {
@@ -104,11 +104,16 @@ export function ProductGrid({ products, viewMode }: ProductGridProps) {
                       by {product.author}
                     </CardDescription>
                     <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
-                      {product.rating && (
+                      {product.rating && product.rating > 0 ? (
                         <div className="flex items-center gap-1">
                           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span>{product.rating.toFixed(1)}</span>
+                          <span>{Number(product.rating).toFixed(1)}</span>
                           <span>({product.reviews || 0})</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 text-gray-400">
+                          <Star className="h-4 w-4" />
+                          <span>No ratings yet</span>
                         </div>
                       )}
                     </div>
@@ -219,9 +224,15 @@ export function ProductGrid({ products, viewMode }: ProductGridProps) {
             {/* Status Badges */}
             <div className="absolute top-2 left-2 flex flex-col gap-1">
               {product.featured && (
-                <Badge variant="secondary" className="text-xs px-2 py-1">Featured</Badge>
+                <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-medium shadow-md">
+                  Featured
+                </Badge>
               )}
-              <Badge variant={product.inStock ? 'default' : 'destructive'} className="text-xs px-2 py-1">
+              <Badge className={`text-xs font-medium shadow-md ${
+                product.inStock 
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white' 
+                  : 'bg-gradient-to-r from-gray-500 to-gray-600 text-white'
+              }`}>
                 {product.inStock ? 'In Stock' : 'Out of Stock'}
               </Badge>
             </div>
@@ -240,11 +251,16 @@ export function ProductGrid({ products, viewMode }: ProductGridProps) {
             </CardDescription>
 
             {/* Rating */}
-            {product.rating && (
+            {product.rating && product.rating > 0 ? (
               <div className="flex items-center gap-1 mb-1.5 sm:mb-2 lg:mb-3">
                 <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-yellow-400 text-yellow-400" />
-                <span className="text-xs sm:text-sm font-medium">{product.rating.toFixed(1)}</span>
+                <span className="text-xs sm:text-sm font-medium">{Number(product.rating).toFixed(1)}</span>
                 <span className="text-xs text-gray-500">({product.reviews || 0})</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 mb-1.5 sm:mb-2 lg:mb-3 text-gray-400">
+                <Star className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="text-xs sm:text-sm">No ratings yet</span>
               </div>
             )}
 

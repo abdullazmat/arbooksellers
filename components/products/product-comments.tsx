@@ -227,7 +227,7 @@ export default function ProductComments({ productId }: ProductCommentsProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5" />
-            Customer Reviews & Comments ({totalComments})
+            Customer Reviews ({totalComments})
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">

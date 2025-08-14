@@ -10,8 +10,6 @@ export interface IProduct extends Document {
   stockQuantity: number
   description?: string
   featured: boolean
-  rating?: number
-  reviews?: number
   size?: string
   pages?: number
   paper?: string
@@ -61,17 +59,6 @@ const productSchema = new Schema<IProduct>({
   featured: {
     type: Boolean,
     default: false,
-  },
-  rating: {
-    type: Number,
-    min: 0,
-    max: 5,
-    default: 0,
-  },
-  reviews: {
-    type: Number,
-    min: 0,
-    default: 0,
   },
   size: {
     type: String,

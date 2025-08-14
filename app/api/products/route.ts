@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db'
 import Product from '@/models/Product'
+import Comment from '@/models/Comment'
 
 export async function GET(request: NextRequest) {
   try {
@@ -60,12 +61,44 @@ export async function GET(request: NextRequest) {
         sortObj.createdAt = -1
     }
 
-    // Get products
-    const products = await Product.find(query)
-      .sort(sortObj)
-      .skip(skip)
-      .limit(limit)
-      .lean()
+    // Get products with rating aggregation
+    const products = await Product.aggregate([
+      { $match: query },
+      {
+        $lookup: {
+          from: 'comments',
+          let: { productIdStr: { $toString: '$_id' } },
+          as: 'comments',
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$productId', '$$productIdStr'] },
+                    { $eq: ['$isApproved', true] }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        $addFields: {
+          rating: {
+            $cond: {
+              if: { $gt: [{ $size: '$comments' }, 0] },
+              then: { $round: [{ $avg: '$comments.rating' }, 1] },
+              else: 0
+            }
+          },
+          reviews: { $size: '$comments' }
+        }
+      },
+      { $sort: sortObj },
+      { $skip: skip },
+      { $limit: limit }
+    ])
 
     // Get total count
     const total = await Product.countDocuments(query)

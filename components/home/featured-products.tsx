@@ -18,8 +18,6 @@ interface Product {
   author?: string
   price: number
   originalPrice?: number
-  rating?: number
-  reviews?: number
   images: string[]
   featured: boolean
   inStock: boolean
@@ -28,6 +26,8 @@ interface Product {
   pages?: number
   paper?: string
   binding?: string
+  rating?: number
+  reviews?: number
 }
 
 export default function FeaturedProducts() {
@@ -230,6 +230,22 @@ export default function FeaturedProducts() {
                   className="transition-transform duration-300 hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
+                
+                {/* Status Pills - Top Left */}
+                <div className="absolute top-2 left-2 flex flex-col gap-1">
+                  {product.featured && (
+                    <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-medium shadow-md">
+                      Featured
+                    </Badge>
+                  )}
+                  {product.inStock && (
+                    <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-medium shadow-md">
+                      In Stock
+                    </Badge>
+                  )}
+                </div>
+                
+                {/* Discount Badge - Top Right */}
                 {product.originalPrice && product.originalPrice > product.price && (
                   <div className="absolute top-2 right-2">
                     <Badge className="bg-red-500 text-white">
@@ -237,8 +253,10 @@ export default function FeaturedProducts() {
                     </Badge>
                   </div>
                 )}
+                
+                {/* Out of Stock Badge - Bottom Left (if no stock) */}
                 {!product.inStock && (
-                  <div className="absolute top-2 left-2">
+                  <div className="absolute bottom-2 left-2">
                     <Badge variant="secondary" className="bg-gray-500 text-white">
                       Out of Stock
                     </Badge>
@@ -263,7 +281,12 @@ export default function FeaturedProducts() {
                   </div>
                   <div className="flex items-center gap-1 text-sm text-islamic-gold-500">
                     <Star className="h-4 w-4 fill-islamic-gold-500" />
-                    <span>{product.rating?.toFixed(1) || '0.0'} ({product.reviews || 0})</span>
+                    <span>
+                      {product.rating && product.rating > 0 
+                        ? `${Number(product.rating).toFixed(1)} (${product.reviews || 0})`
+                        : 'No ratings yet'
+                      }
+                    </span>
                   </div>
                 </div>
                 <div className="flex gap-2 mt-3">
