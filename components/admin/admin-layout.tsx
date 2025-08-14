@@ -1,96 +1,103 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { 
-  LayoutDashboard, 
-  Package, 
-  ShoppingCart, 
-  Users, 
-  Settings, 
-  LogOut, 
+import { useState, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  Users,
+  Settings,
+  LogOut,
   Menu,
   X,
   FileText,
-  MessageSquare
-} from 'lucide-react'
-import { useToast } from '@/hooks/use-toast'
-import { useAuth } from '@/contexts/auth-context'
+  MessageSquare,
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/auth-context";
 
 interface AdminLayoutProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 export function AdminLayout({ children }: AdminLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const router = useRouter()
-  const pathname = usePathname()
-  const { toast } = useToast()
-  const { user, isLoading } = useAuth()
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+  const { toast } = useToast();
+  const { user, isLoading } = useAuth();
 
   useEffect(() => {
-    console.log('AdminLayout useEffect - isLoading:', isLoading, 'user:', user)
-    console.log('User details:', user ? { id: user._id, name: user.name, email: user.email, role: user.role } : 'No user')
-    
+    console.log("AdminLayout useEffect - isLoading:", isLoading, "user:", user);
+    console.log(
+      "User details:",
+      user
+        ? { id: user._id, name: user.name, email: user.email, role: user.role }
+        : "No user"
+    );
+
     // Don't redirect while auth is still loading
     if (isLoading) {
-      console.log('Auth still loading, waiting...')
-      return
+      console.log("Auth still loading, waiting...");
+      return;
     }
 
     // Check if user is authenticated and has admin role
     if (!user) {
-      console.log('No user found, redirecting to signin')
-      router.push('/auth/signin')
-      return
+      console.log("No user found, redirecting to signin");
+      router.push("/auth/signin");
+      return;
     }
 
-    console.log('User found, role:', user.role, 'Expected role: admin')
-    if (user.role !== 'admin') {
-      console.log('User is not admin, redirecting to home. User role:', user.role)
+    console.log("User found, role:", user.role, "Expected role: admin");
+    if (user.role !== "admin") {
+      console.log(
+        "User is not admin, redirecting to home. User role:",
+        user.role
+      );
       toast({
-        title: 'Access Denied',
-        description: 'You do not have permission to access the admin panel',
-        variant: 'destructive',
-      })
-      router.push('/')
-      return
+        title: "Access Denied",
+        description: "You do not have permission to access the admin panel",
+        variant: "destructive",
+      });
+      router.push("/");
+      return;
     }
 
-    console.log('User is admin, allowing access to admin panel')
-  }, [user, isLoading, router, toast])
+    console.log("User is admin, allowing access to admin panel");
+  }, [user, isLoading, router, toast]);
 
   const handleLogout = () => {
     // Clear auth data
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
     toast({
-      title: 'Logged out',
-      description: 'You have been successfully logged out',
-    })
-    router.push('/')
-  }
+      title: "Logged out",
+      description: "You have been successfully logged out",
+    });
+    router.push("/");
+  };
 
   const navigation = [
-    { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-    { name: 'Products', href: '/admin/products', icon: Package },
-    { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
-    { name: 'Users', href: '/admin/users', icon: Users },
-    { name: 'Content', href: '/admin/content', icon: FileText },
-    { name: 'Comments', href: '/admin/comments', icon: MessageSquare },
-    { name: 'Newsletter', href: '/admin/newsletter', icon: MessageSquare },
-    { name: 'Settings', href: '/admin/settings', icon: Settings },
-  ]
+    { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+    { name: "Products", href: "/admin/products", icon: Package },
+    { name: "Orders", href: "/admin/orders", icon: ShoppingCart },
+    { name: "Users", href: "/admin/users", icon: Users },
+    { name: "Comments", href: "/admin/comments", icon: MessageSquare },
+    { name: "Newsletter", href: "/admin/newsletter", icon: MessageSquare },
+    { name: "Settings", href: "/admin/settings", icon: Settings },
+  ];
 
   const isActiveTab = (href: string) => {
-    if (href === '/admin') {
-      return pathname === '/admin'
+    if (href === "/admin") {
+      return pathname === "/admin";
     }
-    return pathname.startsWith(href)
-  }
+    return pathname.startsWith(href);
+  };
 
   if (isLoading || !user) {
     return (
@@ -100,32 +107,38 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <p className="mt-2 text-gray-600">Loading...</p>
         </div>
       </div>
-    )
+    );
   }
 
   // Check if user has admin role
-  if (user.role !== 'admin') {
+  if (user.role !== "admin") {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="text-red-600 text-xl mb-4">Access Denied</div>
-          <p className="text-gray-600">You do not have permission to access the admin panel</p>
-          <Button 
-            onClick={() => router.push('/')} 
-            className="mt-4"
-          >
+          <p className="text-gray-600">
+            You do not have permission to access the admin panel
+          </p>
+          <Button onClick={() => router.push("/")} className="mt-4">
             Go Home
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Mobile sidebar */}
-      <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
+      <div
+        className={`fixed inset-0 z-50 lg:hidden ${
+          sidebarOpen ? "block" : "hidden"
+        }`}
+      >
+        <div
+          className="fixed inset-0 bg-gray-600 bg-opacity-75"
+          onClick={() => setSidebarOpen(false)}
+        />
         <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white">
           <div className="flex h-16 items-center justify-between px-4 border-b">
             <h1 className="text-lg font-semibold text-gray-900">Admin Panel</h1>
@@ -144,14 +157,18 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 href={item.href}
                 className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
                   isActiveTab(item.href)
-                    ? 'bg-green-100 text-green-700 border-r-2 border-green-600'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? "bg-green-100 text-green-700 border-r-2 border-green-600"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 }`}
                 onClick={() => setSidebarOpen(false)}
               >
-                <item.icon className={`mr-3 h-5 w-5 ${
-                  isActiveTab(item.href) ? 'text-green-600' : 'text-gray-400 group-hover:text-gray-500'
-                }`} />
+                <item.icon
+                  className={`mr-3 h-5 w-5 ${
+                    isActiveTab(item.href)
+                      ? "text-green-600"
+                      : "text-gray-400 group-hover:text-gray-500"
+                  }`}
+                />
                 {item.name}
               </Link>
             ))}
@@ -161,7 +178,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <div className="flex-shrink-0">
                 <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
                   <span className="text-sm font-medium text-gray-700">
-                    {user.name?.charAt(0) || 'A'}
+                    {user.name?.charAt(0) || "A"}
                   </span>
                 </div>
               </div>
@@ -196,13 +213,17 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 href={item.href}
                 className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
                   isActiveTab(item.href)
-                    ? 'bg-green-100 text-green-700 border-r-2 border-green-600'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? "bg-green-100 text-green-700 border-r-2 border-green-600"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 }`}
               >
-                <item.icon className={`mr-3 h-5 w-5 ${
-                  isActiveTab(item.href) ? 'text-green-600' : 'text-gray-400 group-hover:text-gray-500'
-                }`} />
+                <item.icon
+                  className={`mr-3 h-5 w-5 ${
+                    isActiveTab(item.href)
+                      ? "text-green-600"
+                      : "text-gray-400 group-hover:text-gray-500"
+                  }`}
+                />
                 {item.name}
               </Link>
             ))}
@@ -212,7 +233,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <div className="flex-shrink-0">
                 <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
                   <span className="text-sm font-medium text-gray-700">
-                    {user.name?.charAt(0) || 'A'}
+                    {user.name?.charAt(0) || "A"}
                   </span>
                 </div>
               </div>
@@ -251,7 +272,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <div className="flex items-center gap-x-4 lg:gap-x-6">
               <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-gray-200" />
               <div className="flex items-center gap-x-4">
-                <span className="text-sm text-gray-700">Welcome, {user.name}</span>
+                <span className="text-sm text-gray-700">
+                  Welcome, {user.name}
+                </span>
               </div>
             </div>
           </div>
@@ -265,5 +288,5 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </main>
       </div>
     </div>
-  )
+  );
 }

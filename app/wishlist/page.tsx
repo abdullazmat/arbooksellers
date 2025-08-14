@@ -11,12 +11,15 @@ import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { formatPrice } from '@/lib/utils'
+import { useEffect, useState } from "react";
+import { ProductCard, ProductCardData } from "@/components/products/product-card";
 
 export default function WishlistPage() {
   const { items, removeItem, clearWishlist, isLoading } = useWishlist();
   const { addItem } = useCart();
   const { user } = useAuth();
   const { toast } = useToast();
+  const [products, setProducts] = useState<ProductCardData[]>([]);
 
   const handleAddToCart = (item: any) => {
     addItem({
@@ -46,6 +49,71 @@ export default function WishlistPage() {
       description: "All items have been removed from your wishlist.",
     });
   };
+
+  // Load full product details for wishlist items to render unified ProductCard
+  useEffect(() => {
+    const loadDetails = async () => {
+      try {
+        // Build unique product ids from wishlist items
+        const ids = Array.from(
+          new Set(
+            items.map((item) => {
+              if (typeof item.product === 'string') return item.product;
+              if (item.product && typeof item.product === 'object' && '_id' in item.product) {
+                return (item.product as any)._id.toString();
+              }
+              return String(item.product || '');
+            })
+          )
+        ).filter(Boolean);
+
+        if (ids.length === 0) {
+          setProducts([]);
+          return;
+        }
+
+        const results = await Promise.all(
+          ids.map(async (id) => {
+            try {
+              const res = await fetch(`/api/products/${id}`);
+              if (!res.ok) return null;
+              const data = await res.json();
+              return data.product as any;
+            } catch {
+              return null;
+            }
+          })
+        );
+
+        const detailed = results
+          .filter((p): p is any => !!p)
+          .map((p) => ({
+            _id: p._id,
+            title: p.title,
+            author: p.author,
+            price: p.price,
+            originalPrice: p.originalPrice,
+            images: p.images || [],
+            featured: !!p.featured,
+            inStock: !!p.inStock,
+            stockQuantity: p.stockQuantity,
+            size: p.size,
+            pages: p.pages,
+            paper: p.paper,
+            binding: p.binding,
+            rating: p.rating,
+            reviews: p.reviews,
+          })) as ProductCardData[];
+
+        setProducts(detailed);
+      } catch {
+        setProducts([]);
+      }
+    };
+
+    if (items.length > 0) loadDetails();
+    else setProducts([]);
+  }, [items]);
 
   // Show login prompt if user is not authenticated
   if (!user) {
@@ -146,93 +214,9 @@ export default function WishlistPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {items.map((item) => {
-            // Ensure product ID is a string - handle both string and object cases
-            let productId: string;
-            if (typeof item.product === 'string') {
-              productId = item.product;
-            } else if (item.product && typeof item.product === 'object' && '_id' in item.product) {
-              productId = (item.product as any)._id.toString();
-            } else {
-              productId = String(item.product || '');
-            }
-            
-            return (
-              <Card
-                key={productId}
-                className="group hover:shadow-lg transition-shadow duration-300"
-              >
-                <CardContent className="p-0">
-                  <div className="relative overflow-hidden rounded-t-lg">
-                    <img
-                      src={item.image || "/placeholder.svg"}
-                      alt={item.title}
-                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute top-2 right-2 h-8 w-8 p-0 bg-white/90 hover:bg-white text-red-500"
-                      onClick={() => handleRemoveItem(productId, item.title)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-
-                    <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <Button
-                        size="sm"
-                        className="w-full bg-green-600 hover:bg-green-700"
-                        onClick={() => handleAddToCart(item)}
-                      >
-                        <ShoppingCart className="h-4 w-4 mr-1" />
-                        Add to Cart
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">
-                      <Link
-                        href={`/products/${productId}`}
-                        className="hover:text-green-600 transition-colors"
-                      >
-                        {item.title}
-                      </Link>
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-3">by {item.author}</p>
-                    <p className="text-sm text-gray-600">
-                      {formatPrice(item.price)}
-                    </p>
-
-                    <div className="flex items-center justify-between">
-                      <div className="text-lg font-bold text-green-600">
-                        {formatPrice(item.price)}
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleAddToCart(item)}
-                        >
-                          <ShoppingCart className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                          onClick={() => handleRemoveItem(productId, item.title)}
-                        >
-                          <Heart className="h-4 w-4 fill-current" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {products.map((product) => (
+            <ProductCard key={product._id} product={product} />
+          ))}
         </div>
 
         <div className="mt-12 text-center">
