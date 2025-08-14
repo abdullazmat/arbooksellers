@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import { useEffect, useState } from 'react'
 
@@ -14,6 +14,7 @@ export function ClientOnly({ children, fallback = null }: ClientOnlyProps) {
     setHasMounted(true)
   }, [])
 
+  // Prevent hydration mismatch by not rendering anything until mounted
   if (!hasMounted) {
     return <>{fallback}</>
   }

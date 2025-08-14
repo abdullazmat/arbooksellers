@@ -43,13 +43,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Check for existing token on mount
   useEffect(() => {
+    console.log('AuthContext useEffect - checking stored auth data')
     const storedToken = localStorage.getItem('token')
     const storedUser = localStorage.getItem('user')
     
+    console.log('Stored token:', !!storedToken, 'Stored user:', !!storedUser)
+    
     if (storedToken && storedUser) {
       try {
+        const parsedUser = JSON.parse(storedUser)
+        console.log('Parsed user:', parsedUser, 'Role:', parsedUser.role)
         setToken(storedToken)
-        setUser(JSON.parse(storedUser))
+        setUser(parsedUser)
       } catch (error) {
         console.error('Error parsing stored user data:', error)
         localStorage.removeItem('token')
@@ -57,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
     setIsLoading(false)
+    console.log('AuthContext loading complete')
   }, [])
 
   const signIn = async (email: string, password: string): Promise<boolean> => {
@@ -92,6 +98,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: 'Login Successful',
         description: `Welcome back, ${data.user.name}!`,
       })
+
+      console.log('data.user.role:', data.user.role)
+
+      // Redirect based on user role using window.location for more reliable navigation
+      setTimeout(() => {
+        if (data.user.role === 'admin') {
+          console.log('Redirecting admin to /admin')
+          window.location.href = '/admin'
+        } else {
+          console.log('Redirecting user to /dashboard')
+          window.location.href = '/dashboard'
+        }
+      }, 100) // Small delay to ensure toast is shown
 
       return true
     } catch (error) {
@@ -140,6 +159,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: 'Registration Successful',
         description: `Welcome, ${data.user.name}! Your account has been created.`,
       })
+
+      // Redirect based on user role using window.location for more reliable navigation
+      setTimeout(() => {
+        if (data.user.role === 'admin') {
+          console.log('Redirecting admin to /admin')
+          window.location.href = '/admin'
+        } else {
+          console.log('Redirecting user to /dashboard')
+          window.location.href = '/dashboard'
+        }
+      }, 100) // Small delay to ensure toast is shown
 
       return true
     } catch (error) {

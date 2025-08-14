@@ -2,6 +2,7 @@ import dbConnect from '../lib/db';
 import Product from '../models/Product';
 import User from '../models/User';
 import Newsletter from '../models/Newsletter';
+import Comment from '../models/Comment';
 
 const products = [
   {
@@ -231,87 +232,131 @@ const products = [
 ];
 
 const newsletterSubscriptions = [
+  { email: 'ahmed.hassan@example.com', name: 'Ahmed Hassan', subscribed: true, subscribedAt: new Date('2024-01-15'), tags: ['quran', 'hadith'] },
+  { email: 'fatima.ali@example.com', name: 'Fatima Ali', subscribed: true, subscribedAt: new Date('2024-02-20'), tags: ['children', 'education'] },
+  { email: 'omar.khan@example.com', name: 'Omar Khan', subscribed: true, subscribedAt: new Date('2024-03-10'), tags: ['islamic studies', 'theology'] },
+  { email: 'aisha.rahman@example.com', name: 'Aisha Rahman', subscribed: false, subscribedAt: new Date('2024-01-05'), unsubscribedAt: new Date('2024-02-15'), tags: ['general'] },
+  { email: 'muhammad.ibrahim@example.com', name: 'Muhammad Ibrahim', subscribed: true, subscribedAt: new Date('2024-03-25'), tags: ['tafsir', 'quran'] }
+]
+
+const sampleComments = [
   {
-    email: 'ahmed.hassan@example.com',
-    name: 'Ahmed Hassan',
-    subscribed: true,
-    subscribedAt: new Date('2024-01-15'),
-    tags: ['quran', 'hadith']
+    productId: '6899fcbe4dc62e0d8d82e172', // Quran book
+    userId: 'user1',
+    userName: 'Ahmed Hassan',
+    userEmail: 'ahmed.hassan@example.com',
+    content: 'Excellent quality Quran with beautiful calligraphy. The paper quality is superb and the binding is very durable. Highly recommended for daily recitation.',
+    rating: 5,
+    isApproved: true,
+    isEdited: false,
+    createdAt: new Date('2024-01-20'),
   },
   {
-    email: 'fatima.ali@example.com',
-    name: 'Fatima Ali',
-    subscribed: true,
-    subscribedAt: new Date('2024-02-20'),
-    tags: ['children', 'education']
+    productId: '6899fcbe4dc62e0d8d82e172', // Quran book
+    userId: 'user2',
+    userName: 'Fatima Ali',
+    userEmail: 'fatima.ali@example.com',
+    content: 'This Quran is perfect for my children. The text is clear and easy to read. They love the beautiful cover design.',
+    rating: 4,
+    isApproved: true,
+    isEdited: false,
+    createdAt: new Date('2024-02-15'),
   },
   {
-    email: 'omar.khan@example.com',
-    name: 'Omar Khan',
-    subscribed: true,
-    subscribedAt: new Date('2024-03-10'),
-    tags: ['islamic studies', 'theology']
+    productId: '6899fcbe4dc62e0d8d82e173', // Hadith collection
+    userId: 'user3',
+    userName: 'Omar Khan',
+    userEmail: 'omar.khan@example.com',
+    content: 'Comprehensive collection of authentic hadith. The translation is clear and the commentary is very helpful for understanding.',
+    rating: 5,
+    isApproved: true,
+    isEdited: false,
+    createdAt: new Date('2024-03-01'),
   },
   {
-    email: 'aisha.rahman@example.com',
-    name: 'Aisha Rahman',
-    subscribed: false,
-    subscribedAt: new Date('2024-01-05'),
-    unsubscribedAt: new Date('2024-02-15'),
-    tags: ['general']
+    productId: '6899fcbe4dc62e0d8d82e174', // Islamic studies book
+    userId: 'user4',
+    userName: 'Aisha Rahman',
+    userEmail: 'aisha.rahman@example.com',
+    content: 'Great book for beginners in Islamic studies. The content is well-organized and easy to follow.',
+    rating: 4,
+    isApproved: false, // Pending approval
+    isEdited: false,
+    createdAt: new Date('2024-03-20'),
   },
   {
-    email: 'muhammad.ibrahim@example.com',
-    name: 'Muhammad Ibrahim',
-    subscribed: true,
-    subscribedAt: new Date('2024-03-25'),
-    tags: ['tafsir', 'quran']
+    productId: '6899fcbe4dc62e0d8d82e175', // Children's book
+    userId: 'user5',
+    userName: 'Muhammad Ibrahim',
+    userEmail: 'muhammad.ibrahim@example.com',
+    content: 'My kids absolutely love this book! The stories are engaging and the illustrations are beautiful. Perfect for teaching Islamic values.',
+    rating: 5,
+    isApproved: true,
+    isEdited: true,
+    editedAt: new Date('2024-03-22'),
+    createdAt: new Date('2024-03-18'),
   }
-];
+]
 
 async function seedDatabase() {
   try {
-    await dbConnect();
+    await dbConnect()
     
-    // Drop the existing collections to avoid index conflicts
-    await Product.collection.drop();
-    console.log('Dropped existing products collection');
+    // Drop existing collections
+    await Product.collection.drop()
+    console.log('Dropped existing products collection')
     
-    await Newsletter.collection.drop();
-    console.log('Dropped existing newsletter collection');
+    await Newsletter.collection.drop()
+    console.log('Dropped existing newsletter collection')
     
-    // Insert new products
-    const insertedProducts = await Product.insertMany(products);
-    console.log(`Inserted ${insertedProducts.length} products`);
+    await Comment.collection.drop()
+    console.log('Dropped existing comments collection')
     
-    // Insert newsletter subscriptions
-    const insertedNewsletters = await Newsletter.insertMany(newsletterSubscriptions);
-    console.log(`Inserted ${insertedNewsletters.length} newsletter subscriptions`);
+    // Insert new data
+    const insertedProducts = await Product.insertMany(products)
+    console.log(`Inserted ${insertedProducts.length} products`)
     
-    // Create a default admin user
-    const adminEmail = 'admin@islamicbooks.com';
-    const existingAdmin = await User.findOne({ email: adminEmail });
+    const insertedNewsletters = await Newsletter.insertMany(newsletterSubscriptions)
+    console.log(`Inserted ${insertedNewsletters.length} newsletter subscriptions`)
     
-    if (!existingAdmin) {
-      const adminUser = new User({
+    const insertedComments = await Comment.insertMany(sampleComments)
+    console.log(`Inserted ${insertedComments.length} sample comments`)
+    
+    // Create admin user if it doesn't exist
+    const adminEmail = 'admin@islamicbooks.com'
+    let adminUser = await User.findOne({ email: adminEmail })
+    
+    if (!adminUser) {
+      adminUser = new User({
         name: 'Admin User',
         email: adminEmail,
-        password: 'admin123',
+        password: 'admin123', // This will be hashed by the pre-save hook
         role: 'admin',
-        phone: '+1234567890'
-      });
+        phone: '+92-300-1234567',
+        addresses: [
+          {
+            type: 'home',
+            address: '123 Islamic Center',
+            city: 'Karachi',
+            state: 'Sindh',
+            zipCode: '75000',
+            country: 'Pakistan',
+            isDefault: true,
+          },
+        ],
+      })
       
-      await adminUser.save();
-      console.log('Created admin user');
+      await adminUser.save()
+      console.log('Created admin user:', adminEmail)
     } else {
-      console.log('Admin user already exists');
+      console.log('Admin user already exists:', adminEmail)
     }
     
-    console.log('Database seeding completed successfully!');
-    process.exit(0);
+    console.log('Database seeding completed successfully!')
+    process.exit(0)
   } catch (error) {
-    console.error('Error seeding database:', error);
-    process.exit(1);
+    console.error('Error seeding database:', error)
+    process.exit(1)
   }
 }
 

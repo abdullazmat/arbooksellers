@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/auth-context'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 import { formatPrice } from '@/lib/utils'
+import ProductComments from '@/components/products/product-comments'
 
 interface Product {
   _id: string
@@ -349,6 +350,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             </Card>
           </div>
         </div>
+
+        {/* Product Comments */}
+        <ProductComments productId={id} />
       </main>
       <Footer />
     </>

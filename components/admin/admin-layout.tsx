@@ -17,6 +17,7 @@ import {
   MessageSquare
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/contexts/auth-context'
 
 interface AdminLayoutProps {
   children: React.ReactNode
@@ -24,36 +25,53 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [adminUser, setAdminUser] = useState<any>(null)
   const router = useRouter()
   const pathname = usePathname()
   const { toast } = useToast()
+  const { user, isLoading } = useAuth()
 
   useEffect(() => {
-    const adminToken = localStorage.getItem('adminToken')
-    const adminUserData = localStorage.getItem('adminUser')
-
-    if (!adminToken || !adminUserData) {
-      router.push('/admin/login')
+    console.log('AdminLayout useEffect - isLoading:', isLoading, 'user:', user)
+    console.log('User details:', user ? { id: user._id, name: user.name, email: user.email, role: user.role } : 'No user')
+    
+    // Don't redirect while auth is still loading
+    if (isLoading) {
+      console.log('Auth still loading, waiting...')
       return
     }
 
-    try {
-      setAdminUser(JSON.parse(adminUserData))
-    } catch (error) {
-      console.error('Error parsing admin user data:', error)
-      router.push('/admin/login')
+    // Check if user is authenticated and has admin role
+    if (!user) {
+      console.log('No user found, redirecting to signin')
+      router.push('/auth/signin')
+      return
     }
-  }, [router])
+
+    console.log('User found, role:', user.role, 'Expected role: admin')
+    if (user.role !== 'admin') {
+      console.log('User is not admin, redirecting to home. User role:', user.role)
+      toast({
+        title: 'Access Denied',
+        description: 'You do not have permission to access the admin panel',
+        variant: 'destructive',
+      })
+      router.push('/')
+      return
+    }
+
+    console.log('User is admin, allowing access to admin panel')
+  }, [user, isLoading, router, toast])
 
   const handleLogout = () => {
-    localStorage.removeItem('adminToken')
-    localStorage.removeItem('adminUser')
+    // Clear auth data
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    
     toast({
       title: 'Logged out',
       description: 'You have been successfully logged out',
     })
-    router.push('/admin/login')
+    router.push('/')
   }
 
   const navigation = [
@@ -63,6 +81,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'Content', href: '/admin/content', icon: FileText },
     { name: 'Reviews', href: '/admin/reviews', icon: MessageSquare },
+    { name: 'Comments', href: '/admin/comments', icon: MessageSquare },
     { name: 'Newsletter', href: '/admin/newsletter', icon: MessageSquare },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
   ]
@@ -74,12 +93,30 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     return pathname.startsWith(href)
   }
 
-  if (!adminUser) {
+  if (isLoading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
           <p className="mt-2 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Check if user has admin role
+  if (user.role !== 'admin') {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="text-red-600 text-xl mb-4">Access Denied</div>
+          <p className="text-gray-600">You do not have permission to access the admin panel</p>
+          <Button 
+            onClick={() => router.push('/')} 
+            className="mt-4"
+          >
+            Go Home
+          </Button>
         </div>
       </div>
     )
@@ -125,13 +162,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <div className="flex-shrink-0">
                 <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
                   <span className="text-sm font-medium text-gray-700">
-                    {adminUser.name?.charAt(0) || 'A'}
+                    {user.name?.charAt(0) || 'A'}
                   </span>
                 </div>
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-700">{adminUser.name}</p>
-                <p className="text-xs text-gray-500">{adminUser.email}</p>
+                <p className="text-sm font-medium text-gray-700">{user.name}</p>
+                <p className="text-xs text-gray-500">{user.email}</p>
               </div>
             </div>
             <Button
@@ -176,13 +213,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <div className="flex-shrink-0">
                 <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
                   <span className="text-sm font-medium text-gray-700">
-                    {adminUser.name?.charAt(0) || 'A'}
+                    {user.name?.charAt(0) || 'A'}
                   </span>
                 </div>
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-700">{adminUser.name}</p>
-                <p className="text-xs text-gray-500">{adminUser.email}</p>
+                <p className="text-sm font-medium text-gray-700">{user.name}</p>
+                <p className="text-xs text-gray-500">{user.email}</p>
               </div>
             </div>
             <Button
@@ -215,7 +252,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <div className="flex items-center gap-x-4 lg:gap-x-6">
               <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-gray-200" />
               <div className="flex items-center gap-x-4">
-                <span className="text-sm text-gray-700">Welcome, {adminUser.name}</span>
+                <span className="text-sm text-gray-700">Welcome, {user.name}</span>
               </div>
             </div>
           </div>
