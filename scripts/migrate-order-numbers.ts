@@ -7,20 +7,42 @@ async function migrateOrderNumbers() {
     await dbConnect();
     console.log('Connected to database');
 
-    // Find all orders without order numbers
-    const ordersWithoutNumbers = await Order.find({ orderNumber: { $exists: false } });
-    console.log(`Found ${ordersWithoutNumbers.length} orders without order numbers`);
+    // Find all orders without order numbers or with old format
+    const ordersToUpdate = await Order.find({
+      $or: [
+        { orderNumber: { $exists: false } },
+        { orderNumber: { $regex: /^ORD-/ } } // Old format
+      ]
+    });
+    
+    console.log(`Found ${ordersToUpdate.length} orders to update`);
 
-    if (ordersWithoutNumbers.length === 0) {
-      console.log('All orders already have order numbers');
+    if (ordersToUpdate.length === 0) {
+      console.log('All orders already have new format order numbers');
       process.exit(0);
     }
 
-    // Generate and assign order numbers
-    for (const order of ordersWithoutNumbers) {
+    // Generate and assign new order numbers
+    for (const order of ordersToUpdate) {
       const orderNumber = generateOrderNumber();
-      await Order.findByIdAndUpdate(order._id, { orderNumber });
-      console.log(`Updated order ${order._id} with order number: ${orderNumber}`);
+      
+      // Ensure uniqueness by checking if this order number already exists
+      let isUnique = false;
+      let attempts = 0;
+      let finalOrderNumber = orderNumber;
+      
+      while (!isUnique && attempts < 10) {
+        const existingOrder = await Order.findOne({ orderNumber: finalOrderNumber });
+        if (!existingOrder) {
+          isUnique = true;
+        } else {
+          finalOrderNumber = generateOrderNumber();
+          attempts++;
+        }
+      }
+      
+      await Order.findByIdAndUpdate(order._id, { orderNumber: finalOrderNumber });
+      console.log(`Updated order ${order._id} with order number: ${finalOrderNumber}`);
     }
 
     console.log('Migration completed successfully');

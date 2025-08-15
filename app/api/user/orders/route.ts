@@ -33,8 +33,9 @@ export async function GET(request: NextRequest) {
       .populate('items.product', 'title images')
       .lean();
 
-    console.log('Raw orders from database:', orders);
+    console.log('User orders API - Raw orders from database:', orders);
     console.log('First order orderNumber:', orders[0]?.orderNumber);
+    console.log('First order _id:', orders[0]?._id);
 
     // Transform orders to include orderNumber and normalize address
     const transformedOrders = orders.map(o => ({

@@ -49,7 +49,7 @@ export default function OrderConfirmationPage() {
       if (stored) {
         const order = JSON.parse(stored)
         const details: OrderDetails = {
-          orderNumber: order.orderNumber || `ORD-${order._id?.slice(-8)?.toUpperCase() || Math.floor(Math.random()*1e8).toString().padStart(8,'0')}`,
+          orderNumber: order.orderNumber || order._id?.slice(-6) || Math.floor(Math.random() * 900000 + 100000).toString(),
           items: order.items?.map((it: any) => ({
             title: it.title,
             price: it.price,

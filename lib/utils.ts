@@ -107,7 +107,11 @@ export function formatPriceWithDecimals(amount: number, currency: string = 'Rs',
 
 // Generate unique order number
 export function generateOrderNumber(): string {
-  const timestamp = Date.now().toString();
-  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  return `ORD-${timestamp.slice(-8)}-${random}`;
+  // Generate a 6-digit numeric order number
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 1000000);
+  const orderNumber = (timestamp % 1000000 + random) % 1000000;
+  const paddedOrderNumber = orderNumber.toString().padStart(6, '0');
+  
+  return paddedOrderNumber;
 }

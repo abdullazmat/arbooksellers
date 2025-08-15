@@ -578,32 +578,30 @@ export default function AdminCommentsPage() {
                         )}
 
                         {/* Page numbers around current page */}
-                        {Array.from(
-                          { length: Math.min(5, totalPages) },
-                          (_, i) => {
-                            const pageNum = Math.max(
-                              1,
-                              Math.min(totalPages, currentPage - 2 + i)
-                            );
-                            if (pageNum > 0 && pageNum <= totalPages) {
-                              return (
-                                <PaginationItem key={pageNum}>
-                                  <PaginationLink
-                                    href="#"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      setCurrentPage(pageNum);
-                                    }}
-                                    isActive={pageNum === currentPage}
-                                  >
-                                    {pageNum}
-                                  </PaginationLink>
-                                </PaginationItem>
-                              );
-                            }
-                            return null;
+                        {(() => {
+                          const pages = []
+                          const startPage = Math.max(1, currentPage - 2)
+                          const endPage = Math.min(totalPages, currentPage + 2)
+                          
+                          for (let pageNum = startPage; pageNum <= endPage; pageNum++) {
+                            pages.push(pageNum)
                           }
-                        )}
+                          
+                          return pages.map((pageNum) => (
+                            <PaginationItem key={`page-${pageNum}`}>
+                              <PaginationLink
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setCurrentPage(pageNum);
+                                }}
+                                isActive={pageNum === currentPage}
+                              >
+                                {pageNum}
+                              </PaginationLink>
+                            </PaginationItem>
+                          ))
+                        })()}
 
                         {/* Ellipsis */}
                         {currentPage < totalPages - 3 && (

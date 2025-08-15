@@ -296,7 +296,7 @@ export default function AdminOrdersPage() {
                         <div className="flex items-center space-x-2">
                           <Package className="h-4 w-4 text-gray-500" />
                           <span className="font-medium">
-                            #{order.orderNumber || order._id.slice(-8)}
+                            #{order.orderNumber || order._id.slice(-6)}
                           </span>
                         </div>
                       </TableCell>
@@ -425,26 +425,30 @@ export default function AdminOrdersPage() {
                     )}
                     
                     {/* Page numbers around current page */}
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      const pageNum = Math.max(1, Math.min(totalPages, currentPage - 2 + i))
-                      if (pageNum > 0 && pageNum <= totalPages) {
-                        return (
-                          <PaginationItem key={pageNum}>
-                            <PaginationLink 
-                              href="#"
-                              onClick={(e) => {
-                                e.preventDefault()
-                                setCurrentPage(pageNum)
-                              }}
-                              isActive={pageNum === currentPage}
-                            >
-                              {pageNum}
-                            </PaginationLink>
-                          </PaginationItem>
-                        )
+                    {(() => {
+                      const pages = []
+                      const startPage = Math.max(1, currentPage - 2)
+                      const endPage = Math.min(totalPages, currentPage + 2)
+                      
+                      for (let pageNum = startPage; pageNum <= endPage; pageNum++) {
+                        pages.push(pageNum)
                       }
-                      return null
-                    })}
+                      
+                      return pages.map((pageNum) => (
+                        <PaginationItem key={`page-${pageNum}`}>
+                          <PaginationLink 
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              setCurrentPage(pageNum)
+                            }}
+                            isActive={pageNum === currentPage}
+                          >
+                            {pageNum}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))
+                    })()}
                     
                     {/* Ellipsis */}
                     {currentPage < totalPages - 3 && (
@@ -496,7 +500,7 @@ export default function AdminOrdersPage() {
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-bold text-gray-900">
-                    Order Details - #{selectedOrder.orderNumber || selectedOrder._id.slice(-8)}
+                    Order Details - #{selectedOrder.orderNumber || selectedOrder._id.slice(-6)}
                   </h2>
                   <Button
                     variant="ghost"
@@ -517,7 +521,7 @@ export default function AdminOrdersPage() {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-600">Order Number:</span>
-                        <span className="font-medium">#{selectedOrder.orderNumber || selectedOrder._id.slice(-8)}</span>
+                        <span className="font-medium">#{selectedOrder.orderNumber || selectedOrder._id.slice(-6)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Order Date:</span>

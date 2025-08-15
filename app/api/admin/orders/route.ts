@@ -53,6 +53,10 @@ export async function GET(request: NextRequest) {
       .populate('items.product', 'title images')
       .lean();
 
+    console.log('Admin orders API - Raw orders from database:', orders);
+    console.log('First order orderNumber:', orders[0]?.orderNumber);
+    console.log('First order _id:', orders[0]?._id);
+
     // Get total count
     const total = await Order.countDocuments(query);
 
