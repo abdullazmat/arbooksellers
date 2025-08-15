@@ -11,6 +11,8 @@ import { Badge } from '@/components/ui/badge'
 import { CheckCircle, ShoppingBag, Home, Download, Truck, Package, MapPin, Mail, Phone, ShieldCheck, Clock } from 'lucide-react'
 import React from 'react'
 import { formatPrice } from '@/lib/utils'
+import { downloadInvoiceAsPDF } from '@/lib/invoice'
+import { useToast } from '@/hooks/use-toast'
 
 interface OrderDetails {
   orderNumber: string
@@ -42,7 +44,53 @@ export default function OrderConfirmationPage() {
   const searchParams = useSearchParams()
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null)
   const [loading, setLoading] = useState(true)
+  const { toast } = useToast()
   
+  const handleDownloadInvoice = () => {
+    if (!orderDetails) return;
+    
+    try {
+      const invoiceData = {
+        orderNumber: orderDetails.orderNumber,
+        orderDate: new Date().toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }),
+        items: orderDetails.items,
+        shippingAddress: {
+          fullName: orderDetails.shippingAddress.fullName,
+          email: orderDetails.shippingAddress.email,
+          phone: orderDetails.shippingAddress.phone,
+          address: orderDetails.shippingAddress.address,
+          city: orderDetails.shippingAddress.city,
+          state: orderDetails.shippingAddress.state,
+          zipCode: orderDetails.shippingAddress.zipCode,
+          country: orderDetails.shippingAddress.country
+        },
+        paymentMethod: orderDetails.paymentMethod,
+        subtotal: orderDetails.subtotal,
+        shippingCost: orderDetails.shippingCost,
+        tax: orderDetails.tax,
+        total: orderDetails.total
+      };
+
+      downloadInvoiceAsPDF(invoiceData);
+      
+      toast({
+        title: "Invoice Generated",
+        description: "Invoice has been opened in a new window. You can print or save it.",
+      });
+    } catch (error) {
+      console.error('Error generating invoice:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate invoice. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     try {
       const stored = localStorage.getItem('lastOrder')
@@ -336,6 +384,13 @@ export default function OrderConfirmationPage() {
                     <Home className="mr-2 h-4 w-4" />
                     Continue Shopping
                   </Link>
+                </Button>
+                <Button
+                  className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 shadow-lg"
+                  onClick={handleDownloadInvoice}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download Invoice
                 </Button>
               </div>
             </div>

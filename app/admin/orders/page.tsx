@@ -21,7 +21,8 @@ import {
   Package,
   User,
   Calendar,
-  DollarSign
+  DollarSign,
+  Download
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { 
@@ -34,13 +35,14 @@ import {
   PaginationPrevious 
 } from '@/components/ui/pagination'
 import { formatPrice } from '@/lib/utils'
+import { downloadInvoiceAsPDF } from '@/lib/invoice'
 
 interface Order {
   _id: string
   orderNumber?: string
-  user: {
-    name: string
-    email: string
+  user?: {
+    name?: string
+    email?: string
   }
   items: Array<{
     product: {
@@ -80,6 +82,55 @@ export default function AdminOrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [showOrderModal, setShowOrderModal] = useState(false)
   const { toast } = useToast()
+
+  const handleDownloadInvoice = (order: Order) => {
+    try {
+      // Format the order data for invoice generation
+      const invoiceData = {
+        orderNumber: order.orderNumber || order._id.slice(-6),
+        orderDate: new Date(order.createdAt).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }),
+        items: order.items.map(item => ({
+          title: item.title,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.product?.image
+        })),
+        shippingAddress: {
+          fullName: order.shippingAddress.fullName,
+          email: order.user?.email || 'customer@example.com',
+          phone: '',
+          address: order.shippingAddress.address,
+          city: order.shippingAddress.city,
+          state: order.shippingAddress.state,
+          zipCode: order.shippingAddress.zipCode,
+          country: order.shippingAddress.country
+        },
+        paymentMethod: order.paymentMethod,
+        subtotal: order.subtotal,
+        shippingCost: order.shippingCost,
+        tax: order.tax,
+        total: order.total
+      }
+
+      downloadInvoiceAsPDF(invoiceData)
+      
+      toast({
+        title: "Invoice Generated",
+        description: "Invoice has been opened in a new window. You can print or save it.",
+      })
+    } catch (error) {
+      console.error('Error generating invoice:', error)
+      toast({
+        title: "Error",
+        description: "Failed to generate invoice. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
 
   useEffect(() => {
     fetchOrders()
@@ -308,7 +359,7 @@ export default function AdminOrdersPage() {
                               {order.shippingAddress.fullName}
                             </div>
                             <div className="text-sm text-gray-500">
-                              {order.user.email}
+                              {order.user?.email || 'N/A'}
                             </div>
                           </div>
                         </div>
@@ -377,6 +428,13 @@ export default function AdminOrdersPage() {
                             }}
                           >
                             <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleDownloadInvoice(order)}
+                          >
+                            <Download className="h-4 w-4" />
                           </Button>
                         </div>
                       </TableCell>
@@ -556,7 +614,7 @@ export default function AdminOrdersPage() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Email:</span>
-                        <span className="font-medium">{selectedOrder.user.email}</span>
+                        <span className="font-medium">{selectedOrder.user?.email || 'N/A'}</span>
                       </div>
                     </div>
                   </div>

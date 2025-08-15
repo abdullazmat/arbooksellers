@@ -31,10 +31,10 @@ interface DashboardStats {
 
 interface RecentOrder {
   _id: string
-  orderNumber: string
-  user: {
-    name: string
-    email: string
+  orderNumber?: string
+  user?: {
+    name?: string
+    email?: string
   }
   total: number
   orderStatus: string
@@ -113,15 +113,24 @@ export default function AdminDashboard() {
       const productsData = await productsResponse.json()
 
       setStats({
-        totalSales: ordersData.stats.totalSales,
-        totalOrders: ordersData.stats.totalOrders,
-        totalUsers: usersData.stats.totalUsers,
-        totalProducts: productsData.pagination.total,
-        pendingOrders: ordersData.stats.pendingOrders,
-        processingOrders: ordersData.stats.processingOrders,
+        totalSales: ordersData.stats?.totalSales || 0,
+        totalOrders: ordersData.stats?.totalOrders || 0,
+        totalUsers: usersData.stats?.totalUsers || 0,
+        totalProducts: productsData.pagination?.total || 0,
+        pendingOrders: ordersData.stats?.pendingOrders || 0,
+        processingOrders: ordersData.stats?.processingOrders || 0,
       })
 
-      setRecentOrders(ordersData.orders)
+      // Validate and set recent orders
+      if (ordersData.orders && Array.isArray(ordersData.orders)) {
+        // Filter out any orders with missing user data
+        const validOrders = ordersData.orders.filter((order: any) => 
+          order && order._id && order.total && order.orderStatus && order.createdAt
+        )
+        setRecentOrders(validOrders)
+      } else {
+        setRecentOrders([])
+      }
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
       toast({
@@ -129,6 +138,16 @@ export default function AdminDashboard() {
         description: 'Failed to load dashboard data',
         variant: 'destructive',
       })
+      // Set default values to prevent crashes
+      setStats({
+        totalSales: 0,
+        totalOrders: 0,
+        totalUsers: 0,
+        totalProducts: 0,
+        pendingOrders: 0,
+        processingOrders: 0,
+      })
+      setRecentOrders([])
     } finally {
       setLoading(false)
     }
@@ -305,8 +324,10 @@ export default function AdminDashboard() {
                   <div key={order._id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center space-x-4">
                       <div>
-                        <p className="font-medium">#{order.orderNumber}</p>
-                        <p className="text-sm text-gray-600">{order.user.name}</p>
+                        <p className="font-medium">#{order.orderNumber || order._id.slice(-6)}</p>
+                        <p className="text-sm text-gray-600">
+                          {order.user?.name || order.user?.email || 'Unknown Customer'}
+                        </p>
                       </div>
                     </div>
                     <div className="text-right">
