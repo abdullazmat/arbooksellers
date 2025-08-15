@@ -8,28 +8,25 @@ import { generateOrderNumber } from "@/lib/utils";
 export async function POST(request: NextRequest) {
   try {
     await dbConnect();
-    console.log("Database connected successfully");
+    console.log('Database connected successfully');
 
-    const token = request.headers.get("authorization")?.replace("Bearer ", "");
+    const token = request.headers.get('authorization')?.replace('Bearer ', '');
     if (!token) {
       return NextResponse.json(
-        { error: "Authentication required" },
+        { error: 'Authentication required' },
         { status: 401 }
       );
     }
 
     const decoded = await verifyToken(token);
     if (!decoded) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Invalid token' },
+        { status: 401 }
+      );
     }
 
-    console.log("User authenticated:", decoded.userId);
-    console.log("Order model imported:", Order);
-    console.log("Order model schema:", Order.schema);
-    console.log("Order model collection name:", Order.collection.name);
-
     const orderData = await request.json();
-    console.log("Order data received:", orderData);
 
     // Validate required fields
     if (
@@ -45,70 +42,80 @@ export async function POST(request: NextRequest) {
 
     // Create order with user ID from token
     const orderNumber = generateOrderNumber();
-    console.log("Generated order number:", orderNumber);
-    console.log("Order number type:", typeof orderNumber);
-    console.log("Order number length:", orderNumber.length);
-
+    console.log('Generated order number:', orderNumber);
+    
     // Validate order number
-    if (
-      !orderNumber ||
-      orderNumber.length !== 6 ||
-      isNaN(parseInt(orderNumber))
-    ) {
-      console.error("Invalid order number generated:", orderNumber);
+    if (!orderNumber || orderNumber.length !== 6 || isNaN(parseInt(orderNumber))) {
+      console.error('Invalid order number generated:', orderNumber);
       return NextResponse.json(
-        { error: "Failed to generate valid order number" },
+        { error: 'Failed to generate valid order number' },
         { status: 500 }
       );
     }
-
-    const order = new Order({
+    
+    // Create order data with orderNumber
+    const orderDataWithNumber = {
       ...orderData,
       user: decoded.userId,
       orderNumber: orderNumber,
-    });
-
-    console.log("Order object before save:", order);
-    console.log("Order orderNumber field:", order.orderNumber);
-    console.log("Order validation state:", order.validateSync());
-
+    };
+    
+    // Create and save the order
+    const order = new Order(orderDataWithNumber);
+    
     try {
       await order.save();
-      console.log("Order saved successfully with ID:", order._id);
-      console.log("Order saved with orderNumber:", order.orderNumber);
-
-      // Verify the saved order
+      console.log('Order saved successfully with ID:', order._id);
+      console.log('Order saved with orderNumber:', order.orderNumber);
+      
+      // Fetch the saved order to ensure all fields are present
       const savedOrder = await Order.findById(order._id);
-      console.log("Retrieved saved order:", savedOrder);
-      console.log("Saved order orderNumber:", savedOrder?.orderNumber);
-
-      // If the saved order doesn't have an order number, try to update it
+      
       if (!savedOrder?.orderNumber) {
-        console.log("Order saved but orderNumber is missing, updating...");
-        await Order.findByIdAndUpdate(order._id, { orderNumber: orderNumber });
-        console.log("Order updated with orderNumber:", orderNumber);
+        console.error('CRITICAL: Order number still missing after save');
+        throw new Error('Failed to save order number');
       }
+      
+      return NextResponse.json({
+        message: 'Order created successfully',
+        order: savedOrder,
+      }, { status: 201 });
+      
     } catch (saveError: any) {
-      console.error("Error saving order:", saveError);
+      console.error('Error saving order:', saveError);
+      
+      // If there's a duplicate key error, try with a different order number
       if (saveError.code === 11000) {
-        console.error("Duplicate order number error - trying again");
-        // Try with a different order number
+        console.error('Duplicate order number error - trying again');
+        
+        // Generate a new order number
         const newOrderNumber = generateOrderNumber();
-        order.orderNumber = newOrderNumber;
-        await order.save();
-        console.log("Order saved with new order number:", newOrderNumber);
-      } else {
-        throw saveError;
+        console.log('Trying with new order number:', newOrderNumber);
+        
+        try {
+          // Update the order with new order number
+          order.orderNumber = newOrderNumber;
+          await order.save();
+          
+          // Fetch the saved order
+          const retryOrder = await Order.findById(order._id);
+          
+          if (retryOrder && retryOrder.orderNumber) {
+            return NextResponse.json({
+              message: 'Order created successfully',
+              order: retryOrder,
+            }, { status: 201 });
+          } else {
+            throw new Error('Failed to save order with new order number');
+          }
+        } catch (retryError) {
+          console.error('Retry failed:', retryError);
+          throw retryError;
+        }
       }
+      
+      throw saveError;
     }
-
-    return NextResponse.json(
-      {
-        message: "Order created successfully",
-        order,
-      },
-      { status: 201 }
-    );
   } catch (error: any) {
     console.error("Create order error:", error);
     return NextResponse.json(
