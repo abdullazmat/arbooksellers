@@ -296,18 +296,16 @@ export default function CheckoutPage() {
         }
       }
 
-      const shippingCost = cartTotal >= 50 ? 0 : 5.0;
-      const taxRate = 0.08;
-      const taxAmount = cartTotal * taxRate;
-      const finalTotal = cartTotal + shippingCost + taxAmount;
+      const shippingCost = cartTotal > 50 ? 0 : 5.99
+      const finalTotal = cartTotal + shippingCost
 
       const orderPayload = {
-        items: cartItems.map((item) => ({
+        items: cartItems.map(item => ({
           product: item.id,
           title: item.title,
           price: item.price,
           quantity: item.quantity,
-          image: item.image,
+          image: item.image
         })),
         shippingAddress: {
           fullName: formData.fullName,
@@ -317,12 +315,11 @@ export default function CheckoutPage() {
           city: formData.city,
           state: formData.state,
           zipCode: formData.zipCode,
-          country: formData.country,
+          country: formData.country
         },
         paymentMethod,
         subtotal: cartTotal,
         shippingCost,
-        tax: taxAmount,
         total: finalTotal,
         notes: formData.notes || undefined,
       };
@@ -379,10 +376,8 @@ export default function CheckoutPage() {
     }
   };
 
-  const shippingCost = cartTotal >= 50 ? 0 : 5.0; // Free shipping over Rs 50
-  const taxRate = 0.08; // Example tax rate
-  const taxAmount = cartTotal * taxRate;
-  const finalTotal = cartTotal + shippingCost + taxAmount;
+  const shippingCost = cartTotal > 50 ? 0 : 5.99
+  const finalTotal = cartTotal + shippingCost
 
   if (cartItems.length === 0 && !isLoading) {
     return (
@@ -679,10 +674,6 @@ export default function CheckoutPage() {
                     <span>
                       {shippingCost === 0 ? "Free" : formatPrice(shippingCost)}
                     </span>
-                  </div>
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Tax</span>
-                    <span>{formatPrice(taxAmount)}</span>
                   </div>
                   <div className="flex justify-between font-medium text-lg">
                     <span>Total</span>

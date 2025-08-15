@@ -25,7 +25,6 @@ export interface IOrder extends mongoose.Document {
   orderStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   subtotal: number;
   shippingCost: number;
-  tax: number;
   total: number;
   trackingNumber?: string;
   notes?: string;
@@ -127,11 +126,6 @@ const orderSchema = new mongoose.Schema<IOrder>({
     type: Number,
     required: [true, 'Shipping cost is required'],
     min: [0, 'Shipping cost cannot be negative'],
-  },
-  tax: {
-    type: Number,
-    required: [true, 'Tax is required'],
-    min: [0, 'Tax cannot be negative'],
   },
   total: {
     type: Number,

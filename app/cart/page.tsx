@@ -71,8 +71,7 @@ export default function CartPage() {
   }
 
   const shipping = total >= 50 ? 0 : 9.99
-  const tax = total * 0.08
-  const finalTotal = total + shipping + tax
+  const finalTotal = total + shipping
 
   return (
     <>
@@ -193,17 +192,10 @@ export default function CartPage() {
                     </span>
                   </div>
                   
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Tax</span>
-                    <span className="font-medium">{formatPrice(tax)}</span>
-                  </div>
-                  
-                  <div className="border-t pt-3">
-                    <div className="flex justify-between">
-                      <span className="text-lg font-semibold">Total</span>
-                      <span className="text-lg font-bold text-green-600">
-                        {formatPrice(finalTotal)}
-                      </span>
+                  <div className="border-t pt-2">
+                    <div className="flex justify-between font-semibold text-lg">
+                      <span>Total</span>
+                      <span>{formatPrice(finalTotal)}</span>
                     </div>
                   </div>
                 </div>

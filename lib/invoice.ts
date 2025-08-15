@@ -18,7 +18,7 @@ interface InvoiceAddress {
   country: string;
 }
 
-interface InvoiceData {
+export interface InvoiceData {
   orderNumber: string;
   orderDate: string;
   items: InvoiceItem[];
@@ -26,12 +26,7 @@ interface InvoiceData {
   paymentMethod: string;
   subtotal: number;
   shippingCost: number;
-  tax: number;
   total: number;
-  companyName?: string;
-  companyAddress?: string;
-  companyPhone?: string;
-  companyEmail?: string;
 }
 
 export function generateInvoicePDF(invoiceData: InvoiceData): void {
@@ -261,10 +256,6 @@ export function generateInvoicePDF(invoiceData: InvoiceData): void {
             <span class="total-label">Shipping:</span>
             <span class="total-value">${formatPrice(invoiceData.shippingCost)}</span>
             </div>
-          <div class="total-row">
-            <span class="total-label">Tax:</span>
-            <span class="total-value">${formatPrice(invoiceData.tax)}</span>
-          </div>
           <div class="total-row grand-total">
             <span class="total-label">Total:</span>
             <span class="total-value">${formatPrice(invoiceData.total)}</span>
@@ -348,7 +339,6 @@ export function downloadInvoiceAsCSV(invoiceData: InvoiceData): void {
     ['Order Summary'],
     ['Subtotal', invoiceData.subtotal.toString()],
     ['Shipping', invoiceData.shippingCost.toString()],
-    ['Tax', invoiceData.tax.toString()],
     ['Total', invoiceData.total.toString()]
   ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
 

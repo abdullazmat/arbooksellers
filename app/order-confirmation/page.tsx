@@ -15,29 +15,28 @@ import { downloadInvoiceAsPDF } from '@/lib/invoice'
 import { useToast } from '@/hooks/use-toast'
 
 interface OrderDetails {
-  orderNumber: string
+  orderNumber: string;
+  orderDate: string;
   items: Array<{
-    title: string
-    price: number
-    quantity: number
-    image: string
-  }>
+    title: string;
+    price: number;
+    quantity: number;
+    image: string;
+  }>;
   shippingAddress: {
-    fullName: string
-    email: string
-    phone: string
-    address: string
-    city: string
-    state: string
-    zipCode: string
-    country: string
-  }
-  paymentMethod: string
-  subtotal: number
-  shippingCost: number
-  tax: number
-  total: number
-  estimatedDelivery: string
+    fullName: string;
+    email: string;
+    phone: string;
+    address: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
+  paymentMethod: string;
+  subtotal: number;
+  shippingCost: number;
+  total: number;
 }
 
 export default function OrderConfirmationPage() {
@@ -71,7 +70,6 @@ export default function OrderConfirmationPage() {
         paymentMethod: orderDetails.paymentMethod,
         subtotal: orderDetails.subtotal,
         shippingCost: orderDetails.shippingCost,
-        tax: orderDetails.tax,
         total: orderDetails.total
       };
 
@@ -97,20 +95,32 @@ export default function OrderConfirmationPage() {
       if (stored) {
         const order = JSON.parse(stored)
         const details: OrderDetails = {
-          orderNumber: order.orderNumber || order._id?.slice(-6) || Math.floor(Math.random() * 900000 + 100000).toString(),
-          items: order.items?.map((it: any) => ({
-            title: it.title,
-            price: it.price,
-            quantity: it.quantity,
-            image: it.image,
-          })) || [],
-          shippingAddress: order.shippingAddress,
-          paymentMethod: order.paymentMethod === 'cash_on_delivery' ? 'Cash on Delivery' : order.paymentMethod,
-          subtotal: order.subtotal,
-          shippingCost: order.shippingCost,
-          tax: order.tax,
+          orderNumber: order.orderNumber || order._id.slice(-6),
+          orderDate: new Date(order.createdAt).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }),
+          items: order.items.map((item: any) => ({
+            title: item.title,
+            price: item.price,
+            quantity: item.quantity,
+            image: item.image
+          })),
+          shippingAddress: {
+            fullName: order.shippingAddress.fullName || order.shippingAddress.street,
+            email: order.shippingAddress.email || 'customer@example.com',
+            phone: order.shippingAddress.phone || '',
+            address: order.shippingAddress.street || order.shippingAddress.address || '',
+            city: order.shippingAddress.city || '',
+            state: order.shippingAddress.state || '',
+            zipCode: order.shippingAddress.zipCode || '',
+            country: order.shippingAddress.country || ''
+          },
+          paymentMethod: order.paymentMethod === 'cash_on_delivery' ? 'Cash on Delivery' : order.paymentMethod || "Cash on Delivery",
+          subtotal: order.subtotal || 0,
+          shippingCost: order.shippingCost || 0,
           total: order.total,
-          estimatedDelivery: '3-5 business days',
         }
         setOrderDetails(details)
       }
@@ -266,10 +276,6 @@ export default function OrderConfirmationPage() {
                           <p className="text-sm text-gray-600 mb-1">Phone</p>
                           <p className="font-medium text-gray-900">{orderDetails.shippingAddress.phone}</p>
                         </div>
-                        <div className="bg-green-50 p-4 rounded-lg">
-                          <p className="text-sm text-gray-600 mb-1">Estimated Delivery</p>
-                          <p className="font-medium text-gray-900">{orderDetails.estimatedDelivery}</p>
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -298,10 +304,6 @@ export default function OrderConfirmationPage() {
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Shipping</span>
                       <span className="font-medium">{formatPrice(orderDetails.shippingCost)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Tax</span>
-                      <span className="font-medium">{formatPrice(orderDetails.tax)}</span>
                     </div>
                     <div className="border-t pt-3">
                       <div className="flex justify-between text-lg font-bold text-gray-900">

@@ -52,7 +52,6 @@ interface Order {
   paymentMethod?: string;
   subtotal?: number;
   shippingCost?: number;
-  tax?: number;
   trackingNumber?: string;
 }
 
@@ -107,7 +106,6 @@ export function OrderHistory() {
             : order.paymentMethod || "Cash on Delivery",
         subtotal: order.subtotal || 0,
         shippingCost: order.shippingCost || 0,
-        tax: order.tax || 0,
         total: order.total,
       };
 
@@ -426,19 +424,13 @@ export function OrderHistory() {
                           <span>Subtotal</span>
                           <span>{formatPrice(order.subtotal || 0)}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between text-sm">
                           <span>Shipping</span>
                           <span>{formatPrice(order.shippingCost || 0)}</span>
                         </div>
-                        <div className="flex justify-between">
-                          <span>Tax</span>
-                          <span>{formatPrice(order.tax || 0)}</span>
-                        </div>
-                        <div className="border-t pt-2">
-                          <div className="flex justify-between font-semibold">
-                            <span>Total</span>
-                            <span>{formatPrice(order.total)}</span>
-                          </div>
+                        <div className="flex justify-between font-medium">
+                          <span>Total</span>
+                          <span>{formatPrice(order.total)}</span>
                         </div>
                       </div>
 

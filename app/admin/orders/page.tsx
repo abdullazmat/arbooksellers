@@ -67,7 +67,6 @@ interface Order {
   orderStatus: string
   subtotal: number
   shippingCost: number
-  tax: number
   total: number
   createdAt: string
 }
@@ -112,7 +111,6 @@ export default function AdminOrdersPage() {
         paymentMethod: order.paymentMethod,
         subtotal: order.subtotal,
         shippingCost: order.shippingCost,
-        tax: order.tax,
         total: order.total
       }
 
@@ -667,10 +665,6 @@ export default function AdminOrdersPage() {
                     <div className="flex justify-between">
                       <span className="text-gray-600">Shipping:</span>
                       <span className="font-medium">{formatPrice(selectedOrder.shippingCost)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Tax:</span>
-                      <span className="font-medium">{formatPrice(selectedOrder.tax)}</span>
                     </div>
                     <div className="flex justify-between text-lg font-bold">
                       <span className="text-gray-900">Total:</span>
