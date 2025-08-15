@@ -44,18 +44,32 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    // Get orders
+    // Fetch orders with pagination
     const orders = await Order.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .populate('user', 'name email')
-      .populate('items.product', 'title images')
-      .lean();
+      .populate('items.product', 'title images price');
 
-    console.log('Admin orders API - Raw orders from database:', orders);
-    console.log('First order orderNumber:', orders[0]?.orderNumber);
-    console.log('First order _id:', orders[0]?._id);
+    // Transform orders to include orderNumber and normalize address
+    const transformedOrders = orders.map(order => {
+      const orderObj = order.toObject();
+      
+      // Ensure orderNumber is present
+      if (!orderObj.orderNumber) {
+        orderObj.orderNumber = `ORD-${orderObj._id.toString().slice(-6).toUpperCase()}`;
+      }
+      
+      // Normalize shipping address
+      if (orderObj.shippingAddress) {
+        if (orderObj.shippingAddress.address && !orderObj.shippingAddress.street) {
+          orderObj.shippingAddress.street = orderObj.shippingAddress.address;
+        }
+      }
+      
+      return orderObj;
+    });
 
     // Get total count
     const total = await Order.countDocuments(query);
@@ -85,7 +99,7 @@ export async function GET(request: NextRequest) {
     };
 
     return NextResponse.json({
-      orders,
+      orders: transformedOrders,
       stats: orderStats,
       pagination: {
         page,

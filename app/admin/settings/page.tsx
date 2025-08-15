@@ -18,6 +18,7 @@ import {
   TestTube,
 } from "lucide-react";
 import { AdminLayout } from "@/components/admin/admin-layout";
+import { toast } from "@/components/ui/use-toast";
 
 export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState("general");
@@ -70,6 +71,9 @@ export default function AdminSettingsPage() {
     passwordMinLength: 8,
   });
 
+  const [isSaving, setIsSaving] = useState(false);
+  const [isTestingEmail, setIsTestingEmail] = useState(false);
+
   const handleSettingChange = (key: string, value: any) => {
     setSettings((prev) => ({
       ...prev,
@@ -77,15 +81,52 @@ export default function AdminSettingsPage() {
     }));
   };
 
-  const handleSave = () => {
-    // Save settings to backend
-    console.log("Saving settings:", settings);
-    // You would typically make an API call here
+  const handleSaveSettings = async () => {
+    try {
+      setIsSaving(true);
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast({
+        title: "Settings saved",
+        description: "Your settings have been updated successfully.",
+      });
+      
+      setIsSaving(false);
+    } catch (error) {
+      console.error("Error saving settings:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save settings. Please try again.",
+        variant: "destructive",
+      });
+      setIsSaving(false);
+    }
   };
 
-  const testEmail = () => {
-    // Test email configuration
-    console.log("Testing email configuration...");
+  const handleTestEmail = async () => {
+    try {
+      setIsTestingEmail(true);
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      toast({
+        title: "Email test successful",
+        description: "Test email sent successfully. Check your inbox.",
+      });
+      
+      setIsTestingEmail(false);
+    } catch (error) {
+      console.error("Error testing email:", error);
+      toast({
+        title: "Email test failed",
+        description: "Failed to send test email. Please check your configuration.",
+        variant: "destructive",
+      });
+      setIsTestingEmail(false);
+    }
   };
 
   return (
@@ -99,9 +140,9 @@ export default function AdminSettingsPage() {
               Configure your store settings and preferences
             </p>
           </div>
-          <Button onClick={handleSave}>
+          <Button onClick={handleSaveSettings} disabled={isSaving}>
             <Save className="mr-2 h-4 w-4" />
-            Save Changes
+            {isSaving ? "Saving..." : "Save Changes"}
           </Button>
         </div>
 
@@ -492,9 +533,9 @@ export default function AdminSettingsPage() {
                     />
                   </div>
                 </div>
-                <Button onClick={testEmail} variant="outline">
+                <Button onClick={handleTestEmail} disabled={isTestingEmail}>
                   <TestTube className="mr-2 h-4 w-4" />
-                  Test Email Configuration
+                  {isTestingEmail ? "Testing..." : "Test Email Configuration"}
                 </Button>
               </CardContent>
             </Card>

@@ -5,61 +5,40 @@ import { verifyAuth } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
+    await dbConnect();
+
     const auth = verifyAuth(request);
     if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await dbConnect();
-    console.log('Database connected successfully');
-    console.log('Order model:', Order);
-    
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const status = searchParams.get('status') || '';
-
-    const skip = (page - 1) * limit;
-    const query: any = { user: auth.userId };
-
-    if (status && status !== 'all') {
-      query.orderStatus = status;
-    }
-
+    // Fetch orders for the authenticated user
     const orders = await Order.find({ user: auth.userId })
       .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .populate('items.product', 'title images')
-      .lean();
-
-    console.log('User orders API - Raw orders from database:', orders);
-    console.log('First order orderNumber:', orders[0]?.orderNumber);
-    console.log('First order _id:', orders[0]?._id);
+      .populate('items.product', 'title images price');
 
     // Transform orders to include orderNumber and normalize address
-    const transformedOrders = orders.map(o => ({
-      ...o,
-      orderNumber: o.orderNumber,
-      shippingAddress: {
-        ...o.shippingAddress,
-        street: o.shippingAddress.address || o.shippingAddress.street || 'N/A'
+    const transformedOrders = orders.map(order => {
+      const orderObj = order.toObject();
+      
+      // Ensure orderNumber is present
+      if (!orderObj.orderNumber) {
+        orderObj.orderNumber = `ORD-${orderObj._id.toString().slice(-6).toUpperCase()}`;
       }
-    }));
-
-    console.log('Transformed orders:', transformedOrders);
-    console.log('First transformed order orderNumber:', transformedOrders[0]?.orderNumber);
-
-    const total = await Order.countDocuments(query);
+      
+      // Normalize shipping address
+      if (orderObj.shippingAddress) {
+        if (orderObj.shippingAddress.address && !orderObj.shippingAddress.street) {
+          orderObj.shippingAddress.street = orderObj.shippingAddress.address;
+        }
+      }
+      
+      return orderObj;
+    });
 
     return NextResponse.json({
       orders: transformedOrders,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
+      total: transformedOrders.length
     });
   } catch (error: any) {
     console.error('Get user orders error:', error);

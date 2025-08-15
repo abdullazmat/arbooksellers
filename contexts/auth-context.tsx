@@ -43,27 +43,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Check for existing token on mount
   useEffect(() => {
-    console.log('AuthContext useEffect - checking stored auth data')
-    const storedToken = localStorage.getItem('token')
-    const storedUser = localStorage.getItem('user')
-    
-    console.log('Stored token:', !!storedToken, 'Stored user:', !!storedUser)
-    
+    const storedToken = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+
     if (storedToken && storedUser) {
       try {
-        const parsedUser = JSON.parse(storedUser)
-        console.log('Parsed user:', parsedUser, 'Role:', parsedUser.role)
-        setToken(storedToken)
-        setUser(parsedUser)
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        setToken(storedToken);
       } catch (error) {
-        console.error('Error parsing stored user data:', error)
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
+        console.error('Error parsing stored user data:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
       }
     }
-    setIsLoading(false)
-    console.log('AuthContext loading complete')
-  }, [])
+    
+    setIsLoading(false);
+  }, []);
 
   const signIn = async (email: string, password: string): Promise<boolean> => {
     try {
@@ -99,18 +95,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: `Welcome back, ${data.user.name}!`,
       })
 
-      console.log('data.user.role:', data.user.role)
-
-      // Redirect based on user role using window.location for more reliable navigation
-      setTimeout(() => {
-        if (data.user.role === 'admin') {
-          console.log('Redirecting admin to /admin')
-          window.location.href = '/admin'
-        } else {
-          console.log('Redirecting user to /dashboard')
-          window.location.href = '/dashboard'
-        }
-      }, 100) // Small delay to ensure toast is shown
+      if (data.user.role === 'admin') {
+        // Redirect admin to admin panel
+        router.push('/admin');
+      } else {
+        // Redirect regular user to dashboard
+        router.push('/dashboard');
+      }
 
       return true
     } catch (error) {
@@ -160,16 +151,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: `Welcome, ${data.user.name}! Your account has been created.`,
       })
 
-      // Redirect based on user role using window.location for more reliable navigation
-      setTimeout(() => {
-        if (data.user.role === 'admin') {
-          console.log('Redirecting admin to /admin')
-          window.location.href = '/admin'
-        } else {
-          console.log('Redirecting user to /dashboard')
-          window.location.href = '/dashboard'
-        }
-      }, 100) // Small delay to ensure toast is shown
+      // Redirect based on user role
+      if (data.user.role === 'admin') {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
+      }
 
       return true
     } catch (error) {

@@ -79,8 +79,6 @@ export default function CheckoutPage() {
 
           if (response.ok) {
             const data = await response.json();
-            console.log("Address API response:", data);
-
             // Check if the response has the expected structure
             if (data && Array.isArray(data.addresses)) {
               const addresses = data.addresses;
@@ -273,7 +271,6 @@ export default function CheckoutPage() {
                   }),
                 });
               }
-              console.log("Existing address updated to default");
             } else {
               // Address doesn't exist, add new one
               await fetch("/api/user/addresses", {
@@ -292,7 +289,6 @@ export default function CheckoutPage() {
                   isDefault: true,
                 }),
               });
-              console.log("New address added as default");
             }
           }
         } catch (error) {
@@ -345,20 +341,15 @@ export default function CheckoutPage() {
         throw new Error(data.error || "Failed to place order");
       }
 
-      console.log("Order created successfully:", data);
-      console.log("Order data to be stored:", data.order);
-
       // Persist last order for confirmation screen
       try {
         localStorage.setItem("lastOrder", JSON.stringify(data.order));
-        console.log("Order saved to localStorage successfully");
       } catch (error) {
         console.error("Error saving order to localStorage:", error);
       }
 
       // Clear cart first but keep isOrderProcessing true to prevent redirect
       clearCart();
-      console.log("Cart cleared");
 
       toast({
         title: "Order Placed Successfully!",
@@ -366,24 +357,15 @@ export default function CheckoutPage() {
           "Your order has been received and will be processed shortly.",
       });
 
-      console.log("Toast shown, pushing to /order-confirmation");
-
       // Force redirect immediately and prevent any interference
-      // try {
-      //   router.push("/order-confirmation");
-      //   console.log("Router.push called");
-      // } catch (error) {
-      //   console.error("Router.push failed, using window.location:", error);
-      //   window.location.href = "/order-confirmation";
-      // }
-
-      // Fallback redirect in case router.push doesn't work
-      // setTimeout(() => {
-      //   console.log("Fallback redirect triggered");
-      //   if (window.location.pathname !== "/order-confirmation") {
-      //     window.location.href = "/order-confirmation";
-      //   }
-      // }, 500);
+      router.push('/order-confirmation');
+      
+      // Fallback redirect in case router.push fails
+      setTimeout(() => {
+        if (window.location.pathname !== '/order-confirmation') {
+          window.location.href = '/order-confirmation';
+        }
+      }, 100);
     } catch (error) {
       console.error("Order placement failed:", error);
       toast({

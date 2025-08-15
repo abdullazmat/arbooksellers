@@ -63,41 +63,27 @@ export default function FeaturedProducts() {
   }, [])
 
   const handleAddToCart = (product: Product) => {
-    try {
-      console.log('Adding to cart:', product)
-      addItem({
-        id: product._id,
-        title: product.title,
-        price: product.price,
-        image: product.images[0] || '/placeholder.svg',
-      })
-      
-      toast({
-        title: 'Added to cart',
-        description: `${product.title} has been added to your cart`,
-      })
-    } catch (error) {
-      console.error('Error adding to cart:', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to add item to cart. Please try again.',
-        variant: 'destructive',
-      })
-    }
+    addItem({
+      id: product._id,
+      title: product.title,
+      price: product.price,
+      image: product.images[0] || '/placeholder.svg',
+    })
+    toast({
+      title: 'Added to cart',
+      description: `${product.title} has been added to your cart`,
+    })
   }
 
   const handleWishlistToggle = async (product: Product) => {
     try {
-      console.log('Toggling wishlist for:', product)
       if (isInWishlist(product._id)) {
-        console.log('Removing from wishlist')
         await removeFromWishlist(product._id)
         toast({
           title: 'Removed from wishlist',
           description: `${product.title} has been removed from your wishlist`,
         })
       } else {
-        console.log('Adding to wishlist')
         await addToWishlist(product._id, {
           title: product.title,
           price: product.price,

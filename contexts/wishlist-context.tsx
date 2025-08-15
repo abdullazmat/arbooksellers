@@ -19,7 +19,6 @@ interface WishlistContextType {
   removeItem: (productId: string) => Promise<void>
   clearWishlist: () => Promise<void>
   isInWishlist: (productId: string) => boolean
-  loadWishlist: () => Promise<void>
   refreshWishlist: () => Promise<void>
 }
 
@@ -44,65 +43,66 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
 
   // Load wishlist when user logs in
   useEffect(() => {
-    console.log('Wishlist effect triggered:', { user: !!user, token: !!token, isLoading, hasLoaded })
-    
-    if (user && token && !isLoading && !hasLoaded) {
-      console.log('Loading wishlist...')
-      loadWishlist()
-    } else if (!user) {
-      console.log('No user, clearing wishlist')
-      setItems([])
-      setHasLoaded(false)
-    }
-  }, [user, token, isLoading, hasLoaded])
-
-  const loadWishlist = async () => {
-    if (!user || !token) {
-      console.log('Cannot load wishlist: user or token not available')
-      return
+    if (!user || !token || isLoading) {
+      if (hasLoaded) {
+        setItems([]);
+      }
+      return;
     }
 
     if (hasLoaded) {
-      console.log('Wishlist already loaded, skipping')
-      return
+      return;
     }
 
-    console.log('Making wishlist API call...')
+    const loadWishlist = async () => {
+      try {
+        const response = await fetch('/api/wishlist', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setItems(data.items || []);
+        } else if (response.status === 401) {
+          setItems([]);
+        }
+      } catch (error) {
+        console.error('Error loading wishlist:', error);
+        setItems([]);
+      }
+    };
+
+    loadWishlist();
+    setHasLoaded(true);
+  }, [user, token, isLoading, hasLoaded]);
+
+  const refreshWishlist = async () => {
+    setHasLoaded(false);
+    
+    if (!user || !token) return;
+
     try {
-      setIsLoading(true)
       const response = await fetch('/api/wishlist', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
-      })
-
-      console.log('Wishlist API response:', response.status, response.statusText)
+      });
 
       if (response.ok) {
-        const data = await response.json()
-        console.log('Wishlist data received:', data)
-        setItems(data.wishlist || [])
-        setHasLoaded(true)
+        const data = await response.json();
+        setItems(data.items || []);
       } else if (response.status === 401) {
-        console.log('Unauthorized access to wishlist, clearing items')
-        setItems([])
-        setHasLoaded(false)
-      } else {
-        console.error('Failed to load wishlist:', response.status, response.statusText)
-        // Don't clear items on other errors, just log the error
+        setItems([]);
       }
     } catch (error) {
-      console.error('Error loading wishlist:', error)
-      // Don't clear items on network errors, just log the error
-    } finally {
-      setIsLoading(false)
+      console.error('Error refreshing wishlist:', error);
+      setItems([]);
     }
-  }
-
-  const refreshWishlist = async () => {
-    setHasLoaded(false)
-    await loadWishlist()
-  }
+    
+    setHasLoaded(true);
+  };
 
   const addItem = async (productId: string, productData: Omit<WishlistItem, 'product'>) => {
     if (!user || !token) {
@@ -257,7 +257,6 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         removeItem,
         clearWishlist,
         isInWishlist,
-        loadWishlist,
         refreshWishlist,
       }}
     >

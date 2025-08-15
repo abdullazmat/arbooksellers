@@ -31,44 +31,20 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const { user, isLoading } = useAuth();
 
   useEffect(() => {
-    console.log("AdminLayout useEffect - isLoading:", isLoading, "user:", user);
-    console.log(
-      "User details:",
-      user
-        ? { id: user._id, name: user.name, email: user.email, role: user.role }
-        : "No user"
-    );
-
-    // Don't redirect while auth is still loading
     if (isLoading) {
-      console.log("Auth still loading, waiting...");
       return;
     }
 
-    // Check if user is authenticated and has admin role
     if (!user) {
-      console.log("No user found, redirecting to signin");
-      router.push("/auth/signin");
+      router.push('/auth/signin');
       return;
     }
 
-    console.log("User found, role:", user.role, "Expected role: admin");
-    if (user.role !== "admin") {
-      console.log(
-        "User is not admin, redirecting to home. User role:",
-        user.role
-      );
-      toast({
-        title: "Access Denied",
-        description: "You do not have permission to access the admin panel",
-        variant: "destructive",
-      });
-      router.push("/");
+    if (user.role !== 'admin') {
+      router.push('/');
       return;
     }
-
-    console.log("User is admin, allowing access to admin panel");
-  }, [user, isLoading, router, toast]);
+  }, [user, isLoading, router]);
 
   const handleLogout = () => {
     // Clear auth data

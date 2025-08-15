@@ -8,7 +8,6 @@ import { generateOrderNumber } from "@/lib/utils";
 export async function POST(request: NextRequest) {
   try {
     await dbConnect();
-    console.log('Database connected successfully');
 
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     if (!token) {
@@ -29,20 +28,18 @@ export async function POST(request: NextRequest) {
     const orderData = await request.json();
 
     // Validate required fields
-    if (
-      !orderData.items ||
-      !orderData.shippingAddress ||
-      !orderData.paymentMethod
-    ) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
+    const requiredFields = ['items', 'shippingAddress', 'paymentMethod', 'subtotal', 'shippingCost', 'tax', 'total'];
+    for (const field of requiredFields) {
+      if (!orderData[field]) {
+        return NextResponse.json(
+          { error: `Missing required field: ${field}` },
+          { status: 400 }
+        );
+      }
     }
 
     // Create order with user ID from token
     const orderNumber = generateOrderNumber();
-    console.log('Generated order number:', orderNumber);
     
     // Validate order number
     if (!orderNumber || orderNumber.length !== 6 || isNaN(parseInt(orderNumber))) {
@@ -65,8 +62,6 @@ export async function POST(request: NextRequest) {
     
     try {
       await order.save();
-      console.log('Order saved successfully with ID:', order._id);
-      console.log('Order saved with orderNumber:', order.orderNumber);
       
       // Fetch the saved order to ensure all fields are present
       const savedOrder = await Order.findById(order._id);
@@ -90,7 +85,6 @@ export async function POST(request: NextRequest) {
         
         // Generate a new order number
         const newOrderNumber = generateOrderNumber();
-        console.log('Trying with new order number:', newOrderNumber);
         
         try {
           // Update the order with new order number
