@@ -64,7 +64,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
 
         if (response.ok) {
           const data = await response.json();
-          setItems(data.items || []);
+          setItems(data.wishlist || []);
         } else if (response.status === 401) {
           setItems([]);
         }
@@ -92,7 +92,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
 
       if (response.ok) {
         const data = await response.json();
-        setItems(data.items || []);
+        setItems(data.wishlist || []);
       } else if (response.status === 401) {
         setItems([]);
       }

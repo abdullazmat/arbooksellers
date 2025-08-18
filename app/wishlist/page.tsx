@@ -1,54 +1,22 @@
 "use client";
 
-import { Header } from '@/components/layout/header'
-import { Footer } from '@/components/layout/footer'
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Heart, ShoppingCart, Trash2, ArrowRight } from "lucide-react";
+import { Heart, ArrowRight } from "lucide-react";
 import { useWishlist } from "@/contexts/wishlist-context";
-import { useCart } from "@/contexts/cart-context";
 import { useAuth } from "@/contexts/auth-context";
-import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { formatPrice } from '@/lib/utils'
 import { useEffect, useState } from "react";
-import { ProductCard, ProductCardData } from "@/components/products/product-card";
+import {
+  ProductCard,
+  ProductCardData,
+} from "@/components/products/product-card";
 
 export default function WishlistPage() {
-  const { items, removeItem, clearWishlist, isLoading } = useWishlist();
-  const { addItem } = useCart();
+  const { items, isLoading } = useWishlist();
   const { user } = useAuth();
-  const { toast } = useToast();
   const [products, setProducts] = useState<ProductCardData[]>([]);
-
-  const handleAddToCart = (item: any) => {
-    addItem({
-      id: item.product,
-      title: item.title,
-      price: item.price,
-      image: item.image,
-    });
-    toast({
-      title: "Added to cart",
-      description: `${item.title} has been added to your cart.`,
-    });
-  };
-
-  const handleRemoveItem = async (productId: string, title: string) => {
-    await removeItem(productId);
-    toast({
-      title: "Removed from wishlist",
-      description: `${title} has been removed from your wishlist.`,
-    });
-  };
-
-  const handleClearWishlist = async () => {
-    await clearWishlist();
-    toast({
-      title: "Wishlist cleared",
-      description: "All items have been removed from your wishlist.",
-    });
-  };
 
   // Load full product details for wishlist items to render unified ProductCard
   useEffect(() => {
@@ -58,11 +26,15 @@ export default function WishlistPage() {
         const ids = Array.from(
           new Set(
             items.map((item) => {
-              if (typeof item.product === 'string') return item.product;
-              if (item.product && typeof item.product === 'object' && '_id' in item.product) {
+              if (typeof item.product === "string") return item.product;
+              if (
+                item.product &&
+                typeof item.product === "object" &&
+                "_id" in item.product
+              ) {
                 return (item.product as any)._id.toString();
               }
-              return String(item.product || '');
+              return String(item.product || "");
             })
           )
         ).filter(Boolean);
@@ -76,10 +48,12 @@ export default function WishlistPage() {
           ids.map(async (id) => {
             try {
               const res = await fetch(`/api/products/${id}`);
-              if (!res.ok) return null;
+              if (!res.ok) {
+                return null;
+              }
               const data = await res.json();
               return data.product as any;
-            } catch {
+            } catch (error) {
               return null;
             }
           })
@@ -106,13 +80,17 @@ export default function WishlistPage() {
           })) as ProductCardData[];
 
         setProducts(detailed);
-      } catch {
+      } catch (error) {
+        console.error("Error loading product details:", error);
         setProducts([]);
       }
     };
 
-    if (items.length > 0) loadDetails();
-    else setProducts([]);
+    if (items.length > 0) {
+      loadDetails();
+    } else {
+      setProducts([]);
+    }
   }, [items]);
 
   // Show login prompt if user is not authenticated
@@ -125,20 +103,21 @@ export default function WishlistPage() {
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <Heart className="h-12 w-12 text-gray-400" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Sign in to view your wishlist</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              Sign in to view your wishlist
+            </h1>
             <p className="text-gray-600 mb-8">
               You need to be signed in to view and manage your wishlist.
             </p>
             <div className="space-y-3">
-              <Button className="bg-green-600 hover:bg-green-700 w-full" asChild>
-                <Link href="/auth/signin">
-                  Sign In
-                </Link>
+              <Button
+                className="bg-green-600 hover:bg-green-700 w-full"
+                asChild
+              >
+                <Link href="/auth/signin">Sign In</Link>
               </Button>
               <Button variant="outline" className="w-full" asChild>
-                <Link href="/products">
-                  Browse Books
-                </Link>
+                <Link href="/products">Browse Books</Link>
               </Button>
             </div>
           </div>
@@ -172,9 +151,12 @@ export default function WishlistPage() {
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <Heart className="h-12 w-12 text-gray-400" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Your wishlist is empty</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              Your wishlist is empty
+            </h1>
             <p className="text-gray-600 mb-8">
-              Start building your collection of Islamic books by adding items to your wishlist!
+              Start building your collection of Islamic books by adding items to
+              your wishlist!
             </p>
             <Button className="bg-green-600 hover:bg-green-700" asChild>
               <Link href="/products">
@@ -195,22 +177,14 @@ export default function WishlistPage() {
       <main className="min-h-screen container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">My Wishlist</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              My Wishlist
+            </h1>
             <p className="text-gray-600">
               {items.length} {items.length === 1 ? "item" : "items"} saved for
               later
             </p>
           </div>
-
-          {items.length > 0 && (
-            <Button
-              variant="outline"
-              onClick={handleClearWishlist}
-              className="text-red-600 border-red-200 hover:bg-red-50"
-            >
-              Clear Wishlist
-            </Button>
-          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
