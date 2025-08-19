@@ -115,3 +115,25 @@ export function generateOrderNumber(): string {
   
   return paddedOrderNumber;
 }
+
+export function clearExpiredAdminTokens() {
+  try {
+    const adminToken = localStorage.getItem('adminToken');
+    if (adminToken) {
+      const tokenPayload = JSON.parse(atob(adminToken.split('.')[1]));
+      const currentTime = Math.floor(Date.now() / 1000);
+      
+      if (tokenPayload.exp && tokenPayload.exp < currentTime) {
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+        return true; // Token was expired and cleared
+      }
+    }
+    return false; // No expired token found
+  } catch (error) {
+    // If we can't parse the token, clear it anyway
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
+    return true; // Token was invalid and cleared
+  }
+}

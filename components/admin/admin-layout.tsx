@@ -17,18 +17,19 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/auth-context";
+import { useAdminAuth } from "@/contexts/admin-auth-context";
+import { AdminAuthProvider } from "@/contexts/admin-auth-context";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
-export function AdminLayout({ children }: AdminLayoutProps) {
+function AdminLayoutContent({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
-  const { user, isLoading } = useAuth();
+  const { adminUser: user, isLoading } = useAdminAuth();
 
   useEffect(() => {
     if (isLoading) {
@@ -36,7 +37,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     }
 
     if (!user) {
-      router.push('/auth/signin');
+      router.push('/admin/login');
       return;
     }
 
@@ -46,16 +47,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     }
   }, [user, isLoading, router]);
 
-  const handleLogout = () => {
-    // Clear auth data
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+  const { adminSignOut } = useAdminAuth();
 
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out",
-    });
-    router.push("/");
+  const handleLogout = () => {
+    adminSignOut();
   };
 
   const navigation = [
@@ -264,5 +259,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </main>
       </div>
     </div>
+  );
+}
+
+export function AdminLayout({ children }: AdminLayoutProps) {
+  return (
+    <AdminAuthProvider>
+      <AdminLayoutContent>{children}</AdminLayoutContent>
+    </AdminAuthProvider>
   );
 }

@@ -8,15 +8,16 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Shield, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { useAdminAuth, AdminAuthProvider } from '@/contexts/admin-auth-context'
 import Image from 'next/image'
 
-export default function AdminLoginPage() {
+function AdminLoginPageContent() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
+  const { adminSignIn, isLoading } = useAdminAuth()
 
   useEffect(() => {
     // Check if admin is already logged in
@@ -40,33 +41,12 @@ export default function AdminLoginPage() {
       return
     }
 
-    setIsLoading(true)
-
     try {
-      const response = await fetch('/api/admin/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Login failed')
+      const success = await adminSignIn(email, password)
+      if (success) {
+        // adminSignIn will handle the redirect
+        return
       }
-
-      // Store admin token and user data
-      localStorage.setItem('adminToken', data.token)
-      localStorage.setItem('adminUser', JSON.stringify(data.user))
-
-      toast({
-        title: 'Login Successful',
-        description: `Welcome back, ${data.user.name}!`,
-      })
-
-      router.push('/admin')
     } catch (error: any) {
       console.error('Admin login error:', error)
       toast({
@@ -74,8 +54,6 @@ export default function AdminLoginPage() {
         description: error.message || 'Invalid credentials',
         variant: 'destructive',
       })
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -197,5 +175,13 @@ export default function AdminLoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function AdminLoginPage() {
+  return (
+    <AdminAuthProvider>
+      <AdminLoginPageContent />
+    </AdminAuthProvider>
   )
 } 

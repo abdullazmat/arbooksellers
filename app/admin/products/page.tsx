@@ -39,7 +39,7 @@ import {
   PaginationNext, 
   PaginationPrevious 
 } from '@/components/ui/pagination'
-import { formatPrice } from '@/lib/utils'
+import { formatPrice, clearExpiredAdminTokens } from '@/lib/utils'
 
 interface Product {
   _id: string
@@ -104,6 +104,17 @@ export default function AdminProductsPage() {
   const { toast } = useToast()
 
   useEffect(() => {
+    // Check token expiration on mount
+    if (clearExpiredAdminTokens()) {
+      toast({
+        title: 'Session Expired',
+        description: 'Your session has expired. Please login again.',
+        variant: 'destructive',
+      });
+      window.location.href = '/admin/login';
+      return;
+    }
+    
     fetchProducts()
   }, [currentPage, searchTerm])
 
@@ -111,6 +122,26 @@ export default function AdminProductsPage() {
     try {
       setLoading(true)
       const token = localStorage.getItem('adminToken')
+
+      if (!token) {
+        toast({
+          title: 'Authentication Error',
+          description: 'Admin token not found. Please login again.',
+          variant: 'destructive',
+        })
+        return
+      }
+
+      // Check if token is expired
+      if (clearExpiredAdminTokens()) {
+        toast({
+          title: 'Session Expired',
+          description: 'Your session has expired. Please login again.',
+          variant: 'destructive',
+        });
+        window.location.href = '/admin/login';
+        return;
+      }
 
       const params = new URLSearchParams({
         page: currentPage.toString(),
@@ -128,7 +159,21 @@ export default function AdminProductsPage() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to fetch products')
+        if (response.status === 401 || response.status === 403) {
+          // Token is invalid or expired, redirect to login
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminUser');
+          toast({
+            title: 'Session Expired',
+            description: 'Your session has expired. Please login again.',
+            variant: 'destructive',
+          });
+          window.location.href = '/admin/login';
+          return;
+        }
+        
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to fetch products')
       }
 
       const data = await response.json()
@@ -138,7 +183,7 @@ export default function AdminProductsPage() {
       console.error('Error fetching products:', error)
       toast({
         title: 'Error',
-        description: 'Failed to load products',
+        description: error instanceof Error ? error.message : 'Failed to load products',
         variant: 'destructive',
       })
     } finally {
