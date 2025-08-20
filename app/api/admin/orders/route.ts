@@ -1,34 +1,66 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Order from '@/models/Order';
-import { verifyToken } from '@/lib/auth';
+import { verifyAuth } from '@/lib/auth';
 
 // GET - Get all orders with stats
 export async function GET(request: NextRequest) {
   try {
-    await dbConnect();
+    console.log('Admin orders API called');
+    console.log('Environment check:', {
+      hasMongoUri: !!process.env.MONGO_URI,
+      nodeEnv: process.env.NODE_ENV,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Test database connection
+    try {
+      await dbConnect();
+      console.log('Database connected successfully');
+    } catch (dbError: any) {
+      console.error('Database connection failed:', dbError);
+      console.error('Database error details:', {
+        name: dbError.name,
+        message: dbError.message,
+        code: dbError.code,
+        stack: dbError.stack
+      });
+      return NextResponse.json(
+        { 
+          error: 'Database connection failed',
+          details: dbError.message || 'Unable to connect to database',
+          timestamp: new Date().toISOString()
+        },
+        { status: 503 }
+      );
+    }
 
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token) {
+    const auth = verifyAuth(request);
+    if (!auth) {
+      console.log('No auth header or invalid auth');
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       );
     }
 
-    const decoded = await verifyToken(token);
-    if (!decoded || decoded.role !== 'admin') {
+    if (auth.role !== 'admin') {
+      console.log('User is not admin:', auth.role);
       return NextResponse.json(
         { error: 'Admin access required' },
         { status: 403 }
       );
     }
 
+    console.log('Admin authenticated:', auth.userId);
+
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
     const status = searchParams.get('status');
     const search = searchParams.get('search');
+
+    console.log('Search params:', { page, limit, status, search });
 
     const skip = (page - 1) * limit;
 
@@ -44,13 +76,29 @@ export async function GET(request: NextRequest) {
       ];
     }
 
+    console.log('Query built:', query);
+
     // Fetch orders with pagination
-    const orders = await Order.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .populate('user', 'name email')
-      .populate('items.product', 'title images price');
+    let orders;
+    try {
+      orders = await Order.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate('user', 'name email')
+        .populate('items.product', 'title images price');
+      console.log('Orders fetched:', orders.length);
+    } catch (findError: any) {
+      console.error('Error fetching orders:', findError);
+      return NextResponse.json(
+        { 
+          error: 'Failed to fetch orders',
+          details: findError.message || 'Database query failed',
+          timestamp: new Date().toISOString()
+        },
+        { status: 500 }
+      );
+    }
 
     // Transform orders to include orderNumber and normalize address
     const transformedOrders = orders.map(order => {
@@ -72,24 +120,38 @@ export async function GET(request: NextRequest) {
     });
 
     // Get total count
-    const total = await Order.countDocuments(query);
+    let total;
+    try {
+      total = await Order.countDocuments(query);
+      console.log('Total orders count:', total);
+    } catch (countError: any) {
+      console.error('Error counting orders:', countError);
+      total = 0; // Set default value
+    }
 
     // Get stats
-    const stats = await Order.aggregate([
-      {
-        $group: {
-          _id: null,
-          totalSales: { $sum: '$total' },
-          totalOrders: { $sum: 1 },
-          pendingOrders: {
-            $sum: { $cond: [{ $eq: ['$orderStatus', 'pending'] }, 1, 0] }
-          },
-          processingOrders: {
-            $sum: { $cond: [{ $eq: ['$orderStatus', 'processing'] }, 1, 0] }
-          },
+    let stats;
+    try {
+      stats = await Order.aggregate([
+        {
+          $group: {
+            _id: null,
+            totalSales: { $sum: '$total' },
+            totalOrders: { $sum: 1 },
+            pendingOrders: {
+              $sum: { $cond: [{ $eq: ['$orderStatus', 'pending'] }, 1, 0] }
+            },
+            processingOrders: {
+              $sum: { $cond: [{ $eq: ['$orderStatus', 'processing'] }, 1, 0] }
+            },
+          }
         }
-      }
-    ]);
+      ]);
+      console.log('Stats calculated successfully');
+    } catch (statsError: any) {
+      console.error('Error calculating stats:', statsError);
+      stats = []; // Set default value
+    }
 
     const orderStats = stats[0] || {
       totalSales: 0,
@@ -98,7 +160,9 @@ export async function GET(request: NextRequest) {
       processingOrders: 0,
     };
 
-    return NextResponse.json({
+    console.log('Stats calculated:', orderStats);
+
+    const response = {
       orders: transformedOrders,
       stats: orderStats,
       pagination: {
@@ -107,12 +171,23 @@ export async function GET(request: NextRequest) {
         total,
         pages: Math.ceil(total / limit),
       },
-    });
+    };
+
+    console.log('Response prepared successfully');
+    return NextResponse.json(response);
 
   } catch (error: any) {
     console.error('Get admin orders error:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error message:', error.message);
+    
+    // Return more specific error information
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        details: error.message || 'Unknown error occurred',
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     );
   }
