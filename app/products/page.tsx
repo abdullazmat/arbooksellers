@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { ProductGrid } from '@/components/products/product-grid'
@@ -28,6 +29,7 @@ interface Product {
 }
 
 export default function ProductsPage() {
+  const searchParams = useSearchParams()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   
@@ -40,6 +42,14 @@ export default function ProductsPage() {
   })
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+
+  // Initialize search filter from URL parameters
+  useEffect(() => {
+    const searchQuery = searchParams.get('search')
+    if (searchQuery) {
+      setFilters(prev => ({ ...prev, search: searchQuery }))
+    }
+  }, [searchParams])
 
   useEffect(() => {
     fetchProducts()
@@ -93,6 +103,11 @@ export default function ProductsPage() {
     setCurrentPage(1) // Reset to first page when sort changes
   }, [])
 
+  const clearSearch = () => {
+    setFilters(prev => ({ ...prev, search: '' }))
+    setCurrentPage(1)
+  }
+
   return (
     <>
       <Header />
@@ -144,7 +159,7 @@ export default function ProductsPage() {
                   />
                   {filters.search && (
                     <button
-                      onClick={() => handleFiltersChange({...filters, search: ''})}
+                      onClick={clearSearch}
                       className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                     >
                       <X className="h-4 w-4" />
@@ -158,6 +173,27 @@ export default function ProductsPage() {
                 {products.length} products found
               </div>
             </div>
+
+            {/* Search Results Summary */}
+            {filters.search && (
+              <div className="flex items-center justify-between bg-islamic-green-50 border border-islamic-green-200 rounded-lg p-4 mb-6">
+                <div className="flex items-center gap-2">
+                  <Search className="h-5 w-5 text-islamic-green-600" />
+                  <span className="text-sm text-islamic-green-800">
+                    Search results for: <span className="font-semibold">"{filters.search}"</span>
+                  </span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={clearSearch}
+                  className="text-islamic-green-700 border-islamic-green-300 hover:bg-islamic-green-100"
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Clear Search
+                </Button>
+              </div>
+            )}
           </div>
 
             {/* Products Grid */}
