@@ -296,10 +296,23 @@ export default function AdminOrdersPage() {
 
       console.log('Order status updated successfully:', responseData)
 
+      // Show appropriate success message
+      const successMessage = responseData.message || 'Order status updated successfully';
       toast({
         title: 'Success',
-        description: 'Order status updated successfully',
+        description: successMessage,
       })
+
+      // Show warnings if any
+      if (responseData.warnings && responseData.warnings.length > 0) {
+        responseData.warnings.forEach((warning: string) => {
+          toast({
+            title: 'Warning',
+            description: warning,
+            variant: 'default',
+          })
+        })
+      }
 
       fetchOrders()
     } catch (error) {
