@@ -49,6 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (storedToken && storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
+        console.log('Loading stored auth state:', parsedUser._id);
         setUser(parsedUser);
         setToken(storedToken);
       } catch (error) {
@@ -56,6 +57,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
       }
+    } else {
+      console.log('No stored auth state found');
     }
     
     setIsLoading(false);
@@ -84,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false
       }
 
+      console.log('User signed in successfully:', data.user._id);
       setUser(data.user)
       setToken(data.token)
       

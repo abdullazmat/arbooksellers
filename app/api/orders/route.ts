@@ -27,10 +27,20 @@ export async function POST(request: NextRequest) {
 
     const orderData = await request.json();
 
+    // Debug logging
+    console.log('Received order data:', {
+      items: orderData.items?.length,
+      shippingAddress: !!orderData.shippingAddress,
+      paymentMethod: orderData.paymentMethod,
+      subtotal: orderData.subtotal,
+      shippingCost: orderData.shippingCost,
+      total: orderData.total
+    });
+
     // Validate required fields
     const requiredFields = ['items', 'shippingAddress', 'paymentMethod', 'subtotal', 'shippingCost', 'total'];
     for (const field of requiredFields) {
-      if (!orderData[field]) {
+      if (orderData[field] === undefined || orderData[field] === null) {
         return NextResponse.json(
           { error: `Missing required field: ${field}` },
           { status: 400 }
@@ -38,6 +48,28 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Additional validation for numeric fields
+    if (typeof orderData.shippingCost !== 'number' || isNaN(orderData.shippingCost) || orderData.shippingCost < 0) {
+      return NextResponse.json(
+        { error: 'Invalid shipping cost value' },
+        { status: 400 }
+      );
+    }
+
+    if (typeof orderData.subtotal !== 'number' || isNaN(orderData.subtotal) || orderData.subtotal < 0) {
+      return NextResponse.json(
+        { error: 'Invalid subtotal value' },
+        { status: 400 }
+      );
+    }
+
+    if (typeof orderData.total !== 'number' || isNaN(orderData.total) || orderData.total < 0) {
+      return NextResponse.json(
+        { error: 'Invalid total value' },
+        { status: 400 }
+      );
+    }
+    
     // Create order with user ID from token
     const orderNumber = generateOrderNumber();
     

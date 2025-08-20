@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'
 import { useAuth } from './auth-context'
 import { useToast } from '@/hooks/use-toast'
 
@@ -32,30 +32,31 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast()
 
   // Helper function to safely extract product ID
-  const getProductId = (item: WishlistItem): string => {
+  const getProductId = useCallback((item: WishlistItem): string => {
     if (typeof item.product === 'string') {
       return item.product;
     } else if (item.product && typeof item.product === 'object' && '_id' in item.product) {
       return (item.product as any)._id.toString();
     }
     return String(item.product || '');
-  }
+  }, [])
 
-  // Load wishlist when user logs in
+  // Load wishlist when user logs in or token changes
   useEffect(() => {
-    if (!user || !token || isLoading) {
-      if (hasLoaded) {
-        setItems([]);
-      }
-      return;
-    }
-
-    if (hasLoaded) {
+    console.log('Wishlist useEffect triggered:', { user: !!user, token: !!token, hasLoaded });
+    
+    if (!user || !token) {
+      // Clear wishlist when user logs out
+      console.log('Clearing wishlist - no user or token');
+      setItems([]);
+      setHasLoaded(false);
       return;
     }
 
     const loadWishlist = async () => {
+      console.log('Loading wishlist for user:', user._id);
       try {
+        setIsLoading(true);
         const response = await fetch('/api/wishlist', {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -64,26 +65,32 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
 
         if (response.ok) {
           const data = await response.json();
+          console.log('Wishlist loaded successfully:', data.wishlist);
           setItems(data.wishlist || []);
+          setHasLoaded(true);
         } else if (response.status === 401) {
+          console.log('Wishlist request unauthorized');
           setItems([]);
+          setHasLoaded(true);
         }
       } catch (error) {
         console.error('Error loading wishlist:', error);
         setItems([]);
+        setHasLoaded(true);
+      } finally {
+        setIsLoading(false);
       }
     };
 
+    // Always load wishlist when user/token changes
     loadWishlist();
-    setHasLoaded(true);
-  }, [user, token, isLoading, hasLoaded]);
+  }, [user?._id, token]); // Only depend on user ID and token, not hasLoaded
 
-  const refreshWishlist = async () => {
-    setHasLoaded(false);
-    
+  const refreshWishlist = useCallback(async () => {
     if (!user || !token) return;
 
     try {
+      setIsLoading(true);
       const response = await fetch('/api/wishlist', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -92,19 +99,26 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('Wishlist refreshed successfully:', data.wishlist);
         setItems(data.wishlist || []);
+        setHasLoaded(true);
       } else if (response.status === 401) {
+        console.log('Wishlist refresh unauthorized');
+        setItems([]);
+        setHasLoaded(false);
+      } else {
+        console.error('Wishlist refresh failed:', response.status);
         setItems([]);
       }
     } catch (error) {
       console.error('Error refreshing wishlist:', error);
       setItems([]);
+    } finally {
+      setIsLoading(false);
     }
-    
-    setHasLoaded(true);
-  };
+  }, [user, token]);
 
-  const addItem = async (productId: string, productData: Omit<WishlistItem, 'product'>) => {
+  const addItem = useCallback(async (productId: string, productData: Omit<WishlistItem, 'product'>) => {
     if (!user || !token) {
       toast({
         title: 'Login Required',
@@ -160,9 +174,9 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [user, token, toast])
 
-  const removeItem = async (productId: string) => {
+  const removeItem = useCallback(async (productId: string) => {
     if (!user || !token) return
 
     try {
@@ -208,9 +222,9 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [user, token, toast])
 
-  const clearWishlist = async () => {
+  const clearWishlist = useCallback(async () => {
     if (!user || !token) return
 
     try {
@@ -242,11 +256,11 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [user, token, items, toast])
 
-  const isInWishlist = (productId: string) => {
+  const isInWishlist = useCallback((productId: string) => {
     return items.some(item => getProductId(item) === productId)
-  }
+  }, [items])
 
   return (
     <WishlistContext.Provider

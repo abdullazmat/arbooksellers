@@ -37,6 +37,15 @@ export default function CheckoutPage() {
   const { toast } = useToast();
   const { user, token } = useAuth();
 
+  // Calculate shipping cost and total
+  const shippingCost = cartTotal > 50 ? 0 : 5.99;
+  const finalTotal = cartTotal + shippingCost;
+
+  // Validate shipping cost calculation
+  if (typeof shippingCost !== 'number' || isNaN(shippingCost) || shippingCost < 0) {
+    console.error('Invalid shipping cost calculated:', shippingCost);
+  }
+
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -296,9 +305,6 @@ export default function CheckoutPage() {
         }
       }
 
-      const shippingCost = cartTotal > 50 ? 0 : 5.99
-      const finalTotal = cartTotal + shippingCost
-
       const orderPayload = {
         items: cartItems.map(item => ({
           product: item.id,
@@ -323,6 +329,11 @@ export default function CheckoutPage() {
         total: finalTotal,
         notes: formData.notes || undefined,
       };
+
+      // Debug logging to ensure all required fields are present
+      console.log('Order payload:', orderPayload);
+      console.log('Shipping cost:', shippingCost);
+      console.log('Final total:', finalTotal);
 
       const response = await fetch("/api/orders", {
         method: "POST",
@@ -375,9 +386,6 @@ export default function CheckoutPage() {
       setIsOrderProcessing(false);
     }
   };
-
-  const shippingCost = cartTotal > 50 ? 0 : 5.99
-  const finalTotal = cartTotal + shippingCost
 
   if (cartItems.length === 0 && !isLoading) {
     return (

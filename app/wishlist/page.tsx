@@ -14,9 +14,27 @@ import {
 } from "@/components/products/product-card";
 
 export default function WishlistPage() {
-  const { items, isLoading } = useWishlist();
+  const { items, isLoading, refreshWishlist } = useWishlist();
   const { user } = useAuth();
   const [products, setProducts] = useState<ProductCardData[]>([]);
+
+  // Debug logging
+  useEffect(() => {
+    console.log('Wishlist page state:', { 
+      user: !!user, 
+      itemsCount: items.length, 
+      isLoading, 
+      productsCount: products.length 
+    });
+  }, [user, items, isLoading, products]);
+
+  // Refresh wishlist when page loads to ensure it's up to date
+  useEffect(() => {
+    if (user) {
+      console.log('Wishlist page loaded, refreshing wishlist');
+      refreshWishlist();
+    }
+  }, [user, refreshWishlist]);
 
   // Load full product details for wishlist items to render unified ProductCard
   useEffect(() => {
@@ -147,6 +165,22 @@ export default function WishlistPage() {
       <>
         <Header />
         <main className="min-h-screen container mx-auto px-4 py-16">
+          {/* Debug section */}
+          <div className="mb-8 p-4 bg-gray-100 rounded-lg">
+            <h3 className="font-semibold mb-2">Debug Info:</h3>
+            <p>User: {user ? `Logged in as ${user.name} (${user._id})` : 'Not logged in'}</p>
+            <p>Items count: {items.length}</p>
+            <p>Loading: {isLoading ? 'Yes' : 'No'}</p>
+            <p>Products count: {products.length}</p>
+            <Button 
+              onClick={() => refreshWishlist()} 
+              className="mt-2"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Refreshing...' : 'Refresh Wishlist'}
+            </Button>
+          </div>
+          
           <div className="text-center max-w-md mx-auto">
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <Heart className="h-12 w-12 text-gray-400" />
@@ -175,6 +209,22 @@ export default function WishlistPage() {
     <>
       <Header />
       <main className="min-h-screen container mx-auto px-4 py-8">
+        {/* Debug section */}
+        <div className="mb-8 p-4 bg-gray-100 rounded-lg">
+          <h3 className="font-semibold mb-2">Debug Info:</h3>
+          <p>User: {user ? `Logged in as ${user.name} (${user._id})` : 'Not logged in'}</p>
+          <p>Items count: {items.length}</p>
+          <p>Loading: {isLoading ? 'Yes' : 'No'}</p>
+          <p>Products count: {products.length}</p>
+          <Button 
+            onClick={() => refreshWishlist()} 
+            className="mt-2"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Refreshing...' : 'Refresh Wishlist'}
+          </Button>
+        </div>
+        
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
