@@ -1,7 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
+import mongoose from 'mongoose';
+
+// Import models in the correct order to ensure proper registration
+import User from '@/models/User';
+import Product from '@/models/Product';
 import Order from '@/models/Order';
+
 import { verifyAuth } from '@/lib/auth';
+
+// Ensure models are registered
+const ensureModelsRegistered = async () => {
+  try {
+    // Force model registration by importing them
+    if (!mongoose.models.User) {
+      console.log('Loading User model...');
+      await import('@/models/User');
+    }
+    if (!mongoose.models.Product) {
+      console.log('Loading Product model...');
+      await import('@/models/Product');
+    }
+    if (!mongoose.models.Order) {
+      console.log('Loading Order model...');
+      await import('@/models/Order');
+    }
+    console.log('All models loaded successfully');
+  } catch (error) {
+    console.error('Error loading models:', error);
+    throw error;
+  }
+};
 
 // GET - Get all orders with stats
 export async function GET(request: NextRequest) {
@@ -17,6 +46,24 @@ export async function GET(request: NextRequest) {
     try {
       await dbConnect();
       console.log('Database connected successfully');
+      
+      // Verify models are registered
+      if (!mongoose.models.Order) {
+        throw new Error('Order model not registered');
+      }
+      if (!mongoose.models.User) {
+        throw new Error('User model not registered');
+      }
+      if (!mongoose.models.Product) {
+        throw new Error('Product model not registered');
+      }
+      console.log('All models verified and registered');
+      console.log('Available models:', Object.keys(mongoose.models));
+      
+      // Ensure all models are registered
+      await ensureModelsRegistered();
+      console.log('Models registration check completed');
+      
     } catch (dbError: any) {
       console.error('Database connection failed:', dbError);
       console.error('Database error details:', {
@@ -81,15 +128,36 @@ export async function GET(request: NextRequest) {
     // Fetch orders with pagination
     let orders;
     try {
+      // First try to find orders without populate to test basic query
+      const basicOrders = await Order.find(query).limit(1);
+      console.log('Basic order query successful, found:', basicOrders.length);
+      
+      // Now try with populate
       orders = await Order.find(query)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .populate('user', 'name email')
         .populate('items.product', 'title images price');
-      console.log('Orders fetched:', orders.length);
+      console.log('Orders fetched with populate:', orders.length);
     } catch (findError: any) {
       console.error('Error fetching orders:', findError);
+      
+      // Check if it's a model registration error
+      if (findError.message && findError.message.includes('Schema hasn\'t been registered')) {
+        console.error('Model registration error detected');
+        console.error('Available models:', Object.keys(mongoose.models));
+        return NextResponse.json(
+          { 
+            error: 'Model registration error',
+            details: 'One or more required models are not properly registered',
+            availableModels: Object.keys(mongoose.models),
+            timestamp: new Date().toISOString()
+          },
+          { status: 500 }
+        );
+      }
+      
       return NextResponse.json(
         { 
           error: 'Failed to fetch orders',
