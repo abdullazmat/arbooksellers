@@ -82,6 +82,32 @@ export default function AdminOrdersPage() {
   const [showOrderModal, setShowOrderModal] = useState(false)
   const { toast } = useToast()
 
+  // Check if admin token is expired
+  const isTokenExpired = (token: string): boolean => {
+    try {
+      const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+      const currentTime = Math.floor(Date.now() / 1000);
+      return tokenPayload.exp && tokenPayload.exp < currentTime;
+    } catch (error) {
+      console.error('Error checking token expiration:', error);
+      return true; // Assume expired if we can't parse
+    }
+  }
+
+  // Check admin authentication on mount
+  useEffect(() => {
+    const token = localStorage.getItem('adminToken');
+    if (!token || isTokenExpired(token)) {
+      toast({
+        title: 'Session Expired',
+        description: 'Your admin session has expired. Please login again.',
+        variant: 'destructive',
+      });
+      window.location.href = '/admin/login';
+      return;
+    }
+  }, [toast]);
+
   const handleDownloadInvoice = (order: Order) => {
     try {
       // Format the order data for invoice generation
@@ -139,6 +165,26 @@ export default function AdminOrdersPage() {
       setLoading(true)
       const token = localStorage.getItem('adminToken')
 
+      if (!token) {
+        toast({
+          title: 'Authentication Error',
+          description: 'Admin token not found. Please login again.',
+          variant: 'destructive',
+        })
+        return
+      }
+
+      // Check if token is expired
+      if (isTokenExpired(token)) {
+        toast({
+          title: 'Session Expired',
+          description: 'Your admin session has expired. Please login again.',
+          variant: 'destructive',
+        });
+        window.location.href = '/admin/login';
+        return;
+      }
+
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: '20',
@@ -180,18 +226,75 @@ export default function AdminOrdersPage() {
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
       const token = localStorage.getItem('adminToken')
+      
+      console.log('Admin token check:', { 
+        hasToken: !!token, 
+        tokenLength: token?.length,
+        orderId, 
+        newStatus 
+      })
+      
+      if (!token) {
+        toast({
+          title: 'Authentication Error',
+          description: 'Admin token not found. Please login again.',
+          variant: 'destructive',
+        })
+        return
+      }
+
+      // Check if token is expired
+      if (isTokenExpired(token)) {
+        toast({
+          title: 'Session Expired',
+          description: 'Your admin session has expired. Please login again.',
+          variant: 'destructive',
+        });
+        window.location.href = '/admin/login';
+        return;
+      }
+
+      console.log('Updating order status:', { orderId, newStatus })
+
+      const requestBody = { orderStatus: newStatus }
+      console.log('Request body:', requestBody)
+
       const response = await fetch(`/api/admin/orders/${orderId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ orderStatus: newStatus }),
+        body: JSON.stringify(requestBody),
       })
 
+      console.log('Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      })
+
+      const responseData = await response.json()
+
       if (!response.ok) {
-        throw new Error('Failed to update order status')
+        console.error('Order status update failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          data: responseData
+        })
+        
+        if (response.status === 401) {
+          throw new Error('Unauthorized - Please login again')
+        } else if (response.status === 404) {
+          throw new Error('Order not found')
+        } else if (response.status === 400) {
+          throw new Error(responseData.error || 'Invalid request data')
+        } else {
+          throw new Error(`Server error: ${responseData.error || 'Unknown error'}`)
+        }
       }
+
+      console.log('Order status updated successfully:', responseData)
 
       toast({
         title: 'Success',
@@ -203,7 +306,7 @@ export default function AdminOrdersPage() {
       console.error('Error updating order status:', error)
       toast({
         title: 'Error',
-        description: 'Failed to update order status',
+        description: error instanceof Error ? error.message : 'Failed to update order status',
         variant: 'destructive',
       })
     }
