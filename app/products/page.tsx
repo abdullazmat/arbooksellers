@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { ProductGrid } from '@/components/products/product-grid'
 import { ProductSort } from '@/components/products/product-sort'
+import { CategoryFilter } from '@/components/products/category-filter'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -30,6 +31,8 @@ interface Product {
 
 export default function ProductsPage() {
   const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   
@@ -39,15 +42,22 @@ export default function ProductsPage() {
     minPrice: 0,
     maxPrice: 10000,
     featured: false,
+    category: 'all',
   })
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
 
-  // Initialize search filter from URL parameters
+  // Initialize filters from URL parameters
   useEffect(() => {
     const searchQuery = searchParams.get('search')
-    if (searchQuery) {
-      setFilters(prev => ({ ...prev, search: searchQuery }))
+    const categoryQuery = searchParams.get('category')
+    
+    if (searchQuery || categoryQuery) {
+      setFilters(prev => ({ 
+        ...prev, 
+        search: searchQuery || prev.search,
+        category: categoryQuery || 'all'
+      }))
     }
   }, [searchParams])
 
@@ -77,6 +87,9 @@ export default function ProductsPage() {
       if (filters.maxPrice < 10000) {
         params.append('maxPrice', filters.maxPrice.toString())
       }
+      if (filters.category && filters.category !== 'all') {
+        params.append('category', filters.category)
+      }
 
       const response = await fetch(`/api/products?${params.toString()}`)
       if (!response.ok) {
@@ -96,7 +109,28 @@ export default function ProductsPage() {
   const handleFiltersChange = useCallback((newFilters: any) => {
     setFilters(newFilters)
     setCurrentPage(1) // Reset to first page when filters change
-  }, [])
+    
+    // Update URL parameters
+    const params = new URLSearchParams(searchParams.toString())
+    
+    // Update search parameter
+    if (newFilters.search) {
+      params.set('search', newFilters.search)
+    } else {
+      params.delete('search')
+    }
+    
+    // Update category parameter
+    if (newFilters.category && newFilters.category !== 'all') {
+      params.set('category', newFilters.category)
+    } else {
+      params.delete('category')
+    }
+    
+    // Update URL
+    const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname
+    router.push(newUrl)
+  }, [searchParams, pathname, router])
 
   const handleSortChange = useCallback((newSort: string) => {
     setSortBy(newSort)
@@ -104,8 +138,8 @@ export default function ProductsPage() {
   }, [])
 
   const clearSearch = () => {
-    setFilters(prev => ({ ...prev, search: '' }))
-    setCurrentPage(1)
+    const newFilters = { ...filters, search: '' }
+    handleFiltersChange(newFilters)
   }
 
   return (
@@ -142,6 +176,10 @@ export default function ProductsPage() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div className="flex items-center gap-3 sm:gap-4">
               <ProductSort value={sortBy} onChange={handleSortChange} />
+              <CategoryFilter 
+                value={filters.category} 
+                onChange={(categoryId) => handleFiltersChange({...filters, category: categoryId})} 
+              />
               
               {/* View Mode Toggle removed */}
             </div>
@@ -173,27 +211,6 @@ export default function ProductsPage() {
                 {products.length} products found
               </div>
             </div>
-
-            {/* Search Results Summary */}
-            {filters.search && (
-              <div className="flex items-center justify-between bg-islamic-green-50 border border-islamic-green-200 rounded-lg p-4 mb-6">
-                <div className="flex items-center gap-2">
-                  <Search className="h-5 w-5 text-islamic-green-600" />
-                  <span className="text-sm text-islamic-green-800">
-                    Search results for: <span className="font-semibold">"{filters.search}"</span>
-                  </span>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={clearSearch}
-                  className="text-islamic-green-700 border-islamic-green-300 hover:bg-islamic-green-100"
-                >
-                  <X className="h-4 w-4 mr-1" />
-                  Clear Search
-                </Button>
-              </div>
-            )}
           </div>
 
             {/* Products Grid */}

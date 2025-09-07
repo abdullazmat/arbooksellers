@@ -15,6 +15,8 @@ export interface IProduct extends Document {
   paper?: string
   binding?: string
   specifications?: Record<string, any>
+  category?: mongoose.Types.ObjectId
+  subcategory?: mongoose.Types.ObjectId
   createdAt: Date
   updatedAt: Date
 }
@@ -79,6 +81,14 @@ const productSchema = new Schema<IProduct>({
   specifications: {
     type: Map,
     of: Schema.Types.Mixed,
+  },
+  category: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
+  },
+  subcategory: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
   },
 }, {
   timestamps: true,

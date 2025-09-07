@@ -43,6 +43,16 @@ interface Product {
   discountPercentage?: number;
   rating?: number;
   reviews?: number;
+  category?: {
+    _id: string;
+    name: string;
+    slug: string;
+  };
+  subcategory?: {
+    _id: string;
+    name: string;
+    slug: string;
+  };
 }
 
 export default function ProductDetailPage({
@@ -238,6 +248,22 @@ export default function ProductDetailPage({
                 </p>
               )}
 
+              {/* Category and Subcategory */}
+              {(product.category || product.subcategory) && (
+                <div className="flex items-center space-x-2 mb-4">
+                  {product.category && (
+                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                      {product.category.name}
+                    </Badge>
+                  )}
+                  {product.subcategory && (
+                    <Badge variant="outline" className="border-green-200 text-green-700">
+                      {product.subcategory.name}
+                    </Badge>
+                  )}
+                </div>
+              )}
+
               <div className="flex items-center space-x-2 mb-4">
                 <div className="flex items-center">
                   {[...Array(5)].map((_, i) => (
@@ -362,6 +388,18 @@ export default function ProductDetailPage({
                   Product Information
                 </h3>
                 <dl className="space-y-3">
+                  {product.category && (
+                    <div className="flex justify-between">
+                      <dt className="text-gray-600">Category:</dt>
+                      <dd className="font-medium">{product.category.name}</dd>
+                    </div>
+                  )}
+                  {product.subcategory && (
+                    <div className="flex justify-between">
+                      <dt className="text-gray-600">Subcategory:</dt>
+                      <dd className="font-medium">{product.subcategory.name}</dd>
+                    </div>
+                  )}
                   {product.size && (
                     <div className="flex justify-between">
                       <dt className="text-gray-600">Size:</dt>

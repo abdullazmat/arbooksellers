@@ -2,35 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import mongoose from 'mongoose';
 
-// Import models in the correct order to ensure proper registration
-import User from '@/models/User';
-import Product from '@/models/Product';
-import Order from '@/models/Order';
-
 import { verifyAuth } from '@/lib/auth';
-
-// Ensure models are registered
-const ensureModelsRegistered = async () => {
-  try {
-    // Force model registration by importing them
-    if (!mongoose.models.User) {
-      console.log('Loading User model...');
-      await import('@/models/User');
-    }
-    if (!mongoose.models.Product) {
-      console.log('Loading Product model...');
-      await import('@/models/Product');
-    }
-    if (!mongoose.models.Order) {
-      console.log('Loading Order model...');
-      await import('@/models/Order');
-    }
-    console.log('All models loaded successfully');
-  } catch (error) {
-    console.error('Error loading models:', error);
-    throw error;
-  }
-};
 
 // GET - Get all orders with stats
 export async function GET(request: NextRequest) {
@@ -42,45 +14,68 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString()
     });
     
-    // Test database connection
+    // Connect to database
+    await dbConnect();
+    console.log('Database connected successfully');
+    
+    // Dynamically import models to ensure they are registered
     try {
-      await dbConnect();
-      console.log('Database connected successfully');
-      
-      // Verify models are registered
-      if (!mongoose.models.Order) {
-        throw new Error('Order model not registered');
-      }
-      if (!mongoose.models.User) {
-        throw new Error('User model not registered');
-      }
-      if (!mongoose.models.Product) {
-        throw new Error('Product model not registered');
-      }
-      console.log('All models verified and registered');
-      console.log('Available models:', Object.keys(mongoose.models));
-      
-      // Ensure all models are registered
-      await ensureModelsRegistered();
-      console.log('Models registration check completed');
-      
-    } catch (dbError: any) {
-      console.error('Database connection failed:', dbError);
-      console.error('Database error details:', {
-        name: dbError.name,
-        message: dbError.message,
-        code: dbError.code,
-        stack: dbError.stack
-      });
+      const UserModel = (await import('@/models/User')).default;
+      const ProductModel = (await import('@/models/Product')).default;
+      const OrderModel = (await import('@/models/Order')).default;
+      console.log('Models imported successfully');
+    } catch (importError) {
+      console.error('Error importing models:', importError);
       return NextResponse.json(
         { 
-          error: 'Database connection failed',
-          details: dbError.message || 'Unable to connect to database',
+          error: 'Failed to import models',
+          details: importError instanceof Error ? importError.message : 'Unknown import error',
           timestamp: new Date().toISOString()
         },
-        { status: 503 }
+        { status: 500 }
       );
     }
+    
+    // Verify models are registered
+    console.log('Available models:', Object.keys(mongoose.models));
+    
+    if (!mongoose.models.Order) {
+      console.error('Order model not registered');
+      return NextResponse.json(
+        { 
+          error: 'Order model not registered',
+          availableModels: Object.keys(mongoose.models),
+          timestamp: new Date().toISOString()
+        },
+        { status: 500 }
+      );
+    }
+    
+    if (!mongoose.models.User) {
+      console.error('User model not registered');
+      return NextResponse.json(
+        { 
+          error: 'User model not registered',
+          availableModels: Object.keys(mongoose.models),
+          timestamp: new Date().toISOString()
+        },
+        { status: 500 }
+      );
+    }
+    
+    if (!mongoose.models.Product) {
+      console.error('Product model not registered');
+      return NextResponse.json(
+        { 
+          error: 'Product model not registered',
+          availableModels: Object.keys(mongoose.models),
+          timestamp: new Date().toISOString()
+        },
+        { status: 500 }
+      );
+    }
+    
+    console.log('All models verified and registered');
 
     const auth = verifyAuth(request);
     if (!auth) {
@@ -129,11 +124,11 @@ export async function GET(request: NextRequest) {
     let orders;
     try {
       // First try to find orders without populate to test basic query
-      const basicOrders = await Order.find(query).limit(1);
+      const basicOrders = await mongoose.models.Order.find(query).limit(1);
       console.log('Basic order query successful, found:', basicOrders.length);
       
       // Now try with populate
-      orders = await Order.find(query)
+      orders = await mongoose.models.Order.find(query)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -169,7 +164,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform orders to include orderNumber and normalize address
-    const transformedOrders = orders.map(order => {
+    const transformedOrders = orders.map((order: any) => {
       const orderObj = order.toObject();
       
       // Ensure orderNumber is present
@@ -190,7 +185,7 @@ export async function GET(request: NextRequest) {
     // Get total count
     let total;
     try {
-      total = await Order.countDocuments(query);
+      total = await mongoose.models.Order.countDocuments(query);
       console.log('Total orders count:', total);
     } catch (countError: any) {
       console.error('Error counting orders:', countError);
@@ -200,7 +195,7 @@ export async function GET(request: NextRequest) {
     // Get stats
     let stats;
     try {
-      stats = await Order.aggregate([
+      stats = await mongoose.models.Order.aggregate([
         {
           $group: {
             _id: null,

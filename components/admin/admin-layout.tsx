@@ -15,6 +15,7 @@ import {
   X,
   FileText,
   MessageSquare,
+  Folder,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminAuth } from "@/contexts/admin-auth-context";
@@ -56,6 +57,7 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
   const navigation = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { name: "Products", href: "/admin/products", icon: Package },
+    { name: "Categories", href: "/admin/categories", icon: Folder },
     { name: "Orders", href: "/admin/orders", icon: ShoppingCart },
     { name: "Users", href: "/admin/users", icon: Users },
     { name: "Comments", href: "/admin/comments", icon: MessageSquare },

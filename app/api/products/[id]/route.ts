@@ -36,7 +36,25 @@ export async function GET(
         }
       },
       {
+        $lookup: {
+          from: 'categories',
+          localField: 'category',
+          foreignField: '_id',
+          as: 'category'
+        }
+      },
+      {
+        $lookup: {
+          from: 'categories',
+          localField: 'subcategory',
+          foreignField: '_id',
+          as: 'subcategory'
+        }
+      },
+      {
         $addFields: {
+          category: { $arrayElemAt: ['$category', 0] },
+          subcategory: { $arrayElemAt: ['$subcategory', 0] },
           rating: {
             $cond: {
               if: { $gt: [{ $size: '$comments' }, 0] },

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db'
 import Product from '@/models/Product'
 import Comment from '@/models/Comment'
+import mongoose from 'mongoose'
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,6 +16,8 @@ export async function GET(request: NextRequest) {
     const featured = searchParams.get('featured')
     const minPrice = searchParams.get('minPrice')
     const maxPrice = searchParams.get('maxPrice')
+    const category = searchParams.get('category')
+    const subcategory = searchParams.get('subcategory')
 
     const skip = (page - 1) * limit
 
@@ -34,6 +37,14 @@ export async function GET(request: NextRequest) {
 
     if (featured === 'true') {
       query.featured = true
+    }
+
+    if (category) {
+      query.category = new mongoose.Types.ObjectId(category)
+    }
+
+    if (subcategory) {
+      query.subcategory = new mongoose.Types.ObjectId(subcategory)
     }
 
     if (minPrice || maxPrice) {
@@ -84,7 +95,25 @@ export async function GET(request: NextRequest) {
         }
       },
       {
+        $lookup: {
+          from: 'categories',
+          localField: 'category',
+          foreignField: '_id',
+          as: 'category'
+        }
+      },
+      {
+        $lookup: {
+          from: 'categories',
+          localField: 'subcategory',
+          foreignField: '_id',
+          as: 'subcategory'
+        }
+      },
+      {
         $addFields: {
+          category: { $arrayElemAt: ['$category', 0] },
+          subcategory: { $arrayElemAt: ['$subcategory', 0] },
           rating: {
             $cond: {
               if: { $gt: [{ $size: '$comments' }, 0] },

@@ -16,6 +16,13 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -68,6 +75,16 @@ interface Product {
   pages?: number;
   paper?: string;
   binding?: string;
+  category?: {
+    _id: string;
+    name: string;
+    slug: string;
+  };
+  subcategory?: {
+    _id: string;
+    name: string;
+    slug: string;
+  };
   createdAt: string;
 }
 
@@ -85,10 +102,13 @@ interface ProductFormData {
   pages: string;
   paper: string;
   binding: string;
+  category: string;
+  subcategory: string;
 }
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -111,6 +131,8 @@ export default function AdminProductsPage() {
     pages: "",
     paper: "",
     binding: "",
+    category: "",
+    subcategory: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
@@ -128,6 +150,7 @@ export default function AdminProductsPage() {
     }
 
     fetchProducts();
+    fetchCategories();
   }, [currentPage, searchTerm]);
 
   const fetchProducts = async () => {
@@ -204,6 +227,18 @@ export default function AdminProductsPage() {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/categories');
+      if (response.ok) {
+        const data = await response.json();
+        setCategories(data.categories);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       title: "",
@@ -219,6 +254,8 @@ export default function AdminProductsPage() {
       pages: "",
       paper: "",
       binding: "",
+      category: "",
+      subcategory: "",
     });
   };
 
@@ -243,6 +280,8 @@ export default function AdminProductsPage() {
       pages: product.pages?.toString() || "",
       paper: product.paper || "",
       binding: product.binding || "",
+      category: product.category?._id || "",
+      subcategory: product.subcategory?._id || "",
     });
     setIsEditDialogOpen(true);
   };
@@ -268,6 +307,8 @@ export default function AdminProductsPage() {
         stockQuantity: parseInt(formData.stockQuantity),
         pages: formData.pages ? parseInt(formData.pages) : undefined,
         images: formData.images,
+        category: formData.category || undefined,
+        subcategory: formData.subcategory || undefined,
       };
 
       const url = selectedProduct
@@ -286,7 +327,8 @@ export default function AdminProductsPage() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to save product");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to save product");
       }
 
       const data = await response.json();
@@ -437,6 +479,7 @@ export default function AdminProductsPage() {
                   <TableRow>
                     <TableHead>Product</TableHead>
                     <TableHead>Details</TableHead>
+                    <TableHead>Category</TableHead>
                     <TableHead>Price</TableHead>
                     <TableHead>Stock</TableHead>
                     <TableHead>Status</TableHead>
@@ -504,6 +547,25 @@ export default function AdminProductsPage() {
                               <span className="font-medium">Binding:</span>{" "}
                               {product.binding}
                             </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm space-y-1">
+                          {product.category && (
+                            <div>
+                              <span className="font-medium">Category:</span>{" "}
+                              {product.category.name}
+                            </div>
+                          )}
+                          {product.subcategory && (
+                            <div>
+                              <span className="font-medium">Subcategory:</span>{" "}
+                              {product.subcategory.name}
+                            </div>
+                          )}
+                          {!product.category && !product.subcategory && (
+                            <div className="text-gray-400">No category</div>
                           )}
                         </div>
                       </TableCell>
@@ -821,6 +883,50 @@ export default function AdminProductsPage() {
                     }
                   />
                 </div>
+                <div>
+                  <Label htmlFor="category">Category</Label>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) => {
+                      setFormData({ ...formData, category: value, subcategory: "" });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category._id} value={category._id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="subcategory">Subcategory</Label>
+                  <Select
+                    value={formData.subcategory}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, subcategory: value })
+                    }
+                    disabled={!formData.category}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select subcategory" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {formData.category && 
+                        categories
+                          .find(cat => cat._id === formData.category)
+                          ?.subcategories?.map((subcategory: any) => (
+                            <SelectItem key={subcategory._id} value={subcategory._id}>
+                              {subcategory.name}
+                            </SelectItem>
+                          ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="md:col-span-2">
                   <Label htmlFor="images">Images</Label>
                   <ImageUpload
@@ -1008,6 +1114,50 @@ export default function AdminProductsPage() {
                       setFormData({ ...formData, binding: e.target.value })
                     }
                   />
+                </div>
+                <div>
+                  <Label htmlFor="edit-category">Category</Label>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) => {
+                      setFormData({ ...formData, category: value, subcategory: "" });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category._id} value={category._id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="edit-subcategory">Subcategory</Label>
+                  <Select
+                    value={formData.subcategory}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, subcategory: value })
+                    }
+                    disabled={!formData.category}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select subcategory" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {formData.category && 
+                        categories
+                          .find(cat => cat._id === formData.category)
+                          ?.subcategories?.map((subcategory: any) => (
+                            <SelectItem key={subcategory._id} value={subcategory._id}>
+                              {subcategory.name}
+                            </SelectItem>
+                          ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="md:col-span-2">
                   <Label htmlFor="edit-images">Images</Label>

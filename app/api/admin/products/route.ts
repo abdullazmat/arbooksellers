@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Product from '@/models/Product';
+import Category from '@/models/Category';
 import { verifyToken } from '@/lib/auth';
+import mongoose from 'mongoose';
 
 // GET - Get all products for admin
 export async function GET(request: NextRequest) {
@@ -29,6 +31,8 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const search = searchParams.get('search');
     const featured = searchParams.get('featured');
+    const category = searchParams.get('category');
+    const subcategory = searchParams.get('subcategory');
 
     const skip = (page - 1) * limit;
 
@@ -36,6 +40,12 @@ export async function GET(request: NextRequest) {
     const query: any = {};
     if (featured === 'true') {
       query.featured = true;
+    }
+    if (category) {
+      query.category = category;
+    }
+    if (subcategory) {
+      query.subcategory = subcategory;
     }
     if (search) {
       query.$or = [
@@ -48,8 +58,10 @@ export async function GET(request: NextRequest) {
       ]
     }
 
-    // Get products
+    // Get products with category population
     const products = await Product.find(query)
+      .populate('category', 'name slug')
+      .populate('subcategory', 'name slug')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -99,7 +111,6 @@ export async function POST(request: NextRequest) {
     }
 
     const productData = await request.json();
-
     // Validate required fields
     if (!productData.title || !productData.author || !productData.price) {
       return NextResponse.json(
@@ -108,12 +119,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Convert category fields to ObjectIds if they exist
+    if (productData.category) {
+      productData.category = new mongoose.Types.ObjectId(productData.category);
+    }
+    if (productData.subcategory) {
+      productData.subcategory = new mongoose.Types.ObjectId(productData.subcategory);
+    }
+    
     const product = new Product(productData);
     await product.save();
 
+    // Populate categories for response
+    let populatedProduct;
+    try {
+      populatedProduct = await Product.findById(product._id)
+        .populate('category', 'name slug')
+        .populate('subcategory', 'name slug')
+        .lean();
+    } catch (populateError: any) {
+      console.error('Error populating product categories:', populateError);
+      // Return product without population if populate fails
+      populatedProduct = await Product.findById(product._id).lean();
+    }
+
     return NextResponse.json({
       message: 'Product created successfully',
-      product,
+      product: {
+        ...populatedProduct,
+        category: productData.category || null,
+        subcategory: productData.subcategory || null,
+      },
     }, { status: 201 });
 
   } catch (error: any) {

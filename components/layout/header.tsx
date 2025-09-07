@@ -23,6 +23,7 @@ import { useCart } from '@/contexts/cart-context'
 import { useWishlist } from '@/contexts/wishlist-context'
 import { ShoppingCart, Heart, User, Search, Menu, Home, BookOpen, Info, LayoutDashboard, LogOut, LogIn, UserPlus, X } from 'lucide-react'
 import { formatPrice } from '@/lib/utils'
+import { CategoryNavbar } from '@/components/layout/category-navbar'
 
 interface SearchResult {
   _id: string
@@ -146,12 +147,13 @@ export function Header() {
   }
 
   return (
-    <header
-      className={`sticky top-0 z-50 w-full transition-all duration-300 ${
-        isScrolled ? 'bg-white/80 backdrop-blur-md shadow-md' : 'bg-white'
-      }`}
-    >
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
+    <>
+      <header
+        className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+          isScrolled ? 'bg-white/80 backdrop-blur-md shadow-md' : 'bg-white'
+        }`}
+      >
+        <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
         {/* Logo */}
         <Link className="flex items-center" href="/">
           <img src="/logo.png" alt="Islamic Books" className="h-16 w-[80px]" />
@@ -503,6 +505,8 @@ export function Header() {
           </Sheet>
         </div>
       </div>
-    </header>
+      </header>
+      <CategoryNavbar />
+    </>
   )
 }
