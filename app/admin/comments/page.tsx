@@ -110,10 +110,7 @@ export default function AdminCommentsPage() {
               }
             }
           } catch (error) {
-            console.error(
-              `Failed to fetch product ${comment.productId}:`,
-              error
-            );
+            // Product not found or fetch failed
           }
           // Return comment without product if fetch fails
           return { ...comment, product: null };
@@ -124,7 +121,6 @@ export default function AdminCommentsPage() {
       setTotalPages(data.pagination.pages);
       setTotal(data.pagination.total);
     } catch (error) {
-      console.error("Error fetching comments:", error);
       toast({
         title: "Error",
         description: "Failed to fetch comments",
@@ -719,7 +715,7 @@ export default function AdminCommentsPage() {
                     </label>
                     {selectedComment.product ? (
                       <div>
-                        <p className="text-gray-900 font-medium">{selectedComment.product.name}</p>
+                        <p className="text-gray-900 font-medium">{selectedComment.product.title}</p>
                         <p className="text-sm text-gray-500">ID: {selectedComment.productId}</p>
                         <p className="text-sm text-gray-500">Price: Rs {selectedComment.product.price.toLocaleString("en-IN")}</p>
                       </div>

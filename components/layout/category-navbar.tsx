@@ -38,7 +38,7 @@ export function CategoryNavbar() {
         setCategories(data.categories || [])
       }
     } catch (error) {
-      console.error('Error fetching categories:', error)
+      // Error fetching categories
     } finally {
       setLoading(false)
     }

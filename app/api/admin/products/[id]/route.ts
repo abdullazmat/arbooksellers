@@ -45,7 +45,6 @@ export async function GET(
     return NextResponse.json({ product })
 
   } catch (error: any) {
-    console.error('Get product error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -107,7 +106,6 @@ export async function PUT(
       .populate('category', 'name slug')
       .populate('subcategory', 'name slug')
     } catch (populateError: any) {
-      console.error('Error populating product categories:', populateError);
       // Fallback to product without population
       product = await Product.findByIdAndUpdate(
         id,
@@ -133,7 +131,6 @@ export async function PUT(
     })
 
   } catch (error: any) {
-    console.error('Update product error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -182,7 +179,6 @@ export async function DELETE(
     })
 
   } catch (error: any) {
-    console.error('Delete product error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -1,7 +1,8 @@
-import jwt from 'jsonwebtoken';
-import { NextRequest } from 'next/server';
+import jwt from "jsonwebtoken";
+import { NextRequest } from "next/server";
 
-const JWT_SECRET = process.env.JWT_SECRET || 'islamic-books-jwt-secret-key-2024-very-secure';
+const JWT_SECRET =
+  process.env.JWT_SECRET || "islamic-books-jwt-secret-key-2024-very-secure";
 
 export interface DecodedToken {
   userId: string;
@@ -20,25 +21,28 @@ export async function verifyToken(token: string): Promise<DecodedToken | null> {
     const decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
     return decoded;
   } catch (error) {
-    console.error('Token verification failed:', error);
     return null;
   }
 }
 
-export function generateToken(payload: { userId: string; email: string; role: string }): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+export function generateToken(payload: {
+  userId: string;
+  email: string;
+  role: string;
+}): string {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
 }
 
 export function verifyAuth(request: NextRequest): AuthResult | null {
   try {
-    const authHeader = request.headers.get('authorization');
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const authHeader = request.headers.get("authorization");
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return null;
     }
 
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-    
+
     if (!token) {
       return null;
     }
@@ -53,11 +57,9 @@ export function verifyAuth(request: NextRequest): AuthResult | null {
         role: decoded.role,
       };
     } catch (error) {
-      console.error('Token verification failed:', error);
       return null;
     }
   } catch (error) {
-    console.error('Auth verification error:', error);
     return null;
   }
-} 
+}

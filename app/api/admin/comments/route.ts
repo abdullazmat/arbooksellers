@@ -10,9 +10,7 @@ export async function GET(request: NextRequest) {
     // Dynamically import Comment model
     try {
       const CommentModel = (await import('@/models/Comment')).default;
-      console.log('Comment model imported successfully');
     } catch (importError) {
-      console.error('Error importing Comment model:', importError);
       return NextResponse.json(
         { 
           error: 'Failed to import Comment model',
@@ -25,7 +23,6 @@ export async function GET(request: NextRequest) {
     // Verify admin authentication
     const user = verifyAuth(request)
     if (!user || user.role !== 'admin') {
-      console.log('Admin authentication failed:', { user: user?.role });
       return NextResponse.json(
         { error: 'Admin access required' },
         { status: 403 }
@@ -76,7 +73,6 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error: any) {
-    console.error('Get admin comments error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

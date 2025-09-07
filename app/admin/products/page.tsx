@@ -215,7 +215,6 @@ export default function AdminProductsPage() {
       setProducts(data.products);
       setTotalPages(data.pagination.pages);
     } catch (error) {
-      console.error("Error fetching products:", error);
       toast({
         title: "Error",
         description:
@@ -229,13 +228,13 @@ export default function AdminProductsPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/categories');
+      const response = await fetch("/api/categories");
       if (response.ok) {
         const data = await response.json();
         setCategories(data.categories);
       }
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      // Categories fetch failed, continue without them
     }
   };
 
@@ -350,7 +349,6 @@ export default function AdminProductsPage() {
       resetForm();
       fetchProducts();
     } catch (error) {
-      console.error("Error saving product:", error);
       toast({
         title: "Error",
         description: "Failed to save product",
@@ -386,7 +384,6 @@ export default function AdminProductsPage() {
 
       fetchProducts();
     } catch (error) {
-      console.error("Error deleting product:", error);
       toast({
         title: "Error",
         description: "Failed to delete product",
@@ -888,7 +885,11 @@ export default function AdminProductsPage() {
                   <Select
                     value={formData.category}
                     onValueChange={(value) => {
-                      setFormData({ ...formData, category: value, subcategory: "" });
+                      setFormData({
+                        ...formData,
+                        category: value,
+                        subcategory: "",
+                      });
                     }}
                   >
                     <SelectTrigger>
@@ -916,11 +917,14 @@ export default function AdminProductsPage() {
                       <SelectValue placeholder="Select subcategory" />
                     </SelectTrigger>
                     <SelectContent>
-                      {formData.category && 
+                      {formData.category &&
                         categories
-                          .find(cat => cat._id === formData.category)
+                          .find((cat) => cat._id === formData.category)
                           ?.subcategories?.map((subcategory: any) => (
-                            <SelectItem key={subcategory._id} value={subcategory._id}>
+                            <SelectItem
+                              key={subcategory._id}
+                              value={subcategory._id}
+                            >
                               {subcategory.name}
                             </SelectItem>
                           ))}
@@ -1120,7 +1124,11 @@ export default function AdminProductsPage() {
                   <Select
                     value={formData.category}
                     onValueChange={(value) => {
-                      setFormData({ ...formData, category: value, subcategory: "" });
+                      setFormData({
+                        ...formData,
+                        category: value,
+                        subcategory: "",
+                      });
                     }}
                   >
                     <SelectTrigger>
@@ -1148,11 +1156,14 @@ export default function AdminProductsPage() {
                       <SelectValue placeholder="Select subcategory" />
                     </SelectTrigger>
                     <SelectContent>
-                      {formData.category && 
+                      {formData.category &&
                         categories
-                          .find(cat => cat._id === formData.category)
+                          .find((cat) => cat._id === formData.category)
                           ?.subcategories?.map((subcategory: any) => (
-                            <SelectItem key={subcategory._id} value={subcategory._id}>
+                            <SelectItem
+                              key={subcategory._id}
+                              value={subcategory._id}
+                            >
                               {subcategory.name}
                             </SelectItem>
                           ))}

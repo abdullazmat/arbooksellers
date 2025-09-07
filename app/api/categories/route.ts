@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Category from '@/models/Category';
+import { NextRequest, NextResponse } from "next/server";
+import dbConnect from "@/lib/db";
+import Category from "@/models/Category";
 
 // GET - Get all active categories with subcategories
 export async function GET(request: NextRequest) {
@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     await dbConnect();
 
     const { searchParams } = new URL(request.url);
-    const includeInactive = searchParams.get('includeInactive') === 'true';
+    const includeInactive = searchParams.get("includeInactive") === "true";
 
     // Build query
     const query: any = {};
@@ -22,26 +22,25 @@ export async function GET(request: NextRequest) {
       .lean();
 
     // Organize categories into parent-child structure
-    const parentCategories = allCategories.filter(cat => !cat.parent);
-    const subcategories = allCategories.filter(cat => cat.parent);
+    const parentCategories = allCategories.filter((cat) => !cat.parent);
+    const subcategories = allCategories.filter((cat) => cat.parent);
 
     // Attach subcategories to their parents
-    const organizedCategories = parentCategories.map(parent => ({
+    const organizedCategories = parentCategories.map((parent) => ({
       ...parent,
-      subcategories: subcategories.filter(sub => 
-        sub.parent && sub.parent.toString() === (parent._id as any).toString()
-      )
+      subcategories: subcategories.filter(
+        (sub) =>
+          sub.parent && sub.parent.toString() === (parent._id as any).toString()
+      ),
     }));
 
     return NextResponse.json({
       categories: organizedCategories,
       total: allCategories.length,
     });
-
   } catch (error: any) {
-    console.error('Get categories error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
