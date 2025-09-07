@@ -64,12 +64,23 @@ export default function ProductComments({ productId }: ProductCommentsProps) {
   const fetchComments = async () => {
     try {
       setLoading(true);
+      console.log('Fetching comments for product:', productId);
+      
       const response = await authenticatedFetch(
         `/api/products/${productId}/comments?page=${currentPage}&limit=10`
       );
-      if (!response.ok) throw new Error("Failed to fetch comments");
+      
+      console.log('Comments response:', response.status, response.ok);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Comments fetch error:', errorData);
+        throw new Error(errorData.error || "Failed to fetch comments");
+      }
 
       const data = await response.json();
+      console.log('Comments data:', data);
+      
       setComments(data.comments);
       setTotalPages(data.pagination.pages);
       setTotalComments(data.pagination.total);
@@ -98,19 +109,27 @@ export default function ProductComments({ productId }: ProductCommentsProps) {
 
     try {
       setSubmitting(true);
+      console.log('Submitting comment:', { productId, commentForm, user });
+      
       const response = await authenticatedFetch(`/api/products/${productId}/comments`, {
         method: 'POST',
         body: JSON.stringify(commentForm),
       });
 
+      console.log('Comment response:', response.status, response.ok);
+
       if (!response.ok) {
         const error = await response.json();
+        console.error('Comment error:', error);
         throw new Error(error.error || "Failed to submit comment");
       }
 
+      const result = await response.json();
+      console.log('Comment created:', result);
+
       toast({
         title: "Comment Submitted",
-        description: "Your comment has been submitted",
+        description: "Your comment has been submitted for review",
       });
 
       setCommentForm({ content: "", rating: 5 });
@@ -119,6 +138,7 @@ export default function ProductComments({ productId }: ProductCommentsProps) {
       // Refresh comments to show the updated count
       await fetchComments();
     } catch (error: any) {
+      console.error('Comment submission error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to submit comment",

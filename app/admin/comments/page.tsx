@@ -53,10 +53,10 @@ interface Comment {
   updatedAt: string;
   product?: {
     _id: string;
-    name: string;
+    title: string;
     price: number;
     images: string[];
-  };
+  } | null;
 }
 
 export default function AdminCommentsPage() {
@@ -83,9 +83,17 @@ export default function AdminCommentsPage() {
         }),
       });
 
-      const response = await authenticatedFetch(
-        `/api/admin/comments?${params}`
-      );
+      const adminToken = localStorage.getItem('adminToken');
+      if (!adminToken) {
+        throw new Error("Admin authentication required");
+      }
+
+      const response = await fetch(`/api/admin/comments?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${adminToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
       if (!response.ok) throw new Error("Failed to fetch comments");
 
       const data = await response.json();
@@ -94,12 +102,12 @@ export default function AdminCommentsPage() {
       const commentsWithProducts = await Promise.all(
         data.comments.map(async (comment: Comment) => {
           try {
-            const productResponse = await authenticatedFetch(
-              `/api/products/${comment.productId}`
-            );
+            const productResponse = await fetch(`/api/products/${comment.productId}`);
             if (productResponse.ok) {
               const productData = await productResponse.json();
-              return { ...comment, product: productData.product };
+              if (productData.product) {
+                return { ...comment, product: productData.product };
+              }
             }
           } catch (error) {
             console.error(
@@ -107,7 +115,8 @@ export default function AdminCommentsPage() {
               error
             );
           }
-          return comment;
+          // Return comment without product if fetch fails
+          return { ...comment, product: null };
         })
       );
 
@@ -142,10 +151,19 @@ export default function AdminCommentsPage() {
 
   const handleApproveComment = async (commentId: string) => {
     try {
-      const response = await authenticatedFetch(
+      const adminToken = localStorage.getItem('adminToken');
+      if (!adminToken) {
+        throw new Error("Admin authentication required");
+      }
+
+      const response = await fetch(
         `/api/admin/comments/${commentId}/approve`,
         {
           method: "POST",
+          headers: {
+            'Authorization': `Bearer ${adminToken}`,
+            'Content-Type': 'application/json',
+          },
         }
       );
 
@@ -169,10 +187,19 @@ export default function AdminCommentsPage() {
 
   const handleRejectComment = async (commentId: string) => {
     try {
-      const response = await authenticatedFetch(
+      const adminToken = localStorage.getItem('adminToken');
+      if (!adminToken) {
+        throw new Error("Admin authentication required");
+      }
+
+      const response = await fetch(
         `/api/admin/comments/${commentId}/reject`,
         {
           method: "POST",
+          headers: {
+            'Authorization': `Bearer ${adminToken}`,
+            'Content-Type': 'application/json',
+          },
         }
       );
 
@@ -203,10 +230,19 @@ export default function AdminCommentsPage() {
       return;
 
     try {
-      const response = await authenticatedFetch(
+      const adminToken = localStorage.getItem('adminToken');
+      if (!adminToken) {
+        throw new Error("Admin authentication required");
+      }
+
+      const response = await fetch(
         `/api/admin/comments/${commentId}`,
         {
           method: "DELETE",
+          headers: {
+            'Authorization': `Bearer ${adminToken}`,
+            'Content-Type': 'application/json',
+          },
         }
       );
 
@@ -402,7 +438,7 @@ export default function AdminCommentsPage() {
                                     <div className="relative">
                                       <img
                                         src={comment.product.images[0]}
-                                        alt={comment.product.name}
+                                        alt={comment.product.title}
                                         className="w-10 h-10 object-cover rounded-md"
                                         onError={(e) => {
                                           const target =
@@ -421,7 +457,7 @@ export default function AdminCommentsPage() {
                                       )
                                     }
                                   >
-                                    {comment.product.name}
+                                    {comment.product.title}
                                   </p>
                                   <p className="text-xs text-gray-500">
                                     Rs{" "}
@@ -445,9 +481,12 @@ export default function AdminCommentsPage() {
                               </div>
                             ) : (
                               <div className="text-sm text-gray-500">
-                                <p>Product ID: {comment.productId}</p>
-                                <p className="text-xs text-red-500">
-                                  Product not found
+                                <p className="font-medium">Product ID: {comment.productId}</p>
+                                <p className="text-xs text-orange-500 bg-orange-50 px-2 py-1 rounded">
+                                  Product deleted or not found
+                                </p>
+                                <p className="text-xs text-gray-400 mt-1">
+                                  This comment references a product that no longer exists
                                 </p>
                               </div>
                             )}
@@ -676,9 +715,20 @@ export default function AdminCommentsPage() {
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-600">
-                      Product ID:
+                      Product:
                     </label>
-                    <p className="text-gray-900">{selectedComment.productId}</p>
+                    {selectedComment.product ? (
+                      <div>
+                        <p className="text-gray-900 font-medium">{selectedComment.product.name}</p>
+                        <p className="text-sm text-gray-500">ID: {selectedComment.productId}</p>
+                        <p className="text-sm text-gray-500">Price: Rs {selectedComment.product.price.toLocaleString("en-IN")}</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="text-gray-900 font-medium">Product ID: {selectedComment.productId}</p>
+                        <p className="text-sm text-orange-500">Product deleted or not found</p>
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-600">

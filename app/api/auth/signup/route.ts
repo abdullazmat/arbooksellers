@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import User from '@/models/User';
-import jwt from 'jsonwebtoken';
+import { NextRequest, NextResponse } from "next/server";
+import dbConnect from "@/lib/db";
+import User from "@/models/User";
+import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET =
+  process.env.JWT_SECRET || "islamic-books-jwt-secret-key-2024-very-secure";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,14 +15,14 @@ export async function POST(request: NextRequest) {
     // Validate input
     if (!name || !email || !password) {
       return NextResponse.json(
-        { error: 'Name, email, and password are required' },
+        { error: "Name, email, and password are required" },
         { status: 400 }
       );
     }
 
     if (password.length < 6) {
       return NextResponse.json(
-        { error: 'Password must be at least 6 characters long' },
+        { error: "Password must be at least 6 characters long" },
         { status: 400 }
       );
     }
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return NextResponse.json(
-        { error: 'User with this email already exists' },
+        { error: "User with this email already exists" },
         { status: 400 }
       );
     }
@@ -47,13 +48,13 @@ export async function POST(request: NextRequest) {
 
     // Generate JWT token
     const token = jwt.sign(
-      { 
-        userId: user._id, 
-        email: user.email, 
-        role: user.role 
+      {
+        userId: user._id,
+        email: user.email,
+        role: user.role,
       },
       JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: "7d" }
     );
 
     // Return user data (without password) and token
@@ -68,16 +69,15 @@ export async function POST(request: NextRequest) {
     };
 
     return NextResponse.json({
-      message: 'User registered successfully',
+      message: "User registered successfully",
       user: userResponse,
       token,
     });
-
   } catch (error: any) {
-    console.error('Signup error:', error);
+    console.error("Signup error:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
-} 
+}

@@ -1,15 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db'
-import Comment from '@/models/Comment'
+import mongoose from 'mongoose'
 import { verifyAuth } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   try {
     await dbConnect()
+    
+    // Dynamically import Comment model
+    try {
+      const CommentModel = (await import('@/models/Comment')).default;
+      console.log('Comment model imported successfully');
+    } catch (importError) {
+      console.error('Error importing Comment model:', importError);
+      return NextResponse.json(
+        { 
+          error: 'Failed to import Comment model',
+          details: importError instanceof Error ? importError.message : 'Unknown import error',
+        },
+        { status: 500 }
+      );
+    }
 
     // Verify admin authentication
     const user = verifyAuth(request)
     if (!user || user.role !== 'admin') {
+      console.log('Admin authentication failed:', { user: user?.role });
       return NextResponse.json(
         { error: 'Admin access required' },
         { status: 403 }
@@ -40,14 +56,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Get comments with pagination
-    const comments = await Comment.find(query)
+    const comments = await mongoose.models.Comment.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean()
 
     // Get total count
-    const total = await Comment.countDocuments(query)
+    const total = await mongoose.models.Comment.countDocuments(query)
 
     return NextResponse.json({
       comments,

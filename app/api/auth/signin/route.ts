@@ -3,7 +3,7 @@ import dbConnect from '@/lib/db';
 import User from '@/models/User';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'islamic-books-jwt-secret-key-2024-very-secure';
 
 export async function POST(request: NextRequest) {
   try {
