@@ -9,6 +9,11 @@ import mongoose from "mongoose";
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
+    
+    // Verify database connection
+    if (mongoose.connection.readyState !== 1) {
+      throw new Error("Database not connected");
+    }
 
     const token = request.headers.get("authorization")?.replace("Bearer ", "");
     if (!token) {
@@ -19,7 +24,13 @@ export async function GET(request: NextRequest) {
     }
 
     const decoded = await verifyToken(token);
-    if (!decoded || decoded.role !== "admin") {
+    if (!decoded) {
+      return NextResponse.json(
+        { error: "Invalid token" },
+        { status: 401 }
+      );
+    }
+    if (decoded.role !== "admin") {
       return NextResponse.json(
         { error: "Admin access required" },
         { status: 403 }
@@ -42,10 +53,24 @@ export async function GET(request: NextRequest) {
       query.featured = true;
     }
     if (category) {
-      query.category = category;
+      try {
+        query.category = new mongoose.Types.ObjectId(category);
+      } catch (error) {
+        return NextResponse.json(
+          { error: "Invalid category ID format" },
+          { status: 400 }
+        );
+      }
     }
     if (subcategory) {
-      query.subcategory = subcategory;
+      try {
+        query.subcategory = new mongoose.Types.ObjectId(subcategory);
+      } catch (error) {
+        return NextResponse.json(
+          { error: "Invalid subcategory ID format" },
+          { status: 400 }
+        );
+      }
     }
     if (search) {
       query.$or = [
@@ -59,13 +84,24 @@ export async function GET(request: NextRequest) {
     }
 
     // Get products with category population
-    const products = await Product.find(query)
-      .populate("category", "name slug")
-      .populate("subcategory", "name slug")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    let products;
+    try {
+      products = await Product.find(query)
+        .populate("category", "name slug")
+        .populate("subcategory", "name slug")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean();
+    } catch (populateError: any) {
+      console.error("Error populating products:", populateError);
+      // Fallback to products without population
+      products = await Product.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean();
+    }
 
     // Get total count
     const total = await Product.countDocuments(query);
@@ -80,8 +116,34 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: any) {
+    console.error("Admin products GET error:", error);
+    
+    // Handle specific error types
+    if (error.name === 'MongoNetworkError') {
+      return NextResponse.json(
+        { 
+          error: "Database connection failed",
+          details: "Unable to connect to the database"
+        },
+        { status: 503 }
+      );
+    }
+    
+    if (error.name === 'MongoServerError') {
+      return NextResponse.json(
+        { 
+          error: "Database server error",
+          details: error.message
+        },
+        { status: 503 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: "Internal server error" },
+      { 
+        error: "Internal server error",
+        details: error.message || "Unknown error occurred"
+      },
       { status: 500 }
     );
   }
@@ -91,6 +153,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await dbConnect();
+    
+    // Verify database connection
+    if (mongoose.connection.readyState !== 1) {
+      throw new Error("Database not connected");
+    }
 
     const token = request.headers.get("authorization")?.replace("Bearer ", "");
     if (!token) {
@@ -101,7 +168,13 @@ export async function POST(request: NextRequest) {
     }
 
     const decoded = await verifyToken(token);
-    if (!decoded || decoded.role !== "admin") {
+    if (!decoded) {
+      return NextResponse.json(
+        { error: "Invalid token" },
+        { status: 401 }
+      );
+    }
+    if (decoded.role !== "admin") {
       return NextResponse.json(
         { error: "Admin access required" },
         { status: 403 }
@@ -154,8 +227,34 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error: any) {
+    console.error("Admin products POST error:", error);
+    
+    // Handle specific error types
+    if (error.name === 'MongoNetworkError') {
+      return NextResponse.json(
+        { 
+          error: "Database connection failed",
+          details: "Unable to connect to the database"
+        },
+        { status: 503 }
+      );
+    }
+    
+    if (error.name === 'MongoServerError') {
+      return NextResponse.json(
+        { 
+          error: "Database server error",
+          details: error.message
+        },
+        { status: 503 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: "Internal server error" },
+      { 
+        error: "Internal server error",
+        details: error.message || "Unknown error occurred"
+      },
       { status: 500 }
     );
   }

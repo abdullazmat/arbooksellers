@@ -11,7 +11,12 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    await dbConnect()
+    await dbConnect();
+    
+    // Verify database connection
+    if (mongoose.connection.readyState !== 1) {
+      throw new Error("Database not connected");
+    }
 
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
     if (!token) {
@@ -45,8 +50,12 @@ export async function GET(
     return NextResponse.json({ product })
 
   } catch (error: any) {
+    console.error('Get admin product error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        details: error.message || 'Unknown error occurred'
+      },
       { status: 500 }
     )
   }
@@ -58,7 +67,12 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    await dbConnect()
+    await dbConnect();
+    
+    // Verify database connection
+    if (mongoose.connection.readyState !== 1) {
+      throw new Error("Database not connected");
+    }
 
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
     if (!token) {
@@ -131,8 +145,12 @@ export async function PUT(
     })
 
   } catch (error: any) {
+    console.error('Update admin product error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        details: error.message || 'Unknown error occurred'
+      },
       { status: 500 }
     )
   }
@@ -179,8 +197,12 @@ export async function DELETE(
     })
 
   } catch (error: any) {
+    console.error('Delete admin product error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        details: error.message || 'Unknown error occurred'
+      },
       { status: 500 }
     )
   }
