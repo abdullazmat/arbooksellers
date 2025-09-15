@@ -293,9 +293,55 @@ export default function AdminProductsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validate required fields
+    if (!formData.title.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Product title is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.author.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Product author is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.price || isNaN(parseFloat(formData.price))) {
+      toast({
+        title: "Validation Error",
+        description: "Valid price is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.stockQuantity || isNaN(parseInt(formData.stockQuantity))) {
+      toast({
+        title: "Validation Error",
+        description: "Valid stock quantity is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setSubmitting(true);
       const token = localStorage.getItem("adminToken");
+
+      if (!token) {
+        toast({
+          title: "Authentication Error",
+          description: "Admin token not found. Please login again.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       const productData = {
         ...formData,
@@ -327,7 +373,8 @@ export default function AdminProductsPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to save product");
+        console.error("API Error:", errorData);
+        throw new Error(errorData.details || errorData.error || "Failed to save product");
       }
 
       const data = await response.json();
@@ -348,10 +395,11 @@ export default function AdminProductsPage() {
       setSelectedProduct(null);
       resetForm();
       fetchProducts();
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Error saving product:", error);
       toast({
         title: "Error",
-        description: "Failed to save product",
+        description: error.message || "Failed to save product",
         variant: "destructive",
       });
     } finally {
