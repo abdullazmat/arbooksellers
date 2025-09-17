@@ -9,15 +9,9 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  experimental: {
-    serverComponentsExternalPackages: ["mongoose"],
-  },
-  // Increase body size limit for API routes
-  api: {
-    bodyParser: {
-      sizeLimit: "10mb",
-    },
-  },
+  // Move serverComponentsExternalPackages to the correct location
+  serverExternalPackages: ["mongoose"],
+  // Remove invalid api config - this is for Pages Router, not App Router
 };
 
 export default nextConfig;
