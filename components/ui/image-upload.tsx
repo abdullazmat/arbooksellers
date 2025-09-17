@@ -5,6 +5,7 @@ import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
 import { X, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import imageCompression from "browser-image-compression";
 
 interface ImageUploadProps {
   images: string[];
@@ -50,11 +51,11 @@ export function ImageUpload({
             continue;
           }
 
-          // Validate file size (max 1MB per image to prevent total size issues)
-          if (file.size > 1 * 1024 * 1024) {
+          // Validate file size (max 5MB per image before compression)
+          if (file.size > 5 * 1024 * 1024) {
             toast({
               title: "File too large",
-              description: `${file.name} is too large. Maximum size is 1MB per image.`,
+              description: `${file.name} is too large. Maximum size is 5MB per image.`,
               variant: "destructive",
             });
             continue;
@@ -62,39 +63,63 @@ export function ImageUpload({
 
           let imageUrl: string;
 
-          if (useCloudUpload) {
-            // Upload to cloud storage
-            try {
-              const formData = new FormData();
-              formData.append("file", file);
+          try {
+            // Compress the image first
+            const compressedFile = await compressImage(file);
 
-              const response = await fetch("/api/upload", {
-                method: "POST",
-                body: formData,
-              });
-
-              if (response.ok) {
-                const data = await response.json();
-                // For now, we'll still use base64 since the API is a placeholder
-                // In production, you would use: imageUrl = data.url
-                imageUrl = await fileToBase64(file);
-              } else {
-                throw new Error("Upload failed");
-              }
-            } catch (error) {
-              console.error(
-                "Cloud upload failed, falling back to base64:",
-                error
+            // Show compression info
+            const compressionRatio = (
+              ((file.size - compressedFile.size) / file.size) *
+              100
+            ).toFixed(1);
+            if (compressionRatio !== "0.0") {
+              console.log(
+                `Image compressed: ${file.name} - ${compressionRatio}% size reduction`
               );
-              // Fallback to base64 if cloud upload fails
-              imageUrl = await fileToBase64(file);
             }
-          } else {
-            // Use base64 for local storage
-            imageUrl = await fileToBase64(file);
-          }
 
-          newImages.push(imageUrl);
+            if (useCloudUpload) {
+              // Upload to cloud storage
+              try {
+                const formData = new FormData();
+                formData.append("file", compressedFile);
+
+                const response = await fetch("/api/upload", {
+                  method: "POST",
+                  body: formData,
+                });
+
+                if (response.ok) {
+                  const data = await response.json();
+                  // For now, we'll still use base64 since the API is a placeholder
+                  // In production, you would use: imageUrl = data.url
+                  imageUrl = await fileToBase64(compressedFile);
+                } else {
+                  throw new Error("Upload failed");
+                }
+              } catch (error) {
+                console.error(
+                  "Cloud upload failed, falling back to base64:",
+                  error
+                );
+                // Fallback to base64 if cloud upload fails
+                imageUrl = await fileToBase64(compressedFile);
+              }
+            } else {
+              // Use base64 for local storage
+              imageUrl = await fileToBase64(compressedFile);
+            }
+
+            newImages.push(imageUrl);
+          } catch (error) {
+            console.error("Error processing image:", error);
+            toast({
+              title: "Image processing failed",
+              description: `Failed to process ${file.name}. Please try again.`,
+              variant: "destructive",
+            });
+            continue;
+          }
         }
 
         onChange([...images, ...newImages]);
@@ -102,7 +127,7 @@ export function ImageUpload({
         if (newImages.length > 0) {
           toast({
             title: "Images uploaded",
-            description: `${newImages.length} image(s) uploaded successfully`,
+            description: `${newImages.length} image(s) uploaded and compressed successfully`,
           });
         }
       } catch (error) {
@@ -137,6 +162,24 @@ export function ImageUpload({
     });
   };
 
+  const compressImage = async (file: File): Promise<File> => {
+    const options = {
+      maxSizeMB: 0.8, // Maximum file size in MB
+      maxWidthOrHeight: 1920, // Maximum width or height
+      useWebWorker: true, // Use web worker for better performance
+      quality: 0.8, // Image quality (0-1)
+    };
+
+    try {
+      const compressedFile = await imageCompression(file, options);
+      return compressedFile;
+    } catch (error) {
+      console.error("Image compression failed:", error);
+      // Return original file if compression fails
+      return file;
+    }
+  };
+
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -169,7 +212,8 @@ export function ImageUpload({
             : "Drag & drop images here, or click to select files"}
         </p>
         <p className="text-xs text-gray-500">
-          PNG, JPG, GIF, WEBP up to 5MB each. Max {maxImages} images.
+          PNG, JPG, GIF, WEBP up to 5MB each (auto-compressed). Max {maxImages}{" "}
+          images.
         </p>
         <Button
           type="button"
