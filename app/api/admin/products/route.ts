@@ -9,7 +9,7 @@ import mongoose from "mongoose";
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
-    
+
     // Verify database connection
     if (mongoose.connection.readyState !== 1) {
       throw new Error("Database not connected");
@@ -25,10 +25,7 @@ export async function GET(request: NextRequest) {
 
     const decoded = await verifyToken(token);
     if (!decoded) {
-      return NextResponse.json(
-        { error: "Invalid token" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
     if (decoded.role !== "admin") {
       return NextResponse.json(
@@ -117,32 +114,32 @@ export async function GET(request: NextRequest) {
     });
   } catch (error: any) {
     console.error("Admin products GET error:", error);
-    
+
     // Handle specific error types
-    if (error.name === 'MongoNetworkError') {
+    if (error.name === "MongoNetworkError") {
       return NextResponse.json(
-        { 
+        {
           error: "Database connection failed",
-          details: "Unable to connect to the database"
+          details: "Unable to connect to the database",
         },
         { status: 503 }
       );
     }
-    
-    if (error.name === 'MongoServerError') {
+
+    if (error.name === "MongoServerError") {
       return NextResponse.json(
-        { 
+        {
           error: "Database server error",
-          details: error.message
+          details: error.message,
         },
         { status: 503 }
       );
     }
-    
+
     return NextResponse.json(
-      { 
+      {
         error: "Internal server error",
-        details: error.message || "Unknown error occurred"
+        details: error.message || "Unknown error occurred",
       },
       { status: 500 }
     );
@@ -153,7 +150,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await dbConnect();
-    
+
     // Verify database connection
     if (mongoose.connection.readyState !== 1) {
       throw new Error("Database not connected");
@@ -169,10 +166,7 @@ export async function POST(request: NextRequest) {
 
     const decoded = await verifyToken(token);
     if (!decoded) {
-      return NextResponse.json(
-        { error: "Invalid token" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
     if (decoded.role !== "admin") {
       return NextResponse.json(
@@ -181,13 +175,54 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check content length before parsing
+    const contentLength = request.headers.get("content-length");
+    if (contentLength && parseInt(contentLength) > 10 * 1024 * 1024) {
+      // 10MB limit
+      return NextResponse.json(
+        {
+          error: "Request too large",
+          details:
+            "The request is too large. Please reduce image sizes or remove some images.",
+        },
+        { status: 413 }
+      );
+    }
+
     const productData = await request.json();
+
     // Validate required fields
     if (!productData.title || !productData.author || !productData.price) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
+    }
+
+    // Check if images are too large (base64 images can be very large)
+    if (productData.images && Array.isArray(productData.images)) {
+      const totalImageSize = productData.images.reduce(
+        (total: number, image: string) => {
+          if (image.startsWith("data:image")) {
+            // Base64 images are ~33% larger than the original
+            return total + image.length * 0.75;
+          }
+          return total;
+        },
+        0
+      );
+
+      if (totalImageSize > 5 * 1024 * 1024) {
+        // 5MB total image limit
+        return NextResponse.json(
+          {
+            error: "Images too large",
+            details:
+              "Total image size exceeds 5MB. Please reduce image sizes or remove some images.",
+          },
+          { status: 413 }
+        );
+      }
     }
 
     // Convert category fields to ObjectIds if they exist
@@ -228,32 +263,55 @@ export async function POST(request: NextRequest) {
     );
   } catch (error: any) {
     console.error("Admin products POST error:", error);
-    
+
     // Handle specific error types
-    if (error.name === 'MongoNetworkError') {
+    if (error.name === "MongoNetworkError") {
       return NextResponse.json(
-        { 
+        {
           error: "Database connection failed",
-          details: "Unable to connect to the database"
+          details: "Unable to connect to the database",
         },
         { status: 503 }
       );
     }
-    
-    if (error.name === 'MongoServerError') {
+
+    if (error.name === "MongoServerError") {
       return NextResponse.json(
-        { 
+        {
           error: "Database server error",
-          details: error.message
+          details: error.message,
         },
         { status: 503 }
       );
     }
-    
+
+    // Handle request size errors
+    if (error.message && error.message.includes("too large")) {
+      return NextResponse.json(
+        {
+          error: "Request too large",
+          details:
+            "The product data is too large. Please reduce image sizes or remove some images.",
+        },
+        { status: 413 }
+      );
+    }
+
+    // Handle JSON parsing errors
+    if (error instanceof SyntaxError && error.message.includes("JSON")) {
+      return NextResponse.json(
+        {
+          error: "Invalid request data",
+          details: "The request data is not valid JSON",
+        },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
-      { 
+      {
         error: "Internal server error",
-        details: error.message || "Unknown error occurred"
+        details: error.message || "Unknown error occurred",
       },
       { status: 500 }
     );

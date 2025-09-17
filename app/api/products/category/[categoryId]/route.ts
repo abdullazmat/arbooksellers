@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Product from '@/models/Product';
-import Category from '@/models/Category';
+import { NextRequest, NextResponse } from "next/server";
+import dbConnect from "@/lib/db";
+import Product from "@/models/Product";
+import Category from "@/models/Category";
+import mongoose from "mongoose";
 
 export async function GET(
   request: NextRequest,
@@ -12,9 +13,9 @@ export async function GET(
 
     const { categoryId } = await params;
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '12');
-    const subcategory = searchParams.get('subcategory');
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "12");
+    const subcategory = searchParams.get("subcategory");
 
     const skip = (page - 1) * limit;
 
@@ -22,21 +23,31 @@ export async function GET(
     const category = await Category.findById(categoryId);
     if (!category) {
       return NextResponse.json(
-        { error: 'Category not found' },
+        { error: "Category not found" },
         { status: 404 }
       );
     }
 
-    // Build query
-    const query: any = { category: categoryId };
+    // Build query - check if categoryId is a subcategory
+    const categoryDoc = await Category.findById(categoryId);
+    const query: any = {};
+
+    if (categoryDoc && categoryDoc.parent) {
+      // If it's a subcategory, filter by subcategory field
+      query.subcategory = new mongoose.Types.ObjectId(categoryId);
+    } else {
+      // If it's a main category, filter by category field
+      query.category = new mongoose.Types.ObjectId(categoryId);
+    }
+
     if (subcategory) {
-      query.subcategory = subcategory;
+      query.subcategory = new mongoose.Types.ObjectId(subcategory);
     }
 
     // Get products with category population
     const products = await Product.find(query)
-      .populate('category', 'name slug')
-      .populate('subcategory', 'name slug')
+      .populate("category", "name slug")
+      .populate("subcategory", "name slug")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -55,11 +66,10 @@ export async function GET(
         pages: Math.ceil(total / limit),
       },
     });
-
   } catch (error: any) {
-    console.error('Get products by category error:', error);
+    console.error("Get products by category error:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

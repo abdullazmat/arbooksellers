@@ -9,6 +9,15 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-}
+  experimental: {
+    serverComponentsExternalPackages: ["mongoose"],
+  },
+  // Increase body size limit for API routes
+  api: {
+    bodyParser: {
+      sizeLimit: "10mb",
+    },
+  },
+};
 
-export default nextConfig
+export default nextConfig;

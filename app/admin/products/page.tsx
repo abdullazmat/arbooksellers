@@ -372,12 +372,34 @@ export default function AdminProductsPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (jsonError) {
+          // If response is not JSON, get the text content
+          const responseText = await response.text();
+          console.error("Non-JSON response:", responseText);
+          throw new Error(
+            `Server error: ${response.status} - ${responseText.substring(
+              0,
+              200
+            )}`
+          );
+        }
         console.error("API Error:", errorData);
-        throw new Error(errorData.details || errorData.error || "Failed to save product");
+        throw new Error(
+          errorData.details || errorData.error || "Failed to save product"
+        );
       }
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        const responseText = await response.text();
+        console.error("Failed to parse response as JSON:", responseText);
+        throw new Error("Server returned invalid response format");
+      }
 
       toast({
         title: "Success",

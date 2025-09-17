@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import Product from "@/models/Product";
 import Comment from "@/models/Comment";
+import Category from "@/models/Category";
 import mongoose from "mongoose";
 
 export async function GET(request: NextRequest) {
@@ -40,7 +41,15 @@ export async function GET(request: NextRequest) {
     }
 
     if (category) {
-      query.category = new mongoose.Types.ObjectId(category);
+      // Check if the category ID is a subcategory by looking it up
+      const categoryDoc = await Category.findById(category);
+      if (categoryDoc && categoryDoc.parent) {
+        // If it's a subcategory, filter by subcategory field
+        query.subcategory = new mongoose.Types.ObjectId(category);
+      } else {
+        // If it's a main category, filter by category field
+        query.category = new mongoose.Types.ObjectId(category);
+      }
     }
 
     if (subcategory) {
