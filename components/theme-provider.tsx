@@ -12,5 +12,6 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
     <ClientOnly fallback={<div style={{ visibility: 'hidden' }}>{children}</div>}>
       <NextThemesProvider {...props}>{children}</NextThemesProvider>
     </ClientOnly>  
+    
   )
 }
