@@ -22,6 +22,7 @@ const categorySchema = new Schema<ICategory>(
     slug: {
       type: String,
       required: true,
+      unique: true,
       lowercase: true,
       trim: true,
     },
@@ -62,7 +63,7 @@ categorySchema.pre("save", function (next) {
 });
 
 // Index for efficient queries
-categorySchema.index({ slug: 1 }, { unique: true });
+categorySchema.index({ slug: 1 });
 categorySchema.index({ parent: 1 });
 categorySchema.index({ isActive: 1, sortOrder: 1 });
 

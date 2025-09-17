@@ -19,10 +19,12 @@ const commentSchema = new Schema<IComment>(
     productId: {
       type: String,
       required: true,
+      index: true,
     },
     userId: {
       type: String,
       required: true,
+      index: true,
     },
     userName: {
       type: String,
@@ -51,6 +53,7 @@ const commentSchema = new Schema<IComment>(
     isApproved: {
       type: Boolean,
       default: false,
+      index: true,
     },
     isEdited: {
       type: Boolean,

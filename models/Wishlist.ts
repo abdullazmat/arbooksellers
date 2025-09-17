@@ -19,6 +19,7 @@ const wishlistSchema = new mongoose.Schema<IWishlist>(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: [true, "User is required"],
+      unique: true,
     },
     items: [
       {
@@ -52,7 +53,7 @@ const wishlistSchema = new mongoose.Schema<IWishlist>(
 );
 
 // Index for efficient queries
-wishlistSchema.index({ user: 1 }, { unique: true });
+wishlistSchema.index({ user: 1 });
 
 export default mongoose.models.Wishlist ||
   mongoose.model<IWishlist>("Wishlist", wishlistSchema);

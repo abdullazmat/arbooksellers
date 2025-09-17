@@ -71,12 +71,7 @@ export default function AdminDashboard() {
       return;
     }
 
-    // Add a small delay to ensure the page is fully loaded
-    const timer = setTimeout(() => {
-      fetchDashboardData();
-    }, 100);
-
-    return () => clearTimeout(timer);
+    fetchDashboardData();
   }, [router]);
 
   const fetchDashboardData = async () => {
@@ -84,64 +79,45 @@ export default function AdminDashboard() {
       setLoading(true);
       const token = localStorage.getItem("adminToken");
 
-      if (!token) {
-        toast({
-          title: "Authentication Error",
-          description: "Admin token not found. Please login again.",
-          variant: "destructive",
-        });
-        router.push("/admin/login");
-        return;
+      // Fetch orders data (includes stats)
+      const ordersResponse = await fetch("/api/admin/orders?limit=5", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!ordersResponse.ok) {
+        throw new Error("Failed to fetch orders data");
       }
 
-      // Fetch all data in parallel for better performance and reliability
-      const [ordersResponse, usersResponse, productsResponse] =
-        await Promise.allSettled([
-          fetch("/api/admin/orders?limit=5", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }),
-          fetch("/api/admin/users?limit=1", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }),
-          fetch("/api/admin/products?limit=1", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }),
-        ]);
+      const ordersData = await ordersResponse.json();
 
-      // Handle orders data
-      let ordersData = { stats: {}, orders: [] };
-      if (ordersResponse.status === "fulfilled" && ordersResponse.value.ok) {
-        ordersData = await ordersResponse.value.json();
-      } else {
-        console.error("Failed to fetch orders:", ordersResponse);
+      // Fetch users data
+      const usersResponse = await fetch("/api/admin/users?limit=1", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!usersResponse.ok) {
+        throw new Error("Failed to fetch users data");
       }
 
-      // Handle users data
-      let usersData = { stats: {} };
-      if (usersResponse.status === "fulfilled" && usersResponse.value.ok) {
-        usersData = await usersResponse.value.json();
-      } else {
-        console.error("Failed to fetch users:", usersResponse);
+      const usersData = await usersResponse.json();
+
+      // Fetch products data
+      const productsResponse = await fetch("/api/admin/products?limit=1", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!productsResponse.ok) {
+        throw new Error("Failed to fetch products data");
       }
 
-      // Handle products data
-      let productsData = { pagination: {} };
-      if (
-        productsResponse.status === "fulfilled" &&
-        productsResponse.value.ok
-      ) {
-        productsData = await productsResponse.value.json();
-      } else {
-        console.error("Failed to fetch products:", productsResponse);
-      }
+      const productsData = await productsResponse.json();
 
-      // Set stats with fallback values
       setStats({
         totalSales: ordersData.stats?.totalSales || 0,
         totalOrders: ordersData.stats?.totalOrders || 0,
@@ -166,31 +142,10 @@ export default function AdminDashboard() {
       } else {
         setRecentOrders([]);
       }
-
-      // Show warning if some data failed to load
-      const failedRequests = [
-        ordersResponse,
-        usersResponse,
-        productsResponse,
-      ].filter(
-        (response) =>
-          response.status === "rejected" ||
-          (response.status === "fulfilled" && !response.value.ok)
-      );
-
-      if (failedRequests.length > 0) {
-        toast({
-          title: "Partial Data Load",
-          description:
-            "Some dashboard data failed to load. Please refresh to try again.",
-          variant: "destructive",
-        });
-      }
     } catch (error) {
-      console.error("Error fetching dashboard data:", error);
       toast({
         title: "Error",
-        description: "Failed to load dashboard data. Please refresh the page.",
+        description: "Failed to load dashboard data",
         variant: "destructive",
       });
       // Set default values to prevent crashes
@@ -244,14 +199,6 @@ export default function AdminDashboard() {
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
             <p className="mt-2 text-gray-600">Loading dashboard...</p>
-            <Button
-              onClick={fetchDashboardData}
-              variant="outline"
-              className="mt-4"
-              disabled={loading}
-            >
-              Retry
-            </Button>
           </div>
         </div>
       </AdminLayout>
