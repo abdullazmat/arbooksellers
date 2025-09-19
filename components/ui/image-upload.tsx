@@ -13,6 +13,7 @@ interface ImageUploadProps {
   maxImages?: number;
   className?: string;
   useCloudUpload?: boolean;
+  isAdmin?: boolean; // New prop to identify admin uploads
 }
 
 export function ImageUpload({
@@ -21,6 +22,7 @@ export function ImageUpload({
   maxImages = 5,
   className = "",
   useCloudUpload = false,
+  isAdmin = false,
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
@@ -51,8 +53,8 @@ export function ImageUpload({
             continue;
           }
 
-          // Validate file size (max 5MB per image before compression)
-          if (file.size > 5 * 1024 * 1024) {
+          // Validate file size - no limit for admin, 5MB for regular users
+          if (!isAdmin && file.size > 5 * 1024 * 1024) {
             toast({
               title: "File too large",
               description: `${file.name} is too large. Maximum size is 5MB per image.`,
@@ -163,15 +165,42 @@ export function ImageUpload({
   };
 
   const compressImage = async (file: File): Promise<File> => {
-    const options = {
-      maxSizeMB: 0.8, // Maximum file size in MB
-      maxWidthOrHeight: 1920, // Maximum width or height
-      useWebWorker: true, // Use web worker for better performance
-      quality: 0.8, // Image quality (0-1)
-    };
+    // Different compression settings for admin vs regular users
+    const options = isAdmin
+      ? {
+          maxSizeMB: 1.5, // Larger size limit for admin (1.5MB)
+          maxWidthOrHeight: 2560, // Higher resolution for admin (2560px)
+          useWebWorker: true,
+          quality: 0.85, // Higher quality for admin (85%)
+          initialQuality: 0.9, // Start with higher quality
+        }
+      : {
+          maxSizeMB: 0.8, // Regular size limit (0.8MB)
+          maxWidthOrHeight: 1920, // Regular resolution (1920px)
+          useWebWorker: true,
+          quality: 0.8, // Regular quality (80%)
+        };
 
     try {
       const compressedFile = await imageCompression(file, options);
+
+      // Log compression details for admin
+      if (isAdmin) {
+        const originalSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        const compressedSizeMB = (compressedFile.size / (1024 * 1024)).toFixed(
+          2
+        );
+        const compressionRatio = (
+          ((file.size - compressedFile.size) / file.size) *
+          100
+        ).toFixed(1);
+
+        console.log(`Admin Image Compression: ${file.name}`);
+        console.log(
+          `Original: ${originalSizeMB}MB → Compressed: ${compressedSizeMB}MB (${compressionRatio}% reduction)`
+        );
+      }
+
       return compressedFile;
     } catch (error) {
       console.error("Image compression failed:", error);
@@ -212,8 +241,8 @@ export function ImageUpload({
             : "Drag & drop images here, or click to select files"}
         </p>
         <p className="text-xs text-gray-500">
-          PNG, JPG, GIF, WEBP up to 5MB each (auto-compressed). Max {maxImages}{" "}
-          images.
+          PNG, JPG, GIF, WEBP {isAdmin ? "any size" : "up to 5MB each"}{" "}
+          (auto-compressed). Max {maxImages} images.
         </p>
         <Button
           type="button"

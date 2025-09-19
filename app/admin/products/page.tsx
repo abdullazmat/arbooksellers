@@ -1010,6 +1010,7 @@ export default function AdminProductsPage() {
                     }
                     maxImages={5}
                     useCloudUpload={true}
+                    isAdmin={true}
                   />
                 </div>
               </div>
