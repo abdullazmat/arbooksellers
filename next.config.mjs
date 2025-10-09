@@ -12,12 +12,8 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ["mongoose"],
   },
-  // Increase body size limit for API routes
-  api: {
-    bodyParser: {
-      sizeLimit: "10mb",
-    },
-  },
+  // Increase body size limit for API routes (App Router)
+  serverExternalPackages: ["mongoose"],
 };
 
 export default nextConfig;

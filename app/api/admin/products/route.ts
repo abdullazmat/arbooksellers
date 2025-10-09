@@ -177,19 +177,30 @@ export async function POST(request: NextRequest) {
 
     // Check content length before parsing
     const contentLength = request.headers.get("content-length");
-    if (contentLength && parseInt(contentLength) > 10 * 1024 * 1024) {
-      // 10MB limit
+    if (contentLength && parseInt(contentLength) > 5 * 1024 * 1024) {
+      // 5MB limit for better performance
       return NextResponse.json(
         {
           error: "Request too large",
           details:
-            "The request is too large. Please reduce image sizes or remove some images.",
+            "The request is too large (max 5MB). Please reduce image sizes or remove some images.",
         },
         { status: 413 }
       );
     }
 
-    const productData = await request.json();
+    let productData;
+    try {
+      productData = await request.json();
+    } catch (error) {
+      return NextResponse.json(
+        {
+          error: "Invalid JSON",
+          details: "The request body contains invalid JSON data.",
+        },
+        { status: 400 }
+      );
+    }
 
     // Validate required fields
     if (!productData.title || !productData.author || !productData.price) {
@@ -212,16 +223,34 @@ export async function POST(request: NextRequest) {
         0
       );
 
-      if (totalImageSize > 5 * 1024 * 1024) {
-        // 5MB total image limit
+      if (totalImageSize > 3 * 1024 * 1024) {
+        // 3MB total image limit for better performance
         return NextResponse.json(
           {
             error: "Images too large",
             details:
-              "Total image size exceeds 5MB. Please reduce image sizes or remove some images.",
+              "Total image size exceeds 3MB. Please reduce image sizes or remove some images.",
           },
           { status: 413 }
         );
+      }
+
+      // Check individual image size
+      for (let i = 0; i < productData.images.length; i++) {
+        const image = productData.images[i];
+        if (image.startsWith("data:image")) {
+          const imageSize = image.length * 0.75; // Approximate original size
+          if (imageSize > 1 * 1024 * 1024) {
+            // 1MB per image limit
+            return NextResponse.json(
+              {
+                error: "Image too large",
+                details: `Image ${i + 1} is too large (max 1MB per image). Please compress the image.`,
+              },
+              { status: 413 }
+            );
+          }
+        }
       }
     }
 

@@ -91,7 +91,33 @@ export async function PUT(
     }
 
     const { id } = params
-    const productData = await request.json()
+    
+    // Check content length before parsing
+    const contentLength = request.headers.get("content-length");
+    if (contentLength && parseInt(contentLength) > 5 * 1024 * 1024) {
+      // 5MB limit for better performance
+      return NextResponse.json(
+        {
+          error: "Request too large",
+          details:
+            "The request is too large (max 5MB). Please reduce image sizes or remove some images.",
+        },
+        { status: 413 }
+      );
+    }
+
+    let productData;
+    try {
+      productData = await request.json();
+    } catch (error) {
+      return NextResponse.json(
+        {
+          error: "Invalid JSON",
+          details: "The request body contains invalid JSON data.",
+        },
+        { status: 400 }
+      );
+    }
 
     // Validate required fields
     if (!productData.title || !productData.author || !productData.price) {
@@ -99,6 +125,50 @@ export async function PUT(
         { error: 'Missing required fields' },
         { status: 400 }
       )
+    }
+
+    // Check if images are too large (base64 images can be very large)
+    if (productData.images && Array.isArray(productData.images)) {
+      const totalImageSize = productData.images.reduce(
+        (total: number, image: string) => {
+          if (image.startsWith("data:image")) {
+            // Base64 images are ~33% larger than the original
+            return total + image.length * 0.75;
+          }
+          return total;
+        },
+        0
+      );
+
+      if (totalImageSize > 3 * 1024 * 1024) {
+        // 3MB total image limit for better performance
+        return NextResponse.json(
+          {
+            error: "Images too large",
+            details:
+              "Total image size exceeds 3MB. Please reduce image sizes or remove some images.",
+          },
+          { status: 413 }
+        );
+      }
+
+      // Check individual image size
+      for (let i = 0; i < productData.images.length; i++) {
+        const image = productData.images[i];
+        if (image.startsWith("data:image")) {
+          const imageSize = image.length * 0.75; // Approximate original size
+          if (imageSize > 1 * 1024 * 1024) {
+            // 1MB per image limit
+            return NextResponse.json(
+              {
+                error: "Image too large",
+                details: `Image ${i + 1} is too large (max 1MB per image). Please compress the image.`,
+              },
+              { status: 413 }
+            );
+          }
+        }
+      }
     }
 
     // Convert category fields to ObjectIds if they exist
