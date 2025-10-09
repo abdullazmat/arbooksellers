@@ -7,13 +7,13 @@ export function middleware(request: NextRequest) {
     
     if (contentLength) {
       const size = parseInt(contentLength);
-      const maxSize = 5 * 1024 * 1024; // 5MB limit
+      const maxSize = 50 * 1024 * 1024; // 50MB limit to accommodate larger images
       
       if (size > maxSize) {
         return NextResponse.json(
           {
             error: 'Request too large',
-            details: `Request size (${Math.round(size / 1024 / 1024 * 100) / 100}MB) exceeds the maximum allowed size of 5MB. Please reduce image sizes or remove some images.`,
+            details: `Request size (${Math.round(size / 1024 / 1024 * 100) / 100}MB) exceeds the maximum allowed size of 50MB. Please reduce image sizes or remove some images.`,
           },
           { status: 413 }
         );

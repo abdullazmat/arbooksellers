@@ -177,13 +177,13 @@ export async function POST(request: NextRequest) {
 
     // Check content length before parsing
     const contentLength = request.headers.get("content-length");
-    if (contentLength && parseInt(contentLength) > 5 * 1024 * 1024) {
-      // 5MB limit for better performance
+    if (contentLength && parseInt(contentLength) > 50 * 1024 * 1024) {
+      // 50MB limit to accommodate larger images
       return NextResponse.json(
         {
           error: "Request too large",
           details:
-            "The request is too large (max 5MB). Please reduce image sizes or remove some images.",
+            "The request is too large (max 50MB). Please reduce image sizes or remove some images.",
         },
         { status: 413 }
       );
@@ -223,13 +223,13 @@ export async function POST(request: NextRequest) {
         0
       );
 
-      if (totalImageSize > 3 * 1024 * 1024) {
-        // 3MB total image limit for better performance
+      if (totalImageSize > 40 * 1024 * 1024) {
+        // 40MB total image limit to accommodate larger images
         return NextResponse.json(
           {
             error: "Images too large",
             details:
-              "Total image size exceeds 3MB. Please reduce image sizes or remove some images.",
+              "Total image size exceeds 40MB. Please reduce image sizes or remove some images.",
           },
           { status: 413 }
         );
@@ -240,12 +240,12 @@ export async function POST(request: NextRequest) {
         const image = productData.images[i];
         if (image.startsWith("data:image")) {
           const imageSize = image.length * 0.75; // Approximate original size
-          if (imageSize > 1 * 1024 * 1024) {
-            // 1MB per image limit
+          if (imageSize > 20 * 1024 * 1024) {
+            // 20MB per image limit
             return NextResponse.json(
               {
                 error: "Image too large",
-                details: `Image ${i + 1} is too large (max 1MB per image). Please compress the image.`,
+                details: `Image ${i + 1} is too large (max 20MB per image). Please compress the image.`,
               },
               { status: 413 }
             );
