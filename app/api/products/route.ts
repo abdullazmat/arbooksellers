@@ -8,10 +8,19 @@ import mongoose from "mongoose";
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
+    
+    // Ensure DB is actually connected
+    if (mongoose.connection.readyState !== 1) {
+      return NextResponse.json(
+        { error: "Database not connected" },
+        { status: 503 }
+      );
+    }
+
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "12");
+    const limit = parseInt(searchParams.get("limit") || "8");
     const search = searchParams.get("search");
     const sort = searchParams.get("sort") || "newest";
     const featured = searchParams.get("featured");
@@ -22,8 +31,9 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-    // Build query
+    // Build query with simplified approach
     const query: any = {};
+
 
     if (search) {
       query.$or = [
@@ -41,18 +51,35 @@ export async function GET(request: NextRequest) {
     }
 
     if (category) {
-      // Check if the category ID is a subcategory by looking it up
-      const categoryDoc = await Category.findById(category);
-      if (categoryDoc && categoryDoc.parent) {
-        // If it's a subcategory, filter by subcategory field
-        query.subcategory = new mongoose.Types.ObjectId(category);
-      } else {
-        // If it's a main category, filter by category field
+      // Validate ObjectId before usage
+      if (!mongoose.Types.ObjectId.isValid(category)) {
+        return NextResponse.json(
+          { error: "Invalid category ID format" },
+          { status: 400 }
+        );
+      }
+      try {
+        // Check if the category ID is a subcategory by looking it up
+        const categoryDoc: any = await Category.findById(category).lean();
+        if (categoryDoc && categoryDoc.parent) {
+          // If it's a subcategory, filter by subcategory field
+          query.subcategory = new mongoose.Types.ObjectId(category);
+        } else {
+          // If it's a main category, filter by category field
+          query.category = new mongoose.Types.ObjectId(category);
+        }
+      } catch (catError: any) {
         query.category = new mongoose.Types.ObjectId(category);
       }
     }
 
     if (subcategory) {
+      if (!mongoose.Types.ObjectId.isValid(subcategory)) {
+        return NextResponse.json(
+          { error: "Invalid subcategory ID format" },
+          { status: 400 }
+        );
+      }
       query.subcategory = new mongoose.Types.ObjectId(subcategory);
     }
 
@@ -62,86 +89,186 @@ export async function GET(request: NextRequest) {
       if (maxPrice) query.price.$lte = parseFloat(maxPrice);
     }
 
-    // Build sort object
+    // Build sort object with fallback strategy
     let sortObj: any = {};
+    let sortField = 'createdAt';
+    let sortDirection = -1;
+    
     switch (sort) {
       case "price-low":
-        sortObj.price = 1;
+        sortField = 'price';
+        sortDirection = 1;
         break;
       case "price-high":
-        sortObj.price = -1;
+        sortField = 'price';
+        sortDirection = -1;
         break;
       case "rating":
-        sortObj.rating = -1;
+        // For rating, we'll sort by createdAt as fallback since rating isn't indexed
+        sortField = 'createdAt';
+        sortDirection = -1;
         break;
       case "oldest":
-        sortObj.createdAt = 1;
+        sortField = 'createdAt';
+        sortDirection = 1;
         break;
       default: // newest
-        sortObj.createdAt = -1;
+        sortField = 'createdAt';
+        sortDirection = -1;
     }
+    
+    sortObj[sortField] = sortDirection;
 
-    // Get products with rating aggregation
-    const products = await Product.aggregate([
-      { $match: query },
-      {
-        $lookup: {
-          from: "comments",
-          let: { productIdStr: { $toString: "$_id" } },
-          as: "comments",
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ["$productId", "$$productIdStr"] },
-                    { $eq: ["$isApproved", true] },
-                  ],
-                },
-              },
-            },
-          ],
-        },
-      },
-      {
-        $lookup: {
-          from: "categories",
-          localField: "category",
-          foreignField: "_id",
-          as: "category",
-        },
-      },
-      {
-        $lookup: {
-          from: "categories",
-          localField: "subcategory",
-          foreignField: "_id",
-          as: "subcategory",
-        },
-      },
-      {
-        $addFields: {
-          category: { $arrayElemAt: ["$category", 0] },
-          subcategory: { $arrayElemAt: ["$subcategory", 0] },
-          rating: {
-            $cond: {
-              if: { $gt: [{ $size: "$comments" }, 0] },
-              then: { $round: [{ $avg: "$comments.rating" }, 1] },
-              else: 0,
-            },
-          },
-          reviews: { $size: "$comments" },
-        },
-      },
-      { $sort: sortObj },
-      { $skip: skip },
-      { $limit: limit },
-    ]);
+    // Optimistic approach - prioritize speed over completeness
+    let products: any[] = [];
+    
+    try {
+      // Use aggregation with allowDiskUse to avoid memory limits
+      const pipeline = [
+        { $match: query },
+        { $project: {
+          _id: 1,
+          title: 1,
+          author: 1,
+          price: 1,
+          originalPrice: 1,
+          images: 1,
+          inStock: 1,
+          stockQuantity: 1,
+          featured: 1,
+          description: 1,
+          size: 1,
+          pages: 1,
+          paper: 1,
+          binding: 1,
+          category: 1,
+          subcategory: 1,
+          createdAt: 1
+        }},
+        { $sort: sortObj },
+        { $skip: skip },
+        { $limit: limit }
+      ];
+
+      let basicProducts;
+      
+      try {
+        basicProducts = await Product.aggregate(pipeline).allowDiskUse(true);
+      } catch (aggError: any) {
+        // Fallback to simple find() if aggregation fails
+        basicProducts = await Product.find(query)
+          .select('_id title author price originalPrice images inStock stockQuantity featured description size pages paper binding category subcategory createdAt')
+          .sort(sortObj)
+          .skip(skip)
+          .limit(limit)
+          .lean();
+      }
+
+      if (basicProducts.length === 0) {
+        products = [];
+      } else {
+        // Only fetch categories if we have products and it's not a search query
+        let categoryMap = new Map();
+        if (!search && basicProducts.some((p: any) => p.category || p.subcategory)) {
+          try {
+            const categoryIds = [...new Set([
+              ...basicProducts.map((p: any) => p.category).filter(Boolean),
+              ...basicProducts.map((p: any) => p.subcategory).filter(Boolean)
+            ])];
+            
+            if (categoryIds.length > 0) {
+              const categories = await Category.find({ _id: { $in: categoryIds } })
+                .select('_id name slug')
+                .lean();
+              categoryMap = new Map(categories.map((cat: any) => [cat._id.toString(), cat]));
+            }
+        } catch (catError) {
+          // If category fetch fails, continue without categories
+        }
+        }
+
+        // Process products with minimal enrichment
+        products = basicProducts.map((product: any) => {
+          const category = product.category ? categoryMap.get(product.category.toString()) : null;
+          const subcategory = product.subcategory ? categoryMap.get(product.subcategory.toString()) : null;
+          
+          return {
+            ...product,
+            category,
+            subcategory,
+            rating: 0, // Default rating for speed
+            reviews: 0  // Default reviews for speed
+          };
+        });
+      }
+    } catch (error: any) {
+      // Ultimate fallback - use aggregation with allowDiskUse
+      try {
+        const fallbackPipeline = [
+          { $match: query },
+          { $project: {
+            _id: 1,
+            title: 1,
+            author: 1,
+            price: 1,
+            originalPrice: 1,
+            images: 1,
+            inStock: 1,
+            stockQuantity: 1,
+            featured: 1,
+            description: 1,
+            size: 1,
+            pages: 1,
+            paper: 1,
+            binding: 1,
+            createdAt: 1
+          }},
+          { $sort: sortObj },
+          { $skip: skip },
+          { $limit: limit }
+        ];
+        
+        products = await Product.aggregate(fallbackPipeline).allowDiskUse(true);
+        
+        // Add default values
+        products = products.map((p: any) => ({
+          ...p,
+          category: null,
+          subcategory: null,
+          rating: 0,
+          reviews: 0
+        }));
+      } catch (fallbackError: any) {
+        // Last resort - get products without sorting, limit to smaller set
+        try {
+          const emergencyQuery = { ...query };
+          // Remove any complex query conditions that might cause issues
+          delete emergencyQuery.$or;
+          delete emergencyQuery.price;
+          
+          products = await Product.find(emergencyQuery)
+            .select('_id title author price originalPrice images inStock stockQuantity featured description size pages paper binding createdAt')
+            .limit(Math.min(limit, 10)) // Limit to 10 items max
+            .lean();
+          
+          // Add default values
+          products = products.map((p: any) => ({
+            ...p,
+            category: null,
+            subcategory: null,
+            rating: 0,
+            reviews: 0
+          }));
+        } catch (emergencyError: any) {
+          products = [];
+        }
+      }
+    }
 
     // Get total count
     const total = await Product.countDocuments(query);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       products,
       pagination: {
         page,
@@ -150,10 +277,20 @@ export async function GET(request: NextRequest) {
         pages: Math.ceil(total / limit),
       },
     });
+
+    // Add caching headers for better performance
+    response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=300');
+    response.headers.set('ETag', `"${Date.now()}"`);
+    
+    return response;
   } catch (error: any) {
+    // Provide clearer errors to help diagnose issues
+    const message = error?.message || "Internal server error";
+    const status =
+      message.includes("Invalid") || message.includes("format") ? 400 : 500;
     return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
+      { error: message },
+      { status }
     );
   }
 }

@@ -14,7 +14,7 @@ export async function GET(
     const { categoryId } = await params;
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "12");
+    const limit = parseInt(searchParams.get("limit") || "8");
     const subcategory = searchParams.get("subcategory");
 
     const skip = (page - 1) * limit;

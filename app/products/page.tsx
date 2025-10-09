@@ -77,7 +77,7 @@ export default function ProductsPage() {
 
       const params = new URLSearchParams({
         page: currentPage.toString(),
-        limit: "12",
+        limit: "8",
         sort: sortBy,
       });
 
