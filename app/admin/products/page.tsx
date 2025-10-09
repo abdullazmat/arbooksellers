@@ -113,6 +113,7 @@ export default function AdminProductsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
@@ -214,6 +215,7 @@ export default function AdminProductsPage() {
       const data = await response.json();
       setProducts(data.products);
       setTotalPages(data.pagination.pages);
+      setTotalProducts(data.pagination.total);
     } catch (error) {
       toast({
         title: "Error",
@@ -525,7 +527,14 @@ export default function AdminProductsPage() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={fetchProducts}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setLoading(true);
+                    fetchProducts();
+                  }}
+                  disabled={loading}
+                >
                   <Filter className="h-4 w-4" />
                 </Button>
               </div>
@@ -711,8 +720,14 @@ export default function AdminProductsPage() {
             </div>
 
             {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="mt-6">
+            <div className="mt-6">
+              {loading && (
+                <div className="flex justify-center items-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
+                  <span className="ml-2 text-sm text-gray-600">Loading products...</span>
+                </div>
+              )}
+              {totalPages > 1 && !loading && (
                 <Pagination>
                   <PaginationContent>
                     <PaginationItem>
@@ -720,7 +735,10 @@ export default function AdminProductsPage() {
                         href="#"
                         onClick={(e) => {
                           e.preventDefault();
-                          setCurrentPage(Math.max(1, currentPage - 1));
+                          if (currentPage > 1) {
+                            setLoading(true);
+                            setCurrentPage(Math.max(1, currentPage - 1));
+                          }
                         }}
                         className={
                           currentPage === 1
@@ -737,7 +755,10 @@ export default function AdminProductsPage() {
                           href="#"
                           onClick={(e) => {
                             e.preventDefault();
-                            setCurrentPage(1);
+                            if (currentPage !== 1) {
+                              setLoading(true);
+                              setCurrentPage(1);
+                            }
                           }}
                         >
                           1
@@ -772,7 +793,10 @@ export default function AdminProductsPage() {
                             href="#"
                             onClick={(e) => {
                               e.preventDefault();
-                              setCurrentPage(pageNum);
+                              if (pageNum !== currentPage) {
+                                setLoading(true);
+                                setCurrentPage(pageNum);
+                              }
                             }}
                             isActive={pageNum === currentPage}
                           >
@@ -796,7 +820,10 @@ export default function AdminProductsPage() {
                           href="#"
                           onClick={(e) => {
                             e.preventDefault();
-                            setCurrentPage(totalPages);
+                            if (currentPage !== totalPages) {
+                              setLoading(true);
+                              setCurrentPage(totalPages);
+                            }
                           }}
                         >
                           {totalPages}
@@ -809,7 +836,10 @@ export default function AdminProductsPage() {
                         href="#"
                         onClick={(e) => {
                           e.preventDefault();
-                          setCurrentPage(Math.min(totalPages, currentPage + 1));
+                          if (currentPage < totalPages) {
+                            setLoading(true);
+                            setCurrentPage(Math.min(totalPages, currentPage + 1));
+                          }
                         }}
                         className={
                           currentPage === totalPages
@@ -820,13 +850,16 @@ export default function AdminProductsPage() {
                     </PaginationItem>
                   </PaginationContent>
                 </Pagination>
+              )}
 
-                <div className="text-center text-sm text-gray-600 mt-4">
-                  Page {currentPage} of {totalPages} • {products.length}{" "}
-                  products per page
-                </div>
+              <div className="text-center text-sm text-gray-600 mt-4">
+                {loading ? (
+                  <span>Loading...</span>
+                ) : (
+                  <span>Page {currentPage} of {totalPages} • {products.length} of {totalProducts} products</span>
+                )}
               </div>
-            )}
+            </div>
           </CardContent>
         </Card>
 
