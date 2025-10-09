@@ -180,7 +180,7 @@ export default function AdminProductsPage() {
 
       const params = new URLSearchParams({
         page: currentPage.toString(),
-        limit: "20",
+        limit: "9",
       });
 
       if (searchTerm) {
