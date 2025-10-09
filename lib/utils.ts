@@ -43,26 +43,16 @@ export function formatPrice(amount: number, currency: string = 'Rs') {
       return `${currency} 0`
     }
 
-    // Convert to string and split by decimal point
-    const parts = amount.toString().split('.')
-    const integerPart = parts[0]
-    const decimalPart = parts[1] || '00'
-
-    // Add commas for Indian/Pakistani number system (every 2 digits from right, except first 3)
-    let formattedInteger = ''
-    const length = integerPart.length
+    // Convert to integer (remove decimal places for display)
+    const integerAmount = Math.floor(amount)
     
-    for (let i = 0; i < length; i++) {
-      if (i > 0 && (length - i) % 2 === 0 && i !== length - 3) {
-        formattedInteger += ','
-      }
-      formattedInteger += integerPart[i]
-    }
-
-    // Format decimal part to always show 2 digits
-    const formattedDecimal = decimalPart.padEnd(2, '0').slice(0, 2)
-
-    return `${currency} ${formattedInteger}${formattedDecimal !== '00' ? `.${formattedDecimal}` : ''}`
+    // Use standard number formatting with Indian locale
+    const formatter = new Intl.NumberFormat('en-IN', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    })
+    
+    return `${currency} ${formatter.format(integerAmount)}`
   } catch (error) {
     console.error('Error formatting price:', error)
     return `${currency} 0`
@@ -76,29 +66,13 @@ export function formatPriceWithDecimals(amount: number, currency: string = 'Rs',
       return `${currency} 0`
     }
 
-    // Convert to string and split by decimal point
-    const parts = amount.toString().split('.')
-    const integerPart = parts[0]
-    const decimalPart = parts[1] || ''
-
-    // Add commas for Indian/Pakistani number system
-    let formattedInteger = ''
-    const length = integerPart.length
+    // Use standard number formatting with Indian locale
+    const formatter = new Intl.NumberFormat('en-IN', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals
+    })
     
-    for (let i = 0; i < length; i++) {
-      if (i > 0 && (length - i) % 2 === 0 && i !== length - 3) {
-        formattedInteger += ','
-      }
-      formattedInteger += integerPart[i]
-    }
-
-    if (decimals === 0) {
-      return `${currency} ${formattedInteger}`
-    }
-
-    // Format decimal part
-    const formattedDecimal = decimalPart.padEnd(decimals, '0').slice(0, decimals)
-    return `${currency} ${formattedInteger}${formattedDecimal !== '0'.repeat(decimals) ? `.${formattedDecimal}` : ''}`
+    return `${currency} ${formatter.format(amount)}`
   } catch (error) {
     console.error('Error formatting price:', error)
     return `${currency} 0`
