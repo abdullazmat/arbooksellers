@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { AdminLayout } from '@/components/admin/admin-layout'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
 import { useToast } from '@/components/ui/use-toast'
-import { Mail, Phone, Search, RefreshCw } from 'lucide-react'
+import { Mail, Phone, Search, RefreshCw, Trash2 } from 'lucide-react'
 
 export default function AdminContactsPage() {
   const { toast } = useToast()
@@ -56,6 +56,37 @@ export default function AdminContactsPage() {
       toast({ title: 'Failed to load contacts', description: err?.message || 'Unknown error', variant: 'destructive' })
       setContacts([])
       setTotal(0)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null
+      if (!token) {
+        toast({ title: 'Authentication required', description: 'Please log in to delete', variant: 'destructive' })
+        return
+      }
+      const confirm = window.confirm('Are you sure you want to delete this contact message? This action cannot be undone.')
+      if (!confirm) return
+      setLoading(true)
+      const res = await fetch(`/api/admin/contacts/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data?.error || 'Delete failed')
+      }
+      toast({ title: 'Deleted', description: 'Contact message removed' })
+      // Refresh list
+      fetchContacts()
+    } catch (err: any) {
+      toast({ title: 'Failed to delete', description: err?.message || 'Unknown error', variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -146,6 +177,7 @@ export default function AdminContactsPage() {
                     <TableHead>Subject</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Created</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -171,6 +203,17 @@ export default function AdminContactsPage() {
                         <Badge className={statusColor(c.status)}>{c.status}</Badge>
                       </TableCell>
                       <TableCell>{new Date(c.createdAt).toLocaleString()}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDelete(c._id)}
+                          disabled={loading}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Delete
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                   {!loading && contacts.length === 0 && (
