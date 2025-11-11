@@ -21,7 +21,7 @@ import {
 import { useAuth } from '@/contexts/auth-context'
 import { useCart } from '@/contexts/cart-context'
 import { useWishlist } from '@/contexts/wishlist-context'
-import { ShoppingCart, Heart, User, Search, Menu, Home, BookOpen, Info, LayoutDashboard, LogOut, LogIn, UserPlus, X } from 'lucide-react'
+import { ShoppingCart, Heart, User, Search, Menu, Home, BookOpen, Info, LayoutDashboard, LogOut, LogIn, UserPlus, X, Mail } from 'lucide-react'
 import { formatPrice } from '@/lib/utils'
 import { CategoryNavbar } from '@/components/layout/category-navbar'
 
@@ -168,6 +168,9 @@ export function Header() {
           </Link>
           <Link className="text-sm font-medium hover:text-islamic-green-600 transition-colors" href="/about">
             About Us
+          </Link>
+          <Link className="text-sm font-medium hover:text-islamic-green-600 transition-colors" href="/contact">
+            Contact Us
           </Link>
         </nav>
 
@@ -386,6 +389,10 @@ export function Header() {
                 <Link className="flex items-center gap-3 text-lg font-semibold" href="/about">
                   <Info className="h-5 w-5 text-islamic-green-600" />
                   About Us
+                </Link>
+                <Link className="flex items-center gap-3 text-lg font-semibold" href="/contact">
+                  <Mail className="h-5 w-5 text-islamic-green-600" />
+                  Contact Us
                 </Link>
                 <div className="relative mt-4">
                   <form onSubmit={handleSearchSubmit} className="relative">

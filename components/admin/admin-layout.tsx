@@ -61,6 +61,7 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
     { name: "Orders", href: "/admin/orders", icon: ShoppingCart },
     { name: "Users", href: "/admin/users", icon: Users },
     { name: "Comments", href: "/admin/comments", icon: MessageSquare },
+    { name: "Contacts", href: "/admin/contacts", icon: FileText },
     { name: "Newsletter", href: "/admin/newsletter", icon: MessageSquare },
     { name: "Settings", href: "/admin/settings", icon: Settings },
   ];
