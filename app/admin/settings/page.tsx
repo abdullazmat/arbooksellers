@@ -26,9 +26,9 @@ export default function AdminSettingsPage() {
     // General Settings
     storeName: "Islamic Books Store",
     storeDescription: "Your trusted source for authentic Islamic literature",
-    storeEmail: "info@islamicbooks.com",
-    storePhone: "+1 (555) 123-4567",
-    storeAddress: "123 Islamic Way, New York, NY 10001",
+    storeEmail: "Alrahim95@gmail.com",
+    storePhone: "+92-300-8016812",
+    storeAddress: "17-Aziz Market, Urdu Bazar, Lahore",
 
     // Payment Settings
     stripeEnabled: true,

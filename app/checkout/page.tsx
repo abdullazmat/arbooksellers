@@ -533,7 +533,7 @@ export default function CheckoutPage() {
                   type="tel"
                   value={formData.phone}
                   onChange={handleChange}
-                  placeholder="+1 (555) 123-4567"
+                  placeholder="+92-300-8016812"
                   className={errors.phone ? "border-red-500" : ""}
                 />
                 {errors.phone && (

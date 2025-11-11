@@ -272,13 +272,13 @@ export default function AboutPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
-                href="mailto:info@islamicbooks.com"
+                href="mailto:Alrahim95@gmail.com"
                 className="bg-white text-green-600 px-8 py-3 rounded-lg font-semibold hover:bg-green-50 transition-colors"
               >
                 Email Us
               </a>
               <a
-                href="tel:+15551234567"
+                href="tel:+923008016812"
                 className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-green-600 transition-colors"
               >
                 Call Us

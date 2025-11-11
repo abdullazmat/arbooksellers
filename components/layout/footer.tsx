@@ -99,15 +99,15 @@ export function Footer() {
           <ul className="space-y-2">
             <li className="flex items-center gap-2">
               <MapPin className="h-5 w-5 text-gray-400" />
-              <span className="text-sm">123 Islamic Way, Suite 456, City, Country</span>
+              <span className="text-sm">17-Aziz Market, Urdu Bazar, Lahore</span>
             </li>
             <li className="flex items-center gap-2">
               <Phone className="h-5 w-5 text-gray-400" />
-              <span className="text-sm">+1 (555) 123-4567</span>
+              <span className="text-sm">+92-300-8016812</span>
             </li>
             <li className="flex items-center gap-2">
               <Mail className="h-5 w-5 text-gray-400" />
-              <span className="text-sm">info@islamicbooks.com</span>
+              <span className="text-sm">Alrahim95@gmail.com</span>
             </li>
           </ul>
         </div>
