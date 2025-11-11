@@ -24,7 +24,9 @@ export function Footer() {
               <Facebook className="h-6 w-6" />
             </Link>
             <Link
-              href="#"
+              href="https://www.instagram.com/ar.quran.company?igsh=anB6bms1dGRnMmh4"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-gray-400 hover:text-islamic-green-500 transition-colors"
             >
               <Instagram className="h-6 w-6" />
