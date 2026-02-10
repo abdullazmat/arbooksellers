@@ -21,8 +21,8 @@ jobs:
 
       - name: 🔨 Build Project
         run: |
-          pnpm ci --force
-          pnpm run build
+          npm ci --force
+          npm run build
 
       # Sync files via FTP
       - name: 📂 Sync files via FTP
