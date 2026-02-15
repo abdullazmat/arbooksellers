@@ -19,7 +19,7 @@ import { useWishlist } from "@/contexts/wishlist-context";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, getProductImageUrl } from "@/lib/utils";
 import ProductComments from "@/components/products/product-comments";
 
 interface Product {
@@ -105,7 +105,7 @@ export default function ProductDetailPage({
       id: product._id,
       title: product.title,
       price: product.price,
-      image: product.images[0] || "/placeholder.svg",
+      image: getProductImageUrl(product.images[0]),
     });
 
     toast({
@@ -136,7 +136,7 @@ export default function ProductDetailPage({
       await addToWishlist(product._id, {
         title: product.title,
         price: product.price,
-        image: product.images[0] || "/placeholder.svg",
+        image: getProductImageUrl(product.images[0]),
         author: product.author || "Unknown",
       });
       toast({
@@ -206,7 +206,7 @@ export default function ProductDetailPage({
           <div className="space-y-4">
             <div className="aspect-square overflow-hidden rounded-lg">
               <img
-                src={product.images[selectedImage] || "/placeholder.svg"}
+                src={getProductImageUrl(product.images[selectedImage])}
                 alt={product.title}
                 className="w-full h-full object-cover"
               />
@@ -225,7 +225,7 @@ export default function ProductDetailPage({
                     }`}
                   >
                     <img
-                      src={image || "/placeholder.svg"}
+                      src={getProductImageUrl(image)}
                       alt={`${product.title} ${index + 1}`}
                       className="w-full h-full object-cover"
                     />

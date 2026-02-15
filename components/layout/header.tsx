@@ -22,7 +22,7 @@ import { useAuth } from '@/contexts/auth-context'
 import { useCart } from '@/contexts/cart-context'
 import { useWishlist } from '@/contexts/wishlist-context'
 import { ShoppingCart, Heart, User, Search, Menu, Home, BookOpen, Info, LayoutDashboard, LogOut, LogIn, UserPlus, X, Mail } from 'lucide-react'
-import { formatPrice } from '@/lib/utils'
+import { formatPrice, getProductImageUrl } from '@/lib/utils'
 import { CategoryNavbar } from '@/components/layout/category-navbar'
 
 interface SearchResult {
@@ -215,7 +215,7 @@ export function Header() {
                       <div className="w-12 h-16 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
                         {result.images && result.images.length > 0 ? (
                           <img
-                            src={result.images[0]}
+                            src={getProductImageUrl(result.images[0], '/placeholder.jpg')}
                             alt={result.title}
                             className="w-full h-full object-cover"
                             onError={(e) => {
@@ -433,7 +433,7 @@ export function Header() {
                             <div className="w-10 h-12 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
                               {result.images && result.images.length > 0 ? (
                                 <img
-                                  src={result.images[0]}
+                                  src={getProductImageUrl(result.images[0], '/placeholder.jpg')}
                                   alt={result.title}
                                   className="w-full h-full object-cover"
                                   onError={(e) => {

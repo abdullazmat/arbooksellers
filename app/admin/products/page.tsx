@@ -58,7 +58,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { formatPrice, clearExpiredAdminTokens } from "@/lib/utils";
+import { formatPrice, clearExpiredAdminTokens, getProductImageUrl } from "@/lib/utils";
 
 interface Product {
   _id: string;
@@ -571,7 +571,7 @@ export default function AdminProductsPage() {
                           <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                             {product.images && product.images.length > 0 ? (
                               <img
-                                src={product.images[0]}
+                                src={getProductImageUrl(product.images[0], "/placeholder.jpg")}
                                 alt={product.title}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
@@ -1466,7 +1466,7 @@ export default function AdminProductsPage() {
                           <div key={index} className="image-preview-item">
                             <div className="aspect-square rounded-lg overflow-hidden border border-gray-200">
                               <img
-                                src={image}
+                                src={getProductImageUrl(image, "/placeholder.jpg")}
                                 alt={`Product ${index + 1}`}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {

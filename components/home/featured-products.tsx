@@ -7,7 +7,7 @@ import { Star, ShoppingCart, Heart, Eye } from 'lucide-react'
 import { useCart } from '@/contexts/cart-context'
 import { useWishlist } from '@/contexts/wishlist-context'
 import { useToast } from '@/hooks/use-toast'
-import { formatPrice } from '@/lib/utils'
+import { formatPrice, getProductImageUrl } from '@/lib/utils'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
@@ -67,7 +67,7 @@ export default function FeaturedProducts() {
       id: product._id,
       title: product.title,
       price: product.price,
-      image: product.images[0] || '/placeholder.svg',
+      image: getProductImageUrl(product.images[0]),
     })
     toast({
       title: 'Added to cart',
@@ -87,7 +87,7 @@ export default function FeaturedProducts() {
         await addToWishlist(product._id, {
           title: product.title,
           price: product.price,
-          image: product.images[0] || '/placeholder.svg',
+          image: getProductImageUrl(product.images[0]),
           author: product.author || 'Unknown',
         })
         toast({
@@ -209,7 +209,7 @@ export default function FeaturedProducts() {
             <Card key={product._id} className={`overflow-hidden rounded-xl shadow-modern hover:shadow-lg transition-all duration-300 hover-lift animate-fade-in-up stagger-${index + 3}`}>
               <Link href={`/products/${product._id}`} className="block relative h-60 w-full overflow-hidden">
                 <Image
-                  src={product.images[0] || "/placeholder.svg"}
+                  src={getProductImageUrl(product.images[0])}
                   alt={product.title}
                   fill
                   style={{ objectFit: 'cover' }}

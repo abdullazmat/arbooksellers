@@ -10,7 +10,8 @@
     "seed": "tsx scripts/seed-database.ts",
     "migrate": "tsx scripts/migrate-order-numbers.ts",
     "migrate:images": "tsx scripts/migrate-product-images.ts",
-    "update:image-urls": "tsx scripts/update-product-image-urls.ts"
+    "update:image-urls": "tsx scripts/update-product-image-urls.ts",
+    "migrate:image-base-url": "tsx scripts/migrate-product-image-base-url.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

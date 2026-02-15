@@ -35,7 +35,7 @@ import {
   Eye,
   Star,
 } from "lucide-react";
-import { formatDate } from "@/lib/utils";
+import { formatDate, getProductImageUrl } from "@/lib/utils";
 import { authenticatedFetch } from "@/lib/api";
 
 interface Comment {
@@ -433,7 +433,7 @@ export default function AdminCommentsPage() {
                                   comment.product.images.length > 0 && (
                                     <div className="relative">
                                       <img
-                                        src={comment.product.images[0]}
+                                        src={getProductImageUrl(comment.product.images[0], "/placeholder.jpg")}
                                         alt={comment.product.title}
                                         className="w-10 h-10 object-cover rounded-md"
                                         onError={(e) => {

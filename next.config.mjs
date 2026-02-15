@@ -8,6 +8,9 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
+    remotePatterns: [
+      { protocol: "https", hostname: "arbooksellers.com", pathname: "/**" },
+    ],
   },
   experimental: {
     serverComponentsExternalPackages: ["mongoose", "sharp"],

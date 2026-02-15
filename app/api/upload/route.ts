@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateImageFile } from "@/lib/uploadValidation";
 import { processImageToWebP } from "@/lib/imageProcessor";
+import { IMAGE_BASE_URL } from "@/lib/utils";
 
 /**
  * POST /api/upload
@@ -36,15 +37,16 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const { url } = await processImageToWebP(buffer, {
+    const { url: path } = await processImageToWebP(buffer, {
       maxWidth: 1200,
       quality: 80,
     });
+    const url = `${IMAGE_BASE_URL}${path}`;
 
     return NextResponse.json({
       message: "File uploaded successfully",
       url,
-      filename: url.split("/").pop(),
+      filename: path.split("/").pop(),
     });
   } catch (error) {
     console.error("Upload error:", error);

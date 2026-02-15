@@ -15,6 +15,7 @@ import fs from "fs";
 import path from "path";
 import dbConnect from "../lib/db";
 import Product from "../models/Product";
+import { IMAGE_BASE_URL } from "../lib/utils";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public/uploads/products");
 const URL_PREFIX = "/uploads/products";
@@ -59,7 +60,7 @@ async function updateProductImageUrls() {
 
       const match = file.match(/^[^-]+-(\d+)-/);
       const ts = match ? parseInt(match[1], 10) : 0;
-      const url = `${URL_PREFIX}/${file}`;
+      const url = `${IMAGE_BASE_URL}${URL_PREFIX}/${file}`;
 
       if (!byProduct.has(productId)) {
         byProduct.set(productId, []);

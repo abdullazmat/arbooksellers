@@ -111,3 +111,23 @@ export function clearExpiredAdminTokens() {
     return true; // Token was invalid and cleared
   }
 }
+
+// Product image base URL (use env in production)
+export const IMAGE_BASE_URL =
+  (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_SITE_URL) ||
+  'https://arbooksellers.com';
+
+/**
+ * Returns full URL for a product image. Handles relative paths, full URLs, and base64.
+ * Use for all product image src values.
+ */
+export function getProductImageUrl(
+  url: string | undefined | null,
+  placeholder: string = '/placeholder.svg'
+): string {
+  if (!url || typeof url !== 'string') return placeholder;
+  if (url.startsWith('data:')) return url; // base64
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  const path = url.startsWith('/') ? url : `/${url}`;
+  return `${IMAGE_BASE_URL}${path}`;
+}

@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Star, ShoppingCart, Heart } from "lucide-react";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, getProductImageUrl } from "@/lib/utils";
 import { useCart } from "@/contexts/cart-context";
 import { useWishlist } from "@/contexts/wishlist-context";
 import { useToast } from "@/hooks/use-toast";
@@ -44,7 +44,7 @@ export function ProductCard({ product, variant = 'grid' }: ProductCardProps) {
       id: product._id,
       title: product.title,
       price: product.price,
-      image: product.images?.[0] || "/placeholder.svg",
+      image: getProductImageUrl(product.images?.[0]),
     });
 
     toast({
@@ -64,7 +64,7 @@ export function ProductCard({ product, variant = 'grid' }: ProductCardProps) {
       await addToWishlist(product._id, {
         title: product.title,
         price: product.price,
-        image: product.images?.[0] || "/placeholder.svg",
+        image: getProductImageUrl(product.images?.[0]),
         author: product.author || "Unknown",
       });
       toast({
@@ -87,7 +87,7 @@ export function ProductCard({ product, variant = 'grid' }: ProductCardProps) {
             {/* Image */}
             <div className="w-full sm:w-48 h-48 sm:h-48 flex-shrink-0 relative overflow-hidden bg-gray-100">
               <img
-                src={product.images?.[0] || '/placeholder.jpg'}
+                src={getProductImageUrl(product.images?.[0], '/placeholder.jpg')}
                 alt={product.title}
                 className="w-full h-full object-cover"
                 onError={(e) => {
@@ -191,7 +191,7 @@ export function ProductCard({ product, variant = 'grid' }: ProductCardProps) {
     <Card className="overflow-hidden rounded-xl shadow-modern hover:shadow-lg transition-all duration-300 hover-lift">
       <Link href={`/products/${product._id}`} className="block relative h-60 w-full overflow-hidden">
         <Image
-          src={"https://arbooksellers.com" + product.images?.[0] || "/placeholder.svg"}
+          src={getProductImageUrl(product.images?.[0])}
           alt={product.title}
           fill
           style={{ objectFit: "cover" }}

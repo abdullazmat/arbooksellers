@@ -87,12 +87,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const { getProductImageUrl } = await import('@/lib/utils');
     // Add item to wishlist
     wishlist.items.push({
       product: productId,
       title: product.title,
       price: product.price,
-      image: product.images[0],
+      image: getProductImageUrl(product.images?.[0]),
       author: product.author,
     });
 
