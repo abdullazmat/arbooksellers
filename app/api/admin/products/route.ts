@@ -175,15 +175,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check content length before parsing
+    // Reasonable limit for JSON body (images are now URLs only)
     const contentLength = request.headers.get("content-length");
-    if (contentLength && parseInt(contentLength) > 50 * 1024 * 1024) {
-      // 50MB limit to accommodate larger images
+    if (contentLength && parseInt(contentLength) > 2 * 1024 * 1024) {
       return NextResponse.json(
         {
           error: "Request too large",
-          details:
-            "The request is too large (max 50MB). Please reduce image sizes or remove some images.",
+          details: "The request is too large.",
         },
         { status: 413 }
       );
@@ -210,46 +208,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if images are too large (base64 images can be very large)
+    // Images must be URLs only (no base64). Upload via /api/upload first.
     if (productData.images && Array.isArray(productData.images)) {
-      const totalImageSize = productData.images.reduce(
-        (total: number, image: string) => {
-          if (image.startsWith("data:image")) {
-            // Base64 images are ~33% larger than the original
-            return total + image.length * 0.75;
-          }
-          return total;
-        },
-        0
-      );
-
-      if (totalImageSize > 40 * 1024 * 1024) {
-        // 40MB total image limit to accommodate larger images
-        return NextResponse.json(
-          {
-            error: "Images too large",
-            details:
-              "Total image size exceeds 40MB. Please reduce image sizes or remove some images.",
-          },
-          { status: 413 }
-        );
-      }
-
-      // Check individual image size
       for (let i = 0; i < productData.images.length; i++) {
         const image = productData.images[i];
-        if (image.startsWith("data:image")) {
-          const imageSize = image.length * 0.75; // Approximate original size
-          if (imageSize > 20 * 1024 * 1024) {
-            // 20MB per image limit
-            return NextResponse.json(
-              {
-                error: "Image too large",
-                details: `Image ${i + 1} is too large (max 20MB per image). Please compress the image.`,
-              },
-              { status: 413 }
-            );
-          }
+        if (typeof image !== "string") {
+          return NextResponse.json(
+            {
+              error: "Invalid images",
+              details: `Image ${i + 1} must be a URL string. Upload images via the upload API first.`,
+            },
+            { status: 400 }
+          );
+        }
+        if (image.startsWith("data:")) {
+          return NextResponse.json(
+            {
+              error: "Base64 images not allowed",
+              details:
+                "Do not paste image data. Upload images using the product form; they will be converted to WebP and stored by URL. Run the migration script for existing products with stored images.",
+            },
+            { status: 400 }
+          );
         }
       }
     }

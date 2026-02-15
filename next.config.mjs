@@ -10,10 +10,10 @@ const nextConfig = {
     unoptimized: true,
   },
   experimental: {
-    serverComponentsExternalPackages: ["mongoose"],
+    serverComponentsExternalPackages: ["mongoose", "sharp"],
   },
   // Increase body size limit for API routes (App Router)
-  serverExternalPackages: ["mongoose"],
+  serverExternalPackages: ["mongoose", "sharp"],
 };
 
 export default nextConfig;

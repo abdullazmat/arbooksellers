@@ -66,50 +66,47 @@ export function ImageUpload({
           let imageUrl: string;
 
           try {
-            // Compress the image first
-            const compressedFile = await compressImage(file);
+            // For admin/server upload: send file to API; server converts to WebP and returns URL.
+            if (useCloudUpload && isAdmin) {
+              const formData = new FormData();
+              formData.append("file", file);
 
-            // Show compression info
-            const compressionRatio = (
-              ((file.size - compressedFile.size) / file.size) *
-              100
-            ).toFixed(1);
-            if (compressionRatio !== "0.0") {
-              console.log(
-                `Image compressed: ${file.name} - ${compressionRatio}% size reduction`
-              );
-            }
+              const response = await fetch("/api/upload", {
+                method: "POST",
+                body: formData,
+              });
 
-            if (useCloudUpload) {
-              // Upload to cloud storage
-              try {
-                const formData = new FormData();
-                formData.append("file", compressedFile);
+              if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.error || "Upload failed");
+              }
 
-                const response = await fetch("/api/upload", {
-                  method: "POST",
-                  body: formData,
-                });
-
-                if (response.ok) {
-                  const data = await response.json();
-                  // For now, we'll still use base64 since the API is a placeholder
-                  // In production, you would use: imageUrl = data.url
+              const data = await response.json();
+              if (!data.url) throw new Error("No URL returned from upload");
+              imageUrl = data.url;
+            } else {
+              // Non-admin or local: compress and use base64 (e.g. for non-product uploads)
+              const compressedFile = await compressImage(file);
+              if (useCloudUpload) {
+                try {
+                  const formData = new FormData();
+                  formData.append("file", compressedFile);
+                  const response = await fetch("/api/upload", {
+                    method: "POST",
+                    body: formData,
+                  });
+                  if (response.ok) {
+                    const data = await response.json();
+                    imageUrl = data.url ?? (await fileToBase64(compressedFile));
+                  } else {
+                    imageUrl = await fileToBase64(compressedFile);
+                  }
+                } catch {
                   imageUrl = await fileToBase64(compressedFile);
-                } else {
-                  throw new Error("Upload failed");
                 }
-              } catch (error) {
-                console.error(
-                  "Cloud upload failed, falling back to base64:",
-                  error
-                );
-                // Fallback to base64 if cloud upload fails
+              } else {
                 imageUrl = await fileToBase64(compressedFile);
               }
-            } else {
-              // Use base64 for local storage
-              imageUrl = await fileToBase64(compressedFile);
             }
 
             newImages.push(imageUrl);
@@ -149,7 +146,9 @@ export function ImageUpload({
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      "image/*": [".jpeg", ".jpg", ".png", ".gif", ".webp"],
+      "image/jpeg": [".jpeg", ".jpg"],
+      "image/png": [".png"],
+      "image/webp": [".webp"],
     },
     multiple: true,
     disabled: uploading || images.length >= maxImages,
@@ -241,8 +240,7 @@ export function ImageUpload({
             : "Drag & drop images here, or click to select files"}
         </p>
         <p className="text-xs text-gray-500">
-          PNG, JPG, GIF, WEBP {isAdmin ? "any size" : "up to 5MB each"}{" "}
-          (auto-compressed). Max {maxImages} images.
+          PNG, JPG, WEBP up to 5MB each. Max {maxImages} images.
         </p>
         <Button
           type="button"

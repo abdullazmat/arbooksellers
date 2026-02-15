@@ -8,7 +8,9 @@
     "lint": "next lint",
     "start": "node server.js",
     "seed": "tsx scripts/seed-database.ts",
-    "migrate": "tsx scripts/migrate-order-numbers.ts"
+    "migrate": "tsx scripts/migrate-order-numbers.ts",
+    "migrate:images": "tsx scripts/migrate-product-images.ts",
+    "update:image-urls": "tsx scripts/update-product-image-urls.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -64,6 +66,7 @@
     "react-hook-form": "^7.54.1",
     "react-resizable-panels": "^2.1.7",
     "recharts": "2.15.0",
+    "sharp": "^0.34.5",
     "sonner": "^1.7.1",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",

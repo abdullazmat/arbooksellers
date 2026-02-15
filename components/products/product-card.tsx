@@ -191,7 +191,7 @@ export function ProductCard({ product, variant = 'grid' }: ProductCardProps) {
     <Card className="overflow-hidden rounded-xl shadow-modern hover:shadow-lg transition-all duration-300 hover-lift">
       <Link href={`/products/${product._id}`} className="block relative h-60 w-full overflow-hidden">
         <Image
-          src={product.images?.[0] || "/placeholder.svg"}
+          src={"https://arbooksellers.com" + product.images?.[0] || "/placeholder.svg"}
           alt={product.title}
           fill
           style={{ objectFit: "cover" }}
