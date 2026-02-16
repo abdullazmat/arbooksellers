@@ -18,6 +18,7 @@ import {
   Search, 
   Filter,
   Eye,
+  Trash2,
   User,
   Calendar,
   Shield,
@@ -35,6 +36,16 @@ import {
   PaginationPrevious 
 } from '@/components/ui/pagination'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 interface AdminUser {
   _id: string
@@ -63,6 +74,8 @@ export default function AdminUsersPage() {
   const [totalPages, setTotalPages] = useState(1)
   const { toast } = useToast()
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null)
+  const [userToDelete, setUserToDelete] = useState<AdminUser | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     fetchUsers()
@@ -138,6 +151,37 @@ export default function AdminUsersPage() {
         return <User className="h-4 w-4" />
       default:
         return <User className="h-4 w-4" />
+    }
+  }
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return
+    try {
+      setDeleting(true)
+      const token = localStorage.getItem('adminToken')
+      const response = await fetch(`/api/admin/users/${userToDelete._id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to delete user')
+      }
+      setUserToDelete(null)
+      if (selectedUser?._id === userToDelete._id) setSelectedUser(null)
+      await fetchUsers()
+      toast({
+        title: 'User deleted',
+        description: `${userToDelete.name} has been removed.`,
+      })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to delete user',
+        variant: 'destructive',
+      })
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -276,8 +320,17 @@ export default function AdminUsersPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end space-x-2">
-                          <Button variant="ghost" size="sm" onClick={() => setSelectedUser(user)}>
+                          <Button variant="ghost" size="sm" onClick={() => setSelectedUser(user)} title="View details">
                             <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setUserToDelete(user)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            title="Delete user"
+                          >
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </TableCell>
@@ -396,6 +449,31 @@ export default function AdminUsersPage() {
       </div>
       {/* User detail modal */}
       <UserDetailDialog user={selectedUser} onClose={() => setSelectedUser(null)} />
+
+      {/* Delete confirmation */}
+      <AlertDialog open={!!userToDelete} onOpenChange={(open) => { if (!open) setUserToDelete(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete user</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{userToDelete?.name}</strong> ({userToDelete?.email})? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault()
+                handleDeleteUser()
+              }}
+              disabled={deleting}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              {deleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   )
 } 
