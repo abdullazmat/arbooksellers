@@ -414,7 +414,7 @@ export default function OrderConfirmationPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
                   <div className="flex items-center justify-center space-x-3 p-4 bg-blue-50 rounded-lg">
                     <Mail className="h-5 w-5 text-blue-600" />
-                    <span className="text-gray-700">Alrahim95@gmail.com</span>
+                    <span className="text-gray-700">contact@arbooksellers.com</span>
                   </div>
                   <div className="flex items-center justify-center space-x-3 p-4 bg-green-50 rounded-lg">
                     <Phone className="h-5 w-5 text-green-600" />

@@ -26,7 +26,7 @@ export default function AdminSettingsPage() {
     // General Settings
     storeName: "Islamic Books Store",
     storeDescription: "Your trusted source for authentic Islamic literature",
-    storeEmail: "Alrahim95@gmail.com",
+    storeEmail: "contact@arbooksellers.com",
     storePhone: "+92-300-8016812",
     storeAddress: "17-Aziz Market, Urdu Bazar, Lahore",
 

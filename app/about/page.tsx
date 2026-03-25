@@ -272,7 +272,7 @@ export default function AboutPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
-                href="mailto:Alrahim95@gmail.com"
+                href="mailto:contact@arbooksellers.com"
                 className="bg-white text-green-600 px-8 py-3 rounded-lg font-semibold hover:bg-green-50 transition-colors"
               >
                 Email Us
