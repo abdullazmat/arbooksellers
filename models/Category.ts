@@ -63,7 +63,6 @@ categorySchema.pre("save", function (next) {
 });
 
 // Index for efficient queries
-categorySchema.index({ slug: 1 });
 categorySchema.index({ parent: 1 });
 categorySchema.index({ isActive: 1, sortOrder: 1 });
 

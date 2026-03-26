@@ -52,7 +52,6 @@ const newsletterSchema = new Schema<INewsletter>(
 );
 
 // Index for email lookups
-newsletterSchema.index({ email: 1 });
 newsletterSchema.index({ subscribed: 1 });
 newsletterSchema.index({ createdAt: -1 });
 

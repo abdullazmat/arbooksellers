@@ -12,10 +12,6 @@ const nextConfig = {
       { protocol: "https", hostname: "arbooksellers.com", pathname: "/**" },
     ],
   },
-  experimental: {
-    serverComponentsExternalPackages: ["mongoose", "sharp"],
-  },
-  // Increase body size limit for API routes (App Router)
   serverExternalPackages: ["mongoose", "sharp"],
 };
 

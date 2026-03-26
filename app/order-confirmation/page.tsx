@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Header } from '@/components/layout/header'
@@ -39,7 +39,7 @@ interface OrderDetails {
   total: number;
 }
 
-export default function OrderConfirmationPage() {
+function OrderConfirmationContent() {
   const searchParams = useSearchParams()
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null)
   const [loading, setLoading] = useState(true)
@@ -191,7 +191,7 @@ export default function OrderConfirmationPage() {
               {/* Order Items */}
               <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
                 <CardHeader className="bg-gradient-to-r from-green-50 to-blue-50 border-b">
-                  <CardTitle className="flex items-center space-x-3 text-xl">
+                   <CardTitle className="flex items-center space-x-3 text-xl">
                     <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                       <Package className="h-5 w-5 text-green-600" />
                     </div>
@@ -392,7 +392,7 @@ export default function OrderConfirmationPage() {
                   onClick={handleDownloadInvoice}
                 >
                   <Download className="mr-2 h-4 w-4" />
-                  Download Invoice
+                   Download Invoice
                 </Button>
               </div>
             </div>
@@ -429,4 +429,19 @@ export default function OrderConfirmationPage() {
       <Footer />
     </>
   )
-} 
+}
+
+export default function OrderConfirmationPage() {
+  return (
+    <Suspense fallback={
+       <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading order...</p>
+          </div>
+        </div>
+    }>
+      <OrderConfirmationContent />
+    </Suspense>
+  )
+}

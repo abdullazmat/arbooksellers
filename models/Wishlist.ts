@@ -53,7 +53,7 @@ const wishlistSchema = new mongoose.Schema<IWishlist>(
 );
 
 // Index for efficient queries
-wishlistSchema.index({ user: 1 });
+// user index is already created by unique: true
 
 export default mongoose.models.Wishlist ||
   mongoose.model<IWishlist>("Wishlist", wishlistSchema);
