@@ -8,11 +8,10 @@ export function Footer() {
         {/* Company Info */}
         <div className="space-y-4">
           <Link href="/" className="flex items-center">
-            <img src="/logo.png" alt="Islamic Books" className="h-20 w-20" />
+            <img src="/logo.png" alt="AR Book Sellers | Quran & Islamic Books Store in Pakistan" className="h-20 w-20" />
           </Link>
           <p className="text-sm leading-relaxed">
-            Your trusted source for authentic Islamic literature. We strive to
-            provide a wide range of books to enrich your knowledge and faith.
+            <strong>AR Book Sellers</strong> is your trusted <strong>Islamic books store in Pakistan</strong>. We provide a wide range of authentic Quran, Hadith, and Islamic literature to enrich your knowledge and faith.
           </p>
           <div className="flex space-x-4">
             <Link
@@ -196,8 +195,8 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-gray-700 mt-8 py-5 text-center text-sm text-gray-500">
-        &copy; {new Date().getFullYear()} Islamic Books. All rights reserved.
+      <div className="border-t border-gray-700 mt-8 py-5 text-center text-sm text-gray-500 font-bold uppercase tracking-widest">
+        &copy; {new Date().getFullYear()} AR Book Sellers | 15 Years of Trusted Service in Pakistan
       </div>
     </footer>
   );

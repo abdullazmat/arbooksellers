@@ -2,159 +2,128 @@ import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { BookOpen, Users, Award, Globe, Heart, Shield } from 'lucide-react'
-
-const teamMembers = [
-  {
-    name: 'Dr. Ahmad Rahman',
-    role: 'Founder & Islamic Scholar',
-    image: '/placeholder.svg?height=200&width=200',
-    description: 'PhD in Islamic Studies from Al-Azhar University. 20+ years experience in Islamic education and book curation.'
-  },
-  {
-    name: 'Fatima Al-Zahra',
-    role: 'Head of Content',
-    image: '/placeholder.svg?height=200&width=200',
-    description: 'Masters in Arabic Literature. Specializes in authenticating Islamic texts and translations.'
-  },
-  {
-    name: 'Omar Hassan',
-    role: 'Customer Relations',
-    image: '/placeholder.svg?height=200&width=200',
-    description: 'Dedicated to providing exceptional customer service and helping customers find the right Islamic books.'
-  },
-  {
-    name: 'Aisha Khan',
-    role: 'Quality Assurance',
-    image: '/placeholder.svg?height=200&width=200',
-    description: 'Ensures all books meet our high standards for authenticity and quality before reaching customers.'
-  }
-]
+import { ShieldCheck, Scroll, Globe, Heart, BookOpen, Crown } from 'lucide-react'
+import Image from 'next/image'
 
 const values = [
   {
-    icon: BookOpen,
-    title: 'Authentic Knowledge',
-    description: 'We carefully curate books from trusted scholars and verified publishers to ensure authenticity and accuracy.'
+    icon: ShieldCheck,
+    title: 'Verified Authenticity',
+    description: 'Every work in our collection is scrupulously vetted for theological accuracy before it reaches your home.'
   },
   {
-    icon: Heart,
-    title: 'Serving the Ummah',
-    description: 'Our mission is to make authentic Islamic knowledge accessible to Muslims worldwide, fostering spiritual growth.'
+    icon: Scroll,
+    title: 'Venerable Sources',
+    description: 'We source our literature directly from the most respected publishers and scholars in the Islamic world.'
   },
   {
-    icon: Shield,
-    title: 'Trust & Integrity',
-    description: 'We maintain the highest standards of integrity in our business practices and book selection process.'
+    icon: Crown,
+    title: 'Premium Quality',
+    description: 'We prioritize high-quality prints, durable bindings, and beautiful gift-ready packaging.'
   },
   {
     icon: Globe,
-    title: 'Global Reach',
-    description: 'Serving Muslim communities across the globe with fast, reliable shipping and multilingual support.'
+    title: 'Nationwide Delivery',
+    description: 'Serving the Ummah across Pakistan with reliable shipping and dedicated customer support.'
   }
-]
-
-const stats = [
-  { number: '50,000+', label: 'Happy Customers' },
-  { number: '1,000+', label: 'Islamic Books' },
-  { number: '25+', label: 'Languages' },
-  { number: '15+', label: 'Years Experience' }
 ]
 
 export default function AboutPage() {
   return (
-    <>
+    <div className="flex flex-col min-h-screen">
       <Header />
-      <main className="min-h-screen">
-        {/* Hero Section */}
-        <section className="bg-gradient-to-br from-green-50 via-white to-yellow-50 py-16">
+      <main className="flex-grow">
+        {/* Simple & Clear Hero */}
+        <section className="bg-white py-20 border-b border-gray-100">
           <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto text-center">
-              <Badge className="mb-4 bg-green-100 text-green-800">About Us</Badge>
-              <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-                Spreading Islamic Knowledge
-                <span className="text-green-600 block">Across the World</span>
+            <div className="flex flex-col items-center text-center max-w-4xl mx-auto space-y-8">
+              <div className="w-32 h-32 relative mb-2">
+                <Image 
+                  src="/logo.png" 
+                  alt="AR Book Sellers Logo" 
+                  fill 
+                  className="object-contain"
+                />
+              </div>
+              <Badge className="bg-islamic-green-50 text-islamic-green-700 hover:bg-islamic-green-100 border-islamic-green-200 px-4 py-1.5 text-xs font-bold uppercase tracking-widest">
+                Our Mission
+              </Badge>
+              <h1 className="text-4xl lg:text-6xl font-black text-gray-900 leading-tight">
+                Spreading Islamic Knowledge <span className="text-islamic-green-600">Across Pakistan</span>
               </h1>
-              <p className="text-xl text-gray-600 leading-relaxed mb-8">
-                For over 15 years, we have been dedicated to providing authentic Islamic literature 
-                to Muslims worldwide. Our mission is to make the treasures of Islamic knowledge 
-                accessible to everyone, fostering spiritual growth and understanding.
+              <p className="text-xl text-gray-600 leading-relaxed font-medium max-w-2xl">
+                Founded in 2009, AR Book Sellers is a trusted nationwide platform serving over 50,000 customers across Pakistan, dedicated to making authentic Islamic literature accessible to everyone.
               </p>
-              <div className="text-center">
-                <p className="text-2xl font-arabic text-green-600 mb-2">
+              
+              <div className="pt-6">
+                <p className="text-3xl font-amiri text-islamic-green-700 mb-2">
                   وَقُل رَّبِّ زِدْنِي عِلْمًا
                 </p>
-                <p className="text-gray-600 italic">
-                  "And say: My Lord, increase me in knowledge" - Quran 20:114
+                <p className="text-gray-500 italic text-sm">
+                  "And say: My Lord, increase me in knowledge" — Quran 20:114
                 </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Stats Section */}
-        <section className="py-16 bg-white">
+        {/* Story Section with Real Image */}
+        <section className="py-24 bg-gray-50">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-              {stats.map((stat, index) => (
-                <div key={index} className="text-center">
-                  <div className="text-3xl lg:text-4xl font-bold text-green-600 mb-2">
-                    {stat.number}
-                  </div>
-                  <div className="text-gray-600">{stat.label}</div>
+            <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
+              <div className="lg:w-1/2 relative">
+                <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white">
+                  <Image 
+                    src="/scholar-desk.png" 
+                    alt="The Desk of an Islamic Researcher" 
+                    width={800}
+                    height={800}
+                    className="w-full h-auto object-cover"
+                  />
                 </div>
-              ))}
+                <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-islamic-gold-500 rounded-full flex items-center justify-center text-white border-4 border-white shadow-xl animate-float">
+                   <Scroll className="w-10 h-10" />
+                </div>
+              </div>
+
+              <div className="lg:w-1/2 space-y-8 text-lg">
+                <h2 className="text-3xl font-black text-gray-900 leading-tight">Our Journey Since 2009</h2>
+                <div className="space-y-6 text-gray-600 leading-relaxed">
+                  <p>
+                    Our founder, <strong>Dr. Ahmad Rahman</strong>, recognized the need for a reliable source of authentic Islamic literature after struggling to find quality books for his own Islamic studies. With his background in scholarship and a passion for education, he began curating a collection from the most respected authors in the Islamic world.
+                  </p>
+                  <p>
+                    Today, we work directly with renowned publishers like <strong>Darussalam</strong>, <strong>Islamic Foundation</strong>, and many others to ensure every book in our collection meets the highest standards. Our team of Islamic scholars carefully reviews each title to verify its adherence to authentic Islamic teachings.
+                  </p>
+                  <p>
+                    What started as a small bookstore in our local community has grown into a trusted nationwide platform. Whether it's our signature printed Quran sets or artisan-crafted Rahals, we prioritize items that embody the excellence required of Islamic knowledge.
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-8 pt-4">
+                  <div className="text-center p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+                    <p className="text-3xl font-black text-islamic-green-600 mb-1">50,000+</p>
+                    <p className="text-sm font-bold text-gray-400 uppercase tracking-widest leading-none">Happy Customers</p>
+                  </div>
+                  <div className="text-center p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+                    <p className="text-3xl font-black text-islamic-gold-600 mb-1">Nationwide</p>
+                    <p className="text-sm font-bold text-gray-400 uppercase tracking-widest leading-none">Delivery</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Mission & Vision */}
-        <section className="py-16 bg-gray-50">
+        {/* Values Redesign */}
+        <section className="py-24 bg-white">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-              <Card className="border-0 shadow-lg">
-                <CardContent className="p-8">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-6">
-                    <BookOpen className="h-6 w-6 text-green-600" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Our Mission</h2>
-                  <p className="text-gray-700 leading-relaxed">
-                    To provide authentic, high-quality Islamic books and literature to Muslims 
-                    around the world, making the treasures of Islamic knowledge accessible to 
-                    everyone regardless of their location or background. We strive to be the 
-                    most trusted source for Islamic education materials.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="border-0 shadow-lg">
-                <CardContent className="p-8">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-6">
-                    <Award className="h-6 w-6 text-green-600" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Our Vision</h2>
-                  <p className="text-gray-700 leading-relaxed">
-                    To become the leading global platform for Islamic literature, fostering 
-                    a world where authentic Islamic knowledge is easily accessible to every 
-                    Muslim. We envision communities strengthened by proper understanding of 
-                    Islam through quality books and educational materials.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </section>
-
-        {/* Values Section */}
-        <section className="py-16 bg-white">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                Our Islamic Values
+            <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+              <h2 className="text-3xl lg:text-4xl font-black text-gray-900 leading-tight">
+                Our Core Principles
               </h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Everything we do is guided by Islamic principles and our commitment 
-                to serving the Muslim community with integrity and excellence.
+              <p className="text-gray-500 text-lg">
+                Guided by Islamic ethics, we maintain the highest standards of integrity in everything we do.
               </p>
             </div>
 
@@ -162,15 +131,15 @@ export default function AboutPage() {
               {values.map((value, index) => {
                 const IconComponent = value.icon
                 return (
-                  <Card key={index} className="text-center border-0 shadow-md hover:shadow-lg transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <IconComponent className="h-8 w-8 text-green-600" />
+                  <Card key={index} className="border-0 shadow-xl shadow-gray-100/50 hover:shadow-islamic-green-100/50 transition-all duration-300 hover:-translate-y-2">
+                    <CardContent className="p-8 text-center space-y-4">
+                      <div className="w-16 h-16 bg-islamic-green-50 rounded-2xl flex items-center justify-center mx-auto text-islamic-green-600">
+                        <IconComponent className="h-8 w-8" />
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                      <h3 className="text-xl font-black text-gray-900">
                         {value.title}
                       </h3>
-                      <p className="text-gray-600 text-sm leading-relaxed">
+                      <p className="text-gray-600 leading-relaxed text-sm">
                         {value.description}
                       </p>
                     </CardContent>
@@ -181,113 +150,32 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* Team Section */}
-        <section className="py-16 bg-gray-50">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                Meet Our Team
-              </h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Our dedicated team of Islamic scholars and professionals work tirelessly 
-                to bring you the best Islamic literature from around the world.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {teamMembers.map((member, index) => (
-                <Card key={index} className="text-center border-0 shadow-lg hover:shadow-xl transition-shadow">
-                  <CardContent className="p-6">
-                    <img
-                      src={member.image || "/placeholder.svg"}
-                      alt={member.name}
-                      className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
-                    />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                      {member.name}
-                    </h3>
-                    <p className="text-green-600 font-medium mb-3">{member.role}</p>
-                    <p className="text-gray-600 text-sm leading-relaxed">
-                      {member.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Story Section */}
-        <section className="py-16 bg-white">
-          <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto">
-              <div className="text-center mb-12">
-                <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                  Our Story
-                </h2>
-              </div>
-
-              <div className="prose prose-lg max-w-none text-gray-700">
-                <p className="text-xl leading-relaxed mb-6">
-                  Islamic Books Store was founded in 2009 with a simple yet profound mission: 
-                  to make authentic Islamic knowledge accessible to Muslims worldwide. What started 
-                  as a small bookstore in our local community has grown into a trusted global 
-                  platform serving over 50,000 customers across 40+ countries.
-                </p>
-
-                <p className="leading-relaxed mb-6">
-                  Our founder, Dr. Ahmad Rahman, recognized the need for a reliable source of 
-                  authentic Islamic literature after struggling to find quality books for his 
-                  own Islamic studies. With his background in Islamic scholarship and a passion 
-                  for education, he began curating a collection of books from the most respected 
-                  scholars and publishers in the Islamic world.
-                </p>
-
-                <p className="leading-relaxed mb-6">
-                  Today, we work directly with renowned publishers like Darussalam, Islamic 
-                  Foundation, and many others to ensure that every book in our collection meets 
-                  the highest standards of authenticity and quality. Our team of Islamic scholars 
-                  carefully reviews each title to verify its adherence to authentic Islamic teachings.
-                </p>
-
-                <p className="leading-relaxed">
-                  We believe that knowledge is the foundation of faith, and we are honored to 
-                  play a role in spreading Islamic knowledge to communities around the world. 
-                  Whether you're a student of Islamic studies, a parent looking for children's 
-                  Islamic books, or someone seeking to deepen your understanding of Islam, 
-                  we are here to serve you with dedication and integrity.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Contact CTA */}
-        <section className="py-16 bg-green-600 text-white">
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold mb-4">Have Questions?</h2>
-            <p className="text-xl text-green-100 mb-8 max-w-2xl mx-auto">
-              We're here to help you find the perfect Islamic books for your spiritual journey. 
-              Don't hesitate to reach out to our knowledgeable team.
+        {/* Simple Contact / CTA */}
+        <section className="py-24 bg-islamic-green-700 text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+          <div className="container mx-auto px-4 text-center relative z-10 space-y-8">
+            <h2 className="text-3xl font-black">Looking for a Specific Work?</h2>
+            <p className="text-xl text-islamic-green-100 max-w-2xl mx-auto leading-relaxed">
+              If you can't find a particular title or need advice on choosing the right Quran for your level, our team is always here to help.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               <a
                 href="mailto:contact@arbooksellers.com"
-                className="bg-white text-green-600 px-8 py-3 rounded-lg font-semibold hover:bg-green-50 transition-colors"
+                className="bg-islamic-gold-500 text-white px-10 py-4 rounded-full font-bold hover:bg-islamic-gold-600 transition-all shadow-lg hover:shadow-xl"
               >
-                Email Us
+                Reach Out to Us
               </a>
               <a
                 href="tel:+923008016812"
-                className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-green-600 transition-colors"
+                className="bg-transparent border-2 border-white/30 text-white px-10 py-4 rounded-full font-bold hover:bg-white/10 transition-all"
               >
-                Call Us
+                Call Support
               </a>
             </div>
           </div>
         </section>
       </main>
       <Footer />
-    </>
+    </div>
   )
 }

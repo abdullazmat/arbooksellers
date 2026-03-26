@@ -22,8 +22,15 @@ const amiri = Amiri({
 })
 
 export const metadata: Metadata = {
-  title: 'Islamic Books - Authentic Literature',
-  description: 'Your one-stop shop for authentic Quran, Hadith, and Islamic studies books.',
+  title: {
+    template: '%s | AR Book Sellers',
+    default: 'AR Book Sellers | Quran & Islamic Books Store in Pakistan',
+  },
+  description: 'AR Book Sellers is your trusted Islamic books store in Pakistan. Buy Quran, Hadith, Tafsir, and Islamic literature online with fast delivery across Pakistan.',
+  keywords: 'Islamic books, Quran, Hadith, Islamic literature, Islamic books store in Pakistan, online Islamic bookstore',
+  verification: {
+    google: 'YOUR_GOOGLE_VERIFICATION_CODE_HERE',
+  },
   generator: 'v0.dev'
 }
 
@@ -35,7 +42,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${amiri.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning={true}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} forcedTheme="light" disableTransitionOnChange>
           <ClientOnly fallback={
             <div className="flex items-center justify-center min-h-screen">
               <div className="text-center">

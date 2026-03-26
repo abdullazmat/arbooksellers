@@ -1,75 +1,94 @@
+'use client'
+
 import { Card, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Star } from 'lucide-react'
+import { Star, Quote } from 'lucide-react'
 
 const testimonials = [
   {
     name: 'Aisha Rahman',
-    title: 'Satisfied Customer',
+    role: 'Hifz Student',
     avatar: '/aisha-rahman-profile.png',
     rating: 5,
-    review: 'This website is a treasure trove of Islamic knowledge. The quality of books is exceptional, and the delivery was super fast. Highly recommended!',
+    review: 'Building a library of my own for Hifz was daunting until I found AR Book Sellers. The quality of their printed Quran sets is unmatched in Pakistan.',
   },
   {
     name: 'Omar Khan',
-    title: 'Regular Buyer',
+    role: 'Scholarly Researcher',
     avatar: '/omar-khan-profile.png',
     rating: 5,
-    review: 'I always find what I\'m looking for here. The collection is vast, and the customer service is excellent. A must-visit for anyone seeking authentic Islamic books.',
+    review: 'As someone who values authentic editions, I am impressed with the scrupulous vetting here. Finally a place that respects the text as much as we do.',
   },
   {
     name: 'Fatima Ali',
-    title: 'New Reader',
+    role: 'Gift Buyer',
     avatar: '/fatima-ali-profile.png',
-    rating: 4,
-    review: 'As a new Muslim, this site has been invaluable. The beginner-friendly books are a great starting point, and the descriptions are very helpful.',
+    rating: 5,
+    review: 'I ordered the Fancy Quran Gift Box for my brother\'s Nikah, and it was the highlight of the day. Exceptional craftsmanship and premium feel.',
   },
   {
     name: 'Ahmed Hassan',
-    title: 'Scholar',
+    role: 'Regular Customer',
     avatar: '/ahmed-hassan-profile.png',
     rating: 5,
-    review: 'An excellent platform for serious students and scholars. The range of classical and contemporary works is impressive. May Allah bless this initiative.',
+    review: 'Fast delivery across Pakistan and incredibly professional. My go-to store for anything related to Islamic literature.',
   },
 ]
 
 export default function TestimonialsSection() {
   return (
-    <section className="py-12 md:py-24 lg:py-32 bg-islamic-green-50 font-inter">
+    <section className="py-24 bg-white font-inter overflow-hidden border-y border-gray-100">
       <div className="container mx-auto px-4 md:px-6">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold gradient-text mb-6 animate-fade-in-down stagger-1">
-            What Our Readers Say
+        <div className="text-center max-w-3xl mx-auto mb-20 space-y-6">
+          <Badge className="bg-islamic-gold-50 text-islamic-gold-700 border-islamic-gold-200 uppercase tracking-widest text-[10px] font-bold">Trusted by the Ummah</Badge>
+          <h2 className="text-4xl lg:text-5xl font-black text-gray-900 leading-tight">
+            Hear from Our <span className="text-islamic-green-600">Customers</span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto animate-fade-in-up stagger-2 leading-relaxed">
-            Hear from our satisfied customers about their experience with Islamic Books.
+          <p className="text-lg text-gray-500 max-w-xl mx-auto">
+            Discover why over 50,000 readers in Pakistan choose AR Book Sellers for their journey into sacred knowledge.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           {testimonials.map((testimonial, index) => (
-            <Card key={testimonial.name} className={`rounded-xl shadow-modern hover:shadow-lg transition-all duration-300 hover-lift animate-fade-in-up stagger-${index + 3}`}>
-              <CardContent className="p-6 flex flex-col items-center text-center">
-                <Avatar className="h-20 w-20 mb-4 border-4 border-islamic-green-200 shadow-md">
-                  <AvatarImage src={testimonial.avatar || "/placeholder.svg"} alt={testimonial.name} />
-                  <AvatarFallback>{testimonial.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+            <Card key={testimonial.name} className="border-0 shadow-2xl shadow-gray-100/50 hover:shadow-islamic-green-100/50 transition-all duration-300 group">
+              <CardContent className="p-8 flex flex-col items-center text-center space-y-6 relative">
+                <Quote className="absolute top-4 left-4 w-10 h-10 text-islamic-green-50 opacity-0 group-hover:opacity-100 transition-opacity -rotate-12" />
+                
+                <Avatar className="h-24 w-24 border-4 border-white shadow-xl">
+                  <AvatarImage src={testimonial.avatar} alt={testimonial.name} className="object-cover" />
+                  <AvatarFallback className="bg-islamic-green-50 text-islamic-green-700 font-bold">
+                    {testimonial.name.split(' ').map(n => n[0]).join('')}
+                  </AvatarFallback>
                 </Avatar>
-                <div className="flex items-center mb-2">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="h-5 w-5 fill-islamic-gold-500 text-islamic-gold-500" />
-                  ))}
-                  {[...Array(5 - testimonial.rating)].map((_, i) => (
-                    <Star key={i + testimonial.rating} className="h-5 w-5 text-gray-300" />
+
+                <div className="space-y-1">
+                  <p className="text-lg font-black text-gray-900">{testimonial.name}</p>
+                  <p className="text-xs font-bold text-islamic-green-600 uppercase tracking-widest">{testimonial.role}</p>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-islamic-gold-500 text-islamic-gold-500" />
                   ))}
                 </div>
-                <p className="text-lg font-semibold text-foreground mb-2">{testimonial.name}</p>
-                <p className="text-sm text-muted-foreground mb-4">{testimonial.title}</p>
-                <p className="text-base text-gray-700 italic">"{testimonial.review}"</p>
+
+                <p className="text-gray-600 leading-relaxed italic text-sm">
+                  "{testimonial.review}"
+                </p>
               </CardContent>
             </Card>
           ))}
         </div>
       </div>
     </section>
+  )
+}
+
+function Badge({ children, className }: { children: React.ReactNode, className?: string }) {
+  return (
+    <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${className}`}>
+      {children}
+    </div>
   )
 }

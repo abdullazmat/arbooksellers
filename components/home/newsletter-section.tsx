@@ -4,12 +4,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
 import { useState } from 'react'
-import { Mail, Send, CheckCircle } from 'lucide-react'
+import { Mail, SendHorizontal, CheckCircle, BellRing, BookOpen } from 'lucide-react'
 
 export default function NewsletterSection() {
   const { toast } = useToast()
   const [email, setEmail] = useState('')
-  const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
   const [subscribed, setSubscribed] = useState(false)
 
@@ -25,7 +24,6 @@ export default function NewsletterSection() {
       return
     }
 
-    // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
       toast({
@@ -38,165 +36,125 @@ export default function NewsletterSection() {
 
     try {
       setLoading(true)
-      
       const response = await fetch('/api/newsletter', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, name }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
       })
-
-      const data = await response.json()
 
       if (response.ok) {
         setSubscribed(true)
         setEmail('')
-        setName('')
         toast({
-          title: 'Successfully Subscribed!',
-          description: data.message || 'You have been subscribed to our newsletter',
+          title: 'Welcome to the Community!',
+          description: 'You have been successfully subscribed.',
         })
       } else {
+        const data = await response.json()
         toast({
           title: 'Subscription Failed',
-          description: data.error || 'Failed to subscribe to newsletter',
+          description: data.error || 'Please try again later.',
           variant: 'destructive',
         })
       }
     } catch (error) {
-      console.error('Newsletter subscription error:', error)
       toast({
         title: 'Error',
-        description: 'Failed to subscribe. Please try again.',
+        description: 'Connection error. Please try again.',
         variant: 'destructive',
       })
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleUnsubscribe = async () => {
-    try {
-      setLoading(true)
-      
-      const response = await fetch('/api/newsletter/unsubscribe', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        setSubscribed(false)
-        toast({
-          title: 'Unsubscribed',
-          description: 'You have been unsubscribed from our newsletter',
-        })
-      } else {
-        toast({
-          title: 'Unsubscribe Failed',
-          description: data.error || 'Failed to unsubscribe',
-          variant: 'destructive',
-        })
-      }
-    } catch (error) {
-      console.error('Newsletter unsubscribe error:', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to unsubscribe. Please try again.',
-        variant: 'destructive',
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (subscribed) {
-    return (
-      <section className="py-16 md:py-24 bg-gradient-to-r from-islamic-green-50 to-islamic-green-100 font-inter">
-        <div className="container mx-auto px-4 md:px-6 text-center">
-          <div className="max-w-2xl mx-auto">
-            <CheckCircle className="h-16 w-16 text-islamic-green-600 mx-auto mb-6" />
-            <h2 className="text-3xl md:text-4xl font-bold text-islamic-green-800 mb-4">
-              Thank You for Subscribing!
-            </h2>
-            <p className="text-lg text-islamic-green-700 mb-8">
-              You're now part of our community and will receive updates about new Islamic books, special offers, and Islamic knowledge.
-            </p>
-            <Button
-              onClick={handleUnsubscribe}
-              disabled={loading}
-              variant="outline"
-              className="border-islamic-green-300 text-islamic-green-700 hover:bg-islamic-green-50"
-            >
-              {loading ? 'Processing...' : 'Unsubscribe'}
-            </Button>
-          </div>
-        </div>
-      </section>
-    )
   }
 
   return (
-    <section className="py-16 md:py-24 bg-gradient-to-r from-islamic-green-50 to-islamic-green-100 font-inter">
-      <div className="container mx-auto px-4 md:px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="mb-12">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-islamic-green-100 rounded-full mb-6">
-              <Mail className="h-10 w-10 text-islamic-green-600" />
+    <section className="py-24 bg-white font-inter relative border-y border-gray-100 overflow-hidden">
+      {/* Subtle organic background elements to match the theme */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-islamic-green-50 rounded-full blur-[100px] -mr-48 -mt-48 opacity-60"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-islamic-gold-50 rounded-full blur-[100px] -ml-48 -mb-48 opacity-60"></div>
+      
+      <div className="container mx-auto px-4 md:px-6 relative z-10">
+        <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
+          
+          <div className="w-full lg:w-1/2 space-y-8 text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-islamic-green-50 text-islamic-green-700 border border-islamic-green-100 text-xs font-bold uppercase tracking-widest">
+              <BellRing className="w-4 h-4" />
+              <span>Join our community of seekers</span>
             </div>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-islamic-green-800 mb-6">
-              Stay Updated with Islamic Knowledge
+            <h2 className="text-4xl md:text-5xl font-black text-gray-900 leading-[1.1]">
+              Your Journey of <span className="text-islamic-green-600">Knowledge</span> Continues Here
             </h2>
-            <p className="text-lg md:text-xl text-islamic-green-700 max-w-2xl mx-auto leading-relaxed">
-              Subscribe to our newsletter and be the first to know about new Islamic books, exclusive offers, and spiritual insights delivered to your inbox.
+            <p className="text-xl text-gray-600 leading-relaxed font-medium">
+               Subscribe to get early access to new arrivals from Darussalam and spiritual reminders that matter to your study.
             </p>
+            
+            <div className="flex items-center justify-center lg:justify-start gap-4 pt-4">
+               <div className="flex -space-x-3">
+                  {['aisha-rahman', 'omar-khan', 'fatima-ali', 'ahmed-hassan'].map(name => (
+                    <div key={name} className="w-10 h-10 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center overflow-hidden">
+                      <img src={`/${name}-profile.png`} alt="User" className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+               </div>
+               <p className="text-sm font-bold text-gray-500">Liked by 50,000+ Students</p>
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="max-w-md mx-auto space-y-4">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Input
-                type="text"
-                placeholder="Your Name (Optional)"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="flex-1 border-islamic-green-300 focus:border-islamic-green-500 focus:ring-islamic-green-500"
-              />
-              <Input
-                type="email"
-                placeholder="Your Email Address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="flex-1 border-islamic-green-300 focus:border-islamic-green-500 focus:ring-islamic-green-500"
-              />
-            </div>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-islamic-green-600 hover:bg-islamic-green-700 text-white py-3 px-8 rounded-lg font-semibold transition-all duration-300 hover:shadow-lg"
-            >
-              {loading ? (
-                <div className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Subscribing...
+          <div className="w-full lg:w-1/2">
+            <div className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-[0_20px_50px_rgba(20,83,45,0.1)] border border-gray-50 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-islamic-green-50 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700"></div>
+              
+              {subscribed ? (
+                <div className="text-center space-y-6 py-10 relative z-10">
+                  <div className="w-20 h-20 bg-islamic-green-500 rounded-full flex items-center justify-center mx-auto shadow-xl shadow-islamic-green-200">
+                    <CheckCircle className="w-10 h-10 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-black text-gray-900 leading-tight">JazakAllah Khairan for Joining!</h3>
+                  <p className="text-gray-500">We’ve added you to our community. Look out for our welcome message.</p>
                 </div>
               ) : (
-                <div className="flex items-center gap-2">
-                  <Send className="h-4 w-4" />
-                  Subscribe to Newsletter
+                <div className="space-y-8 relative z-10">
+                  <div className="space-y-2">
+                    <h3 className="text-2xl font-black text-gray-900">Don't Miss a New Chapter</h3>
+                    <p className="text-gray-500">Enter your email for the latest updates on Quran para sets and new literature.</p>
+                  </div>
+
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-islamic-green-600" />
+                      <Input
+                        type="email"
+                        placeholder="yourname@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="h-16 pl-12 pr-6 bg-gray-50 border-gray-100 rounded-2xl focus:bg-white focus:border-islamic-green-500 transition-all text-lg"
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full h-16 bg-islamic-green-600 hover:bg-islamic-green-700 text-white rounded-2xl font-black uppercase tracking-widest text-sm transition-all shadow-lg hover:shadow-xl hover:shadow-islamic-green-200"
+                    >
+                      {loading ? 'Subscribing...' : (
+                        <div className="flex items-center gap-2 justify-center">
+                          <span>Join the Community</span>
+                          <SendHorizontal className="w-4 h-4" />
+                        </div>
+                      )}
+                    </Button>
+                  </form>
+                  
+                  <div className="flex items-center gap-2 text-xs text-gray-400 font-medium">
+                    <div className="w-1.5 h-1.5 bg-islamic-gold-400 rounded-full"></div>
+                    <span>We respect your privacy. Unsubscribe at any time.</span>
+                  </div>
                 </div>
               )}
-            </Button>
-          </form>
+            </div>
+          </div>
 
-          <p className="text-sm text-islamic-green-600 mt-6 max-w-md mx-auto">
-            We respect your privacy. Unsubscribe at any time. No spam, only valuable Islamic content.
-          </p>
         </div>
       </div>
     </section>

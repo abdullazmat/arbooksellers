@@ -29,13 +29,13 @@ export default function HeroSection() {
           <div className="flex flex-col items-center lg:items-start space-y-6 text-center lg:text-left">
             <div className="space-y-4 max-w-2xl lg:max-w-none">
               <h1 className="text-responsive-xl font-extrabold leading-tight gradient-text animate-fade-in-left stagger-1">
-                Discover Authentic
+                Bringing Authentic Islamic Knowledge to Your Doorstep
               </h1>
-              <h1 className="text-responsive-xl font-extrabold leading-tight gradient-text animate-fade-in-left stagger-2">
-                Islamic Literature
-              </h1>
+              <h2 className="text-2xl md:text-3xl font-bold leading-tight text-gray-800 animate-fade-in-left stagger-2">
+                Pakistan's Most Trusted Bookstore Since 2009
+              </h2>
               <p className="text-lg md:text-xl text-muted-foreground animate-fade-in-left stagger-3">
-                Explore a vast collection of Quran, Hadith, Tafsir, and Islamic studies books.
+                At <strong>AR Book Sellers</strong>, we meticulously curate every title from respected scholars and publishers to ensure your spiritual journey is guided by accuracy, sincerity, and authentic literature.
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up stagger-4 justify-center lg:justify-start">

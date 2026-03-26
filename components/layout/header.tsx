@@ -149,27 +149,27 @@ export function Header() {
     <>
       <header
         className={`sticky top-0 z-50 w-full transition-all duration-300 ${
-          isScrolled ? 'bg-white/80 backdrop-blur-md shadow-md' : 'bg-white'
+          isScrolled ? 'bg-background/80 backdrop-blur-md shadow-md' : 'bg-background'
         }`}
       >
         <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
         {/* Logo */}
         <Link className="flex items-center" href="/">
-          <img src="/logo.png" alt="Islamic Books" className="h-16 w-[80px]" />
+          <img src="/logo.png" alt="AR Book Sellers | Quran & Islamic Books Store in Pakistan" className="h-16 w-[80px]" />
         </Link>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6">
-          <Link className="text-sm font-medium hover:text-islamic-green-600 transition-colors" href="/">
+          <Link className="text-sm font-medium text-gray-700 hover:text-islamic-green-600 transition-colors" href="/">
             Home
           </Link>
-          <Link className="text-sm font-medium hover:text-islamic-green-600 transition-colors" href="/products">
+          <Link className="text-sm font-medium text-gray-700 hover:text-islamic-green-600 transition-colors" href="/products">
             Products
           </Link>
-          <Link className="text-sm font-medium hover:text-islamic-green-600 transition-colors" href="/about">
+          <Link className="text-sm font-medium text-gray-700 hover:text-islamic-green-600 transition-colors" href="/about">
             About Us
           </Link>
-          <Link className="text-sm font-medium hover:text-islamic-green-600 transition-colors" href="/contact">
+          <Link className="text-sm font-medium text-gray-700 hover:text-islamic-green-600 transition-colors" href="/contact">
             Contact Us
           </Link>
         </nav>
