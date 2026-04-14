@@ -24,7 +24,7 @@ export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState("general");
   const [settings, setSettings] = useState({
     // General Settings
-    storeName: "Islamic Books Store",
+    storeName: "Islamic BookStore",
     storeDescription: "Your trusted source for authentic Islamic literature",
     storeEmail: "contact@arbooksellers.com",
     storePhone: "+92-300-8016812",
@@ -49,7 +49,7 @@ export default function AdminSettingsPage() {
     ],
 
     // SEO Settings
-    metaTitle: "Islamic Books Store - Authentic Islamic Literature",
+    metaTitle: "Islamic BookStore - Authentic Islamic Literature",
     metaDescription:
       "Discover authentic Islamic books, Quran translations, Hadith collections, and Islamic literature for all ages.",
     metaKeywords:
@@ -61,7 +61,7 @@ export default function AdminSettingsPage() {
     smtpPort: 587,
     smtpUsername: "noreply@islamicbooks.com",
     smtpPassword: "********",
-    emailFromName: "Islamic Books Store",
+    emailFromName: "Islamic BookStore",
     emailFromAddress: "noreply@islamicbooks.com",
 
     // Security Settings
@@ -135,8 +135,8 @@ export default function AdminSettingsPage() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-            <p className="text-gray-600">
+            <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+            <p className="text-muted-foreground">
               Configure your store settings and preferences
             </p>
           </div>

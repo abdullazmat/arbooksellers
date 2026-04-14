@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db'
 import Newsletter from '@/models/Newsletter'
+import nodemailer from 'nodemailer'
+import { getNewsletterWelcomeEmail } from '@/lib/email-templates'
 
 export async function POST(request: NextRequest) {
   try {
     await dbConnect()
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || "",
+      port: parseInt(process.env.SMTP_PORT || "587"),
+      secure: process.env.SMTP_SECURE === "true",
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD,
+      },
+    });
 
     const { email, name } = await request.json()
 
@@ -31,6 +43,18 @@ export async function POST(request: NextRequest) {
         existingSubscription.unsubscribedAt = undefined
         await existingSubscription.save()
 
+        // Send Welcome Email
+        try {
+          await transporter.sendMail({
+            from: `"AR Book Sellers" <${process.env.SMTP_USER}>`,
+            to: existingSubscription.email,
+            subject: "Welcome back to AR Book Sellers!",
+            html: getNewsletterWelcomeEmail(existingSubscription.email)
+          });
+        } catch (e) {
+          console.error("Newsletter resubscribe email failed:", e);
+        }
+
         return NextResponse.json({
           message: 'Successfully resubscribed to newsletter',
           subscription: existingSubscription
@@ -47,6 +71,18 @@ export async function POST(request: NextRequest) {
     })
 
     await newsletter.save()
+
+    // Send Welcome Email
+    try {
+      await transporter.sendMail({
+        from: `"AR Book Sellers" <${process.env.SMTP_USER}>`,
+        to: newsletter.email,
+        subject: "Welcome to AR Book Sellers!",
+        html: getNewsletterWelcomeEmail(newsletter.email)
+      });
+    } catch (e) {
+      console.error("Newsletter subscribe email failed:", e);
+    }
 
     return NextResponse.json({
       message: 'Successfully subscribed to newsletter',

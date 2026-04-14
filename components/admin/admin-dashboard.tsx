@@ -202,265 +202,228 @@ export function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10 selection:bg-islamic-green-100 selection:text-islamic-green-900">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600">Welcome to your admin dashboard</p>
+        <h1 className="text-4xl font-black text-foreground tracking-tight">Executive Dashboard</h1>
+        <p className="text-muted-foreground font-medium mt-1">Overview of your business performance and key metrics</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
-            <DollarSign className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {formatPrice(stats.totalSales)}
-            </div>
-            <p className="text-xs text-gray-600">
-              <ArrowUpRight className="inline h-3 w-3 text-green-600" />
-              +12% from last month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-            <ShoppingCart className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalOrders}</div>
-            <p className="text-xs text-gray-600">
-              <ArrowUpRight className="inline h-3 w-3 text-green-600" />
-              +8% from last month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalUsers}</div>
-            <p className="text-xs text-gray-600">
-              <ArrowUpRight className="inline h-3 w-3 text-green-600" />
-              +15% from last month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-            <Package className="h-4 w-4 text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalProducts}</div>
-            <p className="text-xs text-gray-600">
-              <ArrowUpRight className="inline h-3 w-3 text-green-600" />
-              +5% from last month
-            </p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        {[
+          { title: "Total Sales", value: formatPrice(stats.totalSales), icon: DollarSign, color: "text-islamic-green-600", trend: "+12.5%", trendIcon: ArrowUpRight, bg: "bg-islamic-green-500/10" },
+          { title: "Total Orders", value: stats.totalOrders, icon: ShoppingCart, color: "text-blue-600", trend: "+8.2%", trendIcon: ArrowUpRight, bg: "bg-blue-500/10" },
+          { title: "Active Users", value: stats.totalUsers, icon: Users, color: "text-purple-600", trend: "+15.0%", trendIcon: ArrowUpRight, bg: "bg-purple-500/10" },
+          { title: "Inventory Items", value: stats.totalProducts, icon: Package, color: "text-orange-600", trend: "+5.4%", trendIcon: ArrowUpRight, bg: "bg-orange-500/10" },
+        ].map((stat, i) => (
+          <Card key={i} className="bg-card border-border/50 dark:border-white/5 shadow-xl rounded-[2rem] overflow-hidden group hover:scale-[1.02] transition-all duration-300">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">{stat.title}</CardTitle>
+              <div className={`p-3 rounded-xl ${stat.bg} group-hover:scale-110 transition-transform`}>
+                <stat.icon className={`h-5 w-5 ${stat.color}`} />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-black text-foreground tracking-tight">
+                {stat.value}
+              </div>
+              <div className="flex items-center gap-1.5 mt-2">
+                <span className="flex items-center text-[10px] font-black text-islamic-green-600 uppercase tracking-widest">
+                  <stat.trendIcon className="inline h-3 w-3 mr-0.5" />
+                  {stat.trend}
+                </span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
+                  vs last month
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Order Status Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <Card className="bg-card border-border/50 dark:border-white/5 shadow-xl rounded-[2.5rem]">
+          <CardHeader className="pb-2 px-8 pt-8">
+            <CardTitle className="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground">Quick Insights</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats.pendingOrders}</div>
+          <CardContent className="p-8 pt-4">
+             <div className="grid grid-cols-2 gap-4">
+                <div className="p-5 bg-yellow-500/10 rounded-3xl border border-yellow-500/20">
+                   <p className="text-[10px] font-black uppercase tracking-widest text-yellow-600/70 mb-1">Pending</p>
+                   <p className="text-2xl font-black text-yellow-600">{stats.pendingOrders}</p>
+                </div>
+                <div className="p-5 bg-blue-500/10 rounded-3xl border border-blue-500/20">
+                   <p className="text-[10px] font-black uppercase tracking-widest text-blue-600/70 mb-1">Processing</p>
+                   <p className="text-2xl font-black text-blue-600">{stats.processingOrders}</p>
+                </div>
+             </div>
+             <div className="mt-6 space-y-3">
+                <Button 
+                  size="lg" 
+                  className="w-full bg-foreground text-background hover:bg-islamic-green-600 hover:text-white rounded-2xl font-black text-sm uppercase tracking-widest h-14"
+                  onClick={() => window.location.href = '/admin/products'}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Add Product
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="w-full rounded-2xl font-black text-sm uppercase tracking-widest h-14 border-border/50"
+                  onClick={() => window.location.href = '/admin/orders'}
+                >
+                  View Orders
+                </Button>
+             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">Processing Orders</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.processingOrders}</div>
-          </CardContent>
-        </Card>
+        {/* Main Content Tabs */}
+        <div className="lg:col-span-2">
+          <Tabs defaultValue="orders" className="space-y-6">
+            <TabsList className="bg-zinc-100/50 dark:bg-white/5 p-1.5 rounded-2xl h-14 border border-border/50">
+              <TabsTrigger value="orders" className="rounded-xl px-8 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 data-[state=active]:shadow-lg">Recent Orders</TabsTrigger>
+              <TabsTrigger value="products" className="rounded-xl px-8 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 data-[state=active]:shadow-lg">Top Sellers</TabsTrigger>
+              <TabsTrigger value="analytics" className="rounded-xl px-8 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 data-[state=active]:shadow-lg">Intelligence</TabsTrigger>
+            </TabsList>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Button 
-              size="sm" 
-              className="w-full"
-              onClick={() => window.location.href = '/admin/products'}
-            >
-              Add Product
-            </Button>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="w-full"
-              onClick={() => window.location.href = '/admin/orders'}
-            >
-              View Orders
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Main Content Tabs */}
-      <Tabs defaultValue="orders" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="orders">Recent Orders</TabsTrigger>
-          <TabsTrigger value="products">Top Products</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="orders" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Orders</CardTitle>
-              <CardDescription>
-                Latest orders from your customers
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentOrders.length === 0 ? (
-                  <p className="text-center text-gray-500 py-8">No orders found</p>
-                ) : (
-                  recentOrders.map((order) => (
-                    <div key={order._id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <div className="flex items-center space-x-2">
-                          {getStatusIcon(order.orderStatus)}
-                          <div>
-                            <p className="font-medium">#{order.orderNumber || order._id.slice(-8)}</p>
-                            <p className="text-sm text-gray-600">{order.user.name}</p>
+            <TabsContent value="orders" className="space-y-4">
+              <Card className="bg-card border-border/50 dark:border-white/5 shadow-2xl rounded-[2.5rem] overflow-hidden">
+                <CardHeader className="p-8 border-b border-border/30 bg-zinc-50/50 dark:bg-white/2">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle className="text-xl font-black text-foreground">Latest Orders</CardTitle>
+                      <CardDescription className="font-medium">Real-time customer transactions</CardDescription>
+                    </div>
+                    <Button variant="ghost" size="sm" className="font-black text-[10px] uppercase tracking-widest text-islamic-green-600 hover:bg-islamic-green-500/10 h-10 px-5 rounded-xl transition-all" onClick={() => window.location.href = '/admin/orders'}>
+                      See All <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="divide-y divide-border/30">
+                    {recentOrders.length === 0 ? (
+                      <div className="text-center py-20">
+                        <div className="bg-zinc-100 dark:bg-white/5 h-16 w-16 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                           <Clock className="h-8 w-8 text-muted-foreground/30" />
+                        </div>
+                        <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs">No activity found</p>
+                      </div>
+                    ) : (
+                      recentOrders.map((order) => (
+                        <div key={order._id} className="group flex items-center justify-between p-6 hover:bg-zinc-50/50 dark:hover:bg-white/2 transition-all rounded-3xl">
+                          <div className="flex items-center space-x-5">
+                            <div className={`h-14 w-14 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 ${getStatusColor(order.orderStatus).split(' ')[0]} bg-opacity-20`}>
+                              {getStatusIcon(order.orderStatus)}
+                            </div>
+                            <div className="min-w-0">
+                                <p className="font-black text-foreground text-sm tracking-tight capitalize">#{order.orderNumber || order._id.slice(-8)}</p>
+                                <p className="text-xs font-bold text-muted-foreground mt-0.5">{order.user.name}</p>
+                            </div>
+                          </div>
+                          <div className="text-right flex flex-col items-end gap-1.5">
+                            <p className="font-black text-foreground text-base tracking-tight">{formatPrice(order.total)}</p>
+                            <Badge className={`${getStatusColor(order.orderStatus)} border-none text-[9px] font-black uppercase tracking-widest h-6 px-3 rounded-lg`}>
+                              {order.orderStatus}
+                            </Badge>
                           </div>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">{formatPrice(order.total)}</p>
-                        <Badge className={getStatusColor(order.orderStatus)}>
-                          {order.orderStatus}
-                        </Badge>
-                      </div>
-                      <div className="text-right text-sm text-gray-600">
-                        {formatDate(order.createdAt)}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-              {recentOrders.length > 0 && (
-                <div className="mt-4 text-center">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => window.location.href = '/admin/orders'}
-                  >
-                    View All Orders
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-        <TabsContent value="products" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Top Products</CardTitle>
-              <CardDescription>
-                Best selling products by revenue
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {topProducts.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">No product data available</p>
-              ) : (
-                <div className="space-y-4">
-                  {topProducts.map((product, index) => (
-                    <div key={product._id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium">
-                          {index + 1}
+            <TabsContent value="products" className="space-y-4">
+              <Card className="bg-card border-border/50 dark:border-white/5 shadow-2xl rounded-[2.5rem] overflow-hidden">
+                <CardHeader className="p-8 border-b border-border/30 bg-zinc-50/50 dark:bg-white/2">
+                   <CardTitle className="text-xl font-black text-foreground">Top Performing Items</CardTitle>
+                   <CardDescription className="font-medium">Products generating most revenue</CardDescription>
+                </CardHeader>
+                <CardContent className="p-6">
+                  {topProducts.length === 0 ? (
+                    <div className="text-center py-20">
+                        <div className="bg-zinc-100 dark:bg-white/5 h-16 w-16 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                           <TrendingUp className="h-8 w-8 text-muted-foreground/30" />
                         </div>
-                        <div>
-                          <p className="font-medium">{product.title}</p>
-                          <p className="text-sm text-gray-600">{product.totalSold} sold</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">{formatPrice(product.revenue)}</p>
-                      </div>
+                        <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs">Awaiting data...</p>
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+                  ) : (
+                    <div className="space-y-2">
+                      {topProducts.map((product, index) => (
+                        <div key={product._id} className="flex items-center justify-between p-5 hover:bg-zinc-50/50 dark:hover:bg-white/2 transition-all rounded-2xl border border-transparent hover:border-border/30 group">
+                          <div className="flex items-center space-x-5">
+                            <div className="w-10 h-10 bg-zinc-100 dark:bg-background rounded-xl flex items-center justify-center text-xs font-black text-muted-foreground transition-all group-hover:bg-islamic-green-600 group-hover:text-white group-hover:shadow-lg group-hover:shadow-islamic-green-600/20">
+                              {index + 1}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-black text-foreground text-sm tracking-tight truncate max-w-[200px]">{product.title}</p>
+                              <p className="text-xs font-bold text-muted-foreground mt-0.5 uppercase tracking-wider">{product.totalSold} Units Shipped</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-black text-islamic-green-600 text-base">{formatPrice(product.revenue)}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-        <TabsContent value="analytics" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Analytics</CardTitle>
-              <CardDescription>
-                Performance metrics and insights
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h3 className="font-medium">Order Status Distribution</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Pending</span>
-                      <span className="font-medium">{stats.pendingOrders}</span>
+            <TabsContent value="analytics" className="space-y-4">
+              <Card className="bg-card border-border/50 dark:border-white/5 shadow-2xl rounded-[2.5rem] overflow-hidden">
+                <CardHeader className="p-8 border-b border-border/30 bg-zinc-50/50 dark:bg-white/2">
+                  <CardTitle className="text-xl font-black text-foreground">Operational Intelligence</CardTitle>
+                  <CardDescription className="font-medium">Detailed distribution and efficiency</CardDescription>
+                </CardHeader>
+                <CardContent className="p-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div className="space-y-6">
+                      <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Order Lifecycle</h3>
+                      <div className="space-y-4">
+                        {[
+                          { label: "Pending Fulfillment", value: stats.pendingOrders, percent: 30, color: "bg-yellow-500" },
+                          { label: "Under Processing", value: stats.processingOrders, percent: 45, color: "bg-blue-500" },
+                          { label: "Dispatched", value: stats.shippedOrders, percent: 15, color: "bg-purple-500" },
+                          { label: "Successfully Delivered", value: stats.deliveredOrders, percent: 10, color: "bg-islamic-green-600" },
+                        ].map((item, idx) => (
+                           <div key={idx} className="space-y-2">
+                              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest leading-none">
+                                <span className="text-foreground/60">{item.label}</span>
+                                <span className="text-foreground">{item.value}</span>
+                              </div>
+                              <div className="h-1.5 w-full bg-zinc-100 dark:bg-white/5 rounded-full overflow-hidden">
+                                 <div className={`h-full ${item.color} rounded-full`} style={{ width: `${item.percent}%` }}></div>
+                              </div>
+                           </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Processing</span>
-                      <span className="font-medium">{stats.processingOrders}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Shipped</span>
-                      <span className="font-medium">{stats.shippedOrders}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Delivered</span>
-                      <span className="font-medium">{stats.deliveredOrders}</span>
+                    <div className="space-y-6">
+                      <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Performance Ratios</h3>
+                      <div className="grid grid-cols-1 gap-4">
+                        {[
+                          { label: "Avg Transaction Value", value: stats.totalOrders > 0 ? formatPrice(stats.totalSales / stats.totalOrders) : formatPrice(0), bg: "bg-zinc-100 dark:bg-white/5" },
+                          { label: "User Acquisition Rate", value: stats.totalUsers > 0 ? ((stats.totalOrders / stats.totalUsers) * 100).toFixed(1) + "%" : "0.0%", bg: "bg-zinc-100 dark:bg-white/5" },
+                        ].map((stat, idx) => (
+                           <div key={idx} className={`p-6 ${stat.bg} rounded-[1.5rem] border border-border/30`}>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{stat.label}</p>
+                              <p className="text-2xl font-black text-foreground tracking-tight">{stat.value}</p>
+                           </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="space-y-4">
-                  <h3 className="font-medium">Quick Stats</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Average Order Value</span>
-                      <span className="font-medium">
-                        {stats.totalOrders > 0 ? formatPrice(stats.totalSales / stats.totalOrders) : formatPrice(0)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Conversion Rate</span>
-                      <span className="font-medium">
-                        {stats.totalUsers > 0 ? ((stats.totalOrders / stats.totalUsers) * 100).toFixed(1) : 0}%
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
     </div>
   )
 }

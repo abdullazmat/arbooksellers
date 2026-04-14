@@ -30,6 +30,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
 import { formatPrice } from "@/lib/utils";
+import { APP_CONFIG } from "@/lib/config";
 
 export default function CheckoutPage() {
   const { items: cartItems, total: cartTotal, clearCart } = useCart();
@@ -38,7 +39,7 @@ export default function CheckoutPage() {
   const { user, token } = useAuth();
 
   // Calculate shipping cost and total
-  const shippingCost = cartTotal > 50 ? 0 : 5.99;
+  const shippingCost = cartTotal > APP_CONFIG.shipping.freeShippingThreshold ? 0 : APP_CONFIG.shipping.baseShippingCost;
   const finalTotal = cartTotal + shippingCost;
 
   // Validate shipping cost calculation
@@ -58,10 +59,10 @@ export default function CheckoutPage() {
     notes: "",
   });
   const [paymentMethod, setPaymentMethod] = useState("cash_on_delivery");
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [registerPassword, setRegisterPassword] = useState("");
   const [registerConfirmPassword, setRegisterConfirmPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isOrderProcessing, setIsOrderProcessing] = useState(false);
 
   useEffect(() => {
@@ -212,6 +213,16 @@ export default function CheckoutPage() {
         if (!signupRes.ok) {
           throw new Error(signupData.error || "Failed to create account");
         }
+        
+        if (signupData.requiresVerification) {
+          toast({
+            title: "Verification Required",
+            description: "A verification code was sent to your email. Please verify to complete your order.",
+          });
+          router.push(`/auth/verify?email=${encodeURIComponent(formData.email)}&returnTo=/checkout`);
+          return;
+        }
+
         // Persist auth and use token for subsequent calls
         try {
           localStorage.setItem("token", signupData.token);
@@ -219,6 +230,11 @@ export default function CheckoutPage() {
         } catch {}
         tokenForOrder = signupData.token;
         currentUser = signupData.user;
+        
+        toast({
+          title: "Account Created!",
+          description: "We've created an account for you. You can use your email and the password you entered to sign in later.",
+        });
 
         // Save address as default for new user
         try {

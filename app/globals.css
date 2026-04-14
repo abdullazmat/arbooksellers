@@ -72,33 +72,33 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 230 25% 4%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 230 25% 7%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 230 25% 7%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 120 60% 50%;
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 40 100% 50%;
+    --secondary-foreground: 230 25% 4%;
 
-    --muted: 217.2 32.6% 17.5%;
+    --muted: 230 15% 12%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 230 15% 15%;
     --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 230 15% 15%;
+    --input: 230 15% 15%;
+    --ring: 120 60% 50%;
   }
 }
 
@@ -124,28 +124,33 @@
 .gradient-primary {
   background: linear-gradient(
     to right,
-    hsl(var(--islamic-green-600)),
-    hsl(var(--islamic-green-700))
-  );
-}
-
-.gradient-secondary {
-  background: linear-gradient(
-    to right,
-    hsl(var(--islamic-gold-500)),
-    hsl(var(--islamic-gold-600))
+    #16a34a,
+    #15803d
   );
 }
 
 .gradient-text {
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
   background-image: linear-gradient(
     to right,
-    hsl(var(--islamic-green-600)),
-    hsl(var(--islamic-gold-600))
+    #16a34a,
+    #ca8a04
   );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.dark .gradient-text {
+  background-image: linear-gradient(
+    to right,
+    #4ade80,
+    #fbbf24
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
 }
 
 .bg-gradient-islamic {
@@ -212,13 +217,35 @@
     0 6px 6px rgba(var(--islamic-gold-500), 0.1);
 }
 
+/* Premium Dark Mode Utilities */
+.dark-glow {
+  box-shadow: 0 0 20px hsla(var(--islamic-green-500), 0.1);
+}
+
+.inner-border {
+  border: 1px solid hsla(var(--foreground), 0.05);
+}
+
+.deep-gradient {
+  background: linear-gradient(
+    180deg,
+    hsla(var(--card), 0) 0%,
+    hsla(var(--card), 0.8) 100%
+  );
+}
+
 /* Glassmorphism Effect */
 .glass {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: hsla(var(--background), 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid hsla(var(--foreground), 0.1);
   border-radius: var(--radius);
+}
+
+.dark .glass {
+  background: hsla(230, 25%, 10%, 0.4);
+  border: 1px solid hsla(var(--foreground), 0.05);
 }
 
 /* Animations */

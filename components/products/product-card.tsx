@@ -10,6 +10,7 @@ import { formatPrice, getProductImageUrl } from "@/lib/utils";
 import { useCart } from "@/contexts/cart-context";
 import { useWishlist } from "@/contexts/wishlist-context";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/auth-context";
 
 export interface ProductCardData {
   _id: string;
@@ -21,6 +22,7 @@ export interface ProductCardData {
   featured: boolean;
   inStock: boolean;
   stockQuantity?: number;
+  slug?: string;
   size?: string;
   pages?: number;
   paper?: string;
@@ -37,6 +39,7 @@ interface ProductCardProps {
 export function ProductCard({ product, variant = 'grid' }: ProductCardProps) {
   const { addItem } = useCart();
   const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -58,6 +61,16 @@ export function ProductCard({ product, variant = 'grid' }: ProductCardProps) {
   const handleWishlistToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to add items to your wishlist",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (isInWishlist(product._id)) {
       await removeFromWishlist(product._id);
       toast({
@@ -84,16 +97,18 @@ export function ProductCard({ product, variant = 'grid' }: ProductCardProps) {
 
   if (variant === 'list') {
     return (
-      <Card className="group overflow-hidden bg-white border border-gray-100 hover:shadow-2xl transition-all duration-500 rounded-3xl">
+      <Card className="group overflow-hidden bg-card border border-border hover:shadow-2xl transition-all duration-500 rounded-3xl">
         <CardContent className="p-0">
           <div className="flex flex-col sm:flex-row">
             {/* Image Container */}
-            <div className="w-full sm:w-64 aspect-[3/4] sm:aspect-square flex-shrink-0 relative overflow-hidden bg-gray-50">
+            <div className="w-full sm:w-64 aspect-[3/4] sm:aspect-square flex-shrink-0 relative overflow-hidden bg-white dark:bg-zinc-800 m-2 rounded-2xl">
               <Image
                 src={getProductImageUrl(product.images?.[0], '/placeholder.jpg')}
                 alt={product.title}
                 fill
-                className="object-cover transition-transform duration-700 group-hover:scale-110"
+                sizes="(max-width: 640px) 100vw, 256px"
+                className="object-cover transition-transform duration-700 group-hover:scale-110 p-4"
+                quality={85}
               />
               <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               
@@ -111,21 +126,23 @@ export function ProductCard({ product, variant = 'grid' }: ProductCardProps) {
             <div className="flex-1 p-6 md:p-8 flex flex-col justify-between">
               <div className="space-y-4">
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                  <div className="space-y-1">
-                    <h3 className="text-xl md:text-2xl font-black text-gray-900 leading-tight">
-                      <Link href={`/products/${product._id}`} className="hover:text-islamic-green-600 transition-colors">
-                        {product.title}
-                      </Link>
-                    </h3>
-                    {product.author && (
-                      <p className="text-gray-500 font-bold text-sm uppercase tracking-widest">by {product.author}</p>
-                    )}
-                  </div>
+                    <div className="space-y-2">
+                       <h3 className="text-xl md:text-2xl font-black text-foreground leading-tight">
+                         <Link href={`/products/${product.slug || product._id}`} className="hover:text-islamic-green-600 transition-colors">
+                           {product.title}
+                         </Link>
+                       </h3>
+                       {product.author && (
+                         <p className="text-gray-500 font-bold text-sm uppercase tracking-widest">
+                           {product.author.toLowerCase() === 'admin' ? 'AR Publishers' : `by ${product.author}`}
+                         </p>
+                       )}
+                     </div>
                   
                   <div className="flex flex-col items-end">
-                    <span className="text-2xl font-black text-islamic-green-700">{formatPrice(product.price)}</span>
+                    <span className="text-2xl font-black gradient-text">{formatPrice(product.price)}</span>
                     {discountPercent && (
-                      <span className="text-sm text-gray-400 line-through font-medium">{formatPrice(product.originalPrice!)}</span>
+                      <span className="text-sm text-muted-foreground line-through font-medium">{formatPrice(product.originalPrice!)}</span>
                     )}
                   </div>
                 </div>
@@ -134,12 +151,12 @@ export function ProductCard({ product, variant = 'grid' }: ProductCardProps) {
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} className={`h-4 w-4 ${i < (product.rating || 0) ? 'fill-current' : 'opacity-20'}`} />
                   ))}
-                  <span className="text-xs font-bold text-gray-400 ml-2">({product.reviews || 0} Reviews)</span>
+                  <span className="text-xs font-bold text-muted-foreground ml-2">({product.reviews || 0} Reviews)</span>
                 </div>
 
-                <div className="text-sm text-gray-600 flex flex-wrap gap-x-6 gap-y-2 pt-2 border-t border-gray-50 transition-colors group-hover:border-gray-100">
-                  {product.binding && <p><span className="font-black text-gray-400 uppercase text-[10px] tracking-widest mr-2">Binding:</span> {product.binding}</p>}
-                  {product.pages && <p><span className="font-black text-gray-400 uppercase text-[10px] tracking-widest mr-2">Pages:</span> {product.pages}</p>}
+                <div className="text-sm text-muted-foreground flex flex-wrap gap-x-6 gap-y-2 pt-2 border-t border-border transition-colors group-hover:border-accent">
+                  {product.binding && <p><span className="font-black text-muted-foreground/50 uppercase text-[10px] tracking-widest mr-2">Binding:</span> {product.binding}</p>}
+                  {product.pages && <p><span className="font-black text-muted-foreground/50 uppercase text-[10px] tracking-widest mr-2">Pages:</span> {product.pages}</p>}
                 </div>
               </div>
 
@@ -155,7 +172,7 @@ export function ProductCard({ product, variant = 'grid' }: ProductCardProps) {
                 <Button
                   variant="outline"
                   size="icon"
-                  className={`h-14 w-14 rounded-2xl border-gray-100 hover:border-islamic-green-500 transition-all ${isInWishlist(product._id) ? 'bg-islamic-green-50 border-islamic-green-500 text-red-500' : 'text-gray-400'}`}
+                  className={`h-14 w-14 rounded-2xl border-border hover:border-islamic-green-500 transition-all ${isInWishlist(product._id) ? 'bg-red-50 dark:bg-red-950/20 border-red-500 text-red-500' : 'text-muted-foreground'}`}
                   onClick={handleWishlistToggle}
                 >
                   <Heart className={`h-5 w-5 ${isInWishlist(product._id) ? 'fill-current' : ''}`} />
@@ -170,14 +187,16 @@ export function ProductCard({ product, variant = 'grid' }: ProductCardProps) {
 
   // Grid Card Redesign
   return (
-    <Card className="group relative bg-white border-0 shadow-xl shadow-gray-100/50 hover:shadow-2xl hover:shadow-islamic-green-100/20 transition-all duration-500 rounded-[2rem] overflow-hidden hover:-translate-y-2">
+    <Card className="group relative bg-card border border-border/50 dark:border-white/5 shadow-2xl shadow-black/10 hover:shadow-islamic-green-500/10 transition-all duration-500 rounded-[2.5rem] overflow-hidden hover:-translate-y-2">
       {/* Image Area */}
-      <Link href={`/products/${product._id}`} className="block relative aspect-[4/5] overflow-hidden bg-white">
+      <Link href={`/products/${product.slug || product._id}`} className="block relative aspect-[4/5] overflow-hidden bg-white dark:bg-zinc-800 m-3 rounded-[2rem]">
         <Image
           src={getProductImageUrl(product.images?.[0])}
           alt={product.title}
           fill
-          className="object-cover transition-transform duration-1000 group-hover:scale-110"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          className="object-cover transition-transform duration-1000 group-hover:scale-110 p-6"
+          quality={85}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/[0.04] via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
@@ -192,15 +211,15 @@ export function ProductCard({ product, variant = 'grid' }: ProductCardProps) {
         </div>
 
         {!product.inStock && (
-          <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex items-center justify-center p-4">
-            <span className="bg-gray-900 text-white px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em]">Out of Stock</span>
+          <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex items-center justify-center p-4">
+            <span className="bg-foreground text-background px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em]">Out of Stock</span>
           </div>
         )}
 
         {/* Hover Action Overlay */}
         <div className="absolute bottom-6 left-6 right-6 translate-y-20 group-hover:translate-y-0 transition-transform duration-500 md:block hidden">
           <Button 
-            className="w-full bg-white text-gray-900 hover:bg-islamic-green-600 hover:text-white rounded-full font-black text-xs uppercase tracking-widest h-12 shadow-2xl transition-colors"
+            className="w-full bg-foreground text-background hover:bg-islamic-green-600 hover:text-white rounded-full font-black text-xs uppercase tracking-widest h-12 shadow-2xl transition-colors"
             onClick={handleAddToCart}
             disabled={!product.inStock}
           >
@@ -211,22 +230,24 @@ export function ProductCard({ product, variant = 'grid' }: ProductCardProps) {
 
       {/* Content Area */}
       <CardContent className="p-6 space-y-4">
-        <div className="space-y-1">
-          <Link href={`/products/${product._id}`} className="block group/title">
-            <h3 className="text-xl font-black text-gray-900 leading-tight line-clamp-2 min-h-[3rem] group-hover/title:text-islamic-green-600 transition-colors">
+        <div className="min-h-[4.2rem] flex flex-col justify-start">
+          <Link href={`/products/${product.slug || product._id}`} className="block group/title">
+            <h3 className="text-xl font-black text-foreground leading-tight line-clamp-2 group-hover/title:text-islamic-green-600 transition-colors">
               {product.title}
             </h3>
           </Link>
           {product.author && (
-            <p className="text-gray-400 font-bold text-[10px] uppercase tracking-widest truncate">by {product.author}</p>
+            <p className="text-muted-foreground font-bold text-[10px] uppercase tracking-widest truncate mt-2">
+              {product.author.toLowerCase() === 'admin' ? 'AR Publishers' : `by ${product.author}`}
+            </p>
           )}
         </div>
 
         <div className="flex items-center justify-between pt-2">
           <div className="flex flex-col">
-            <span className="text-2xl font-black text-islamic-green-700 tracking-tight">{formatPrice(product.price)}</span>
+            <span className="text-2xl font-black text-islamic-green-600 dark:text-islamic-green-400 tracking-tight">{formatPrice(product.price)}</span>
             {discountPercent && (
-              <span className="text-sm text-gray-300 line-through font-bold">
+              <span className="text-sm text-muted-foreground line-through font-bold">
                 {formatPrice(product.originalPrice!)}
               </span>
             )}
@@ -236,8 +257,8 @@ export function ProductCard({ product, variant = 'grid' }: ProductCardProps) {
             onClick={handleWishlistToggle}
             className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
               isInWishlist(product._id) 
-                ? 'bg-red-50 text-red-500 scale-110 shadow-lg' 
-                : 'bg-gray-50 text-gray-300 hover:bg-gray-100 hover:text-islamic-green-600'
+                ? 'bg-red-50 dark:bg-red-950/20 text-red-500 scale-110 shadow-lg' 
+                : 'bg-accent/50 text-muted-foreground hover:bg-accent hover:text-islamic-green-600'
             }`}
           >
             <Heart className={`h-5 w-5 ${isInWishlist(product._id) ? 'fill-current' : ''}`} />

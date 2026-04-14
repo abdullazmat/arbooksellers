@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
         .sort({ featured: -1, createdAt: -1 }) // Featured products first, then by creation date
         .skip(skip)
         .limit(limit)
-        .select('title author price originalPrice images featured inStock categories')
+        .select('title author price originalPrice images featured inStock categories slug')
         .lean(),
       Product.countDocuments(searchQuery)
     ]);
@@ -58,6 +58,7 @@ export async function GET(request: NextRequest) {
       featured: product.featured || false,
       inStock: product.inStock,
       categories: product.categories || [],
+      slug: product.slug,
       discount: product.originalPrice && product.originalPrice > product.price 
         ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
         : 0

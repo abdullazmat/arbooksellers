@@ -109,7 +109,7 @@ export default function AdminContactsPage() {
       case 'resolved':
         return 'bg-green-100 text-green-800'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-zinc-100 dark:bg-white/5 text-foreground'
     }
   }
 
@@ -118,8 +118,8 @@ export default function AdminContactsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Contact Forms</h1>
-            <p className="text-gray-600">View messages submitted via the contact form</p>
+            <h1 className="text-2xl font-bold text-foreground">Contact Forms</h1>
+            <p className="text-muted-foreground">View messages submitted via the contact form</p>
           </div>
           <Button onClick={fetchContacts} disabled={loading} variant="outline">
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
@@ -131,7 +131,7 @@ export default function AdminContactsPage() {
           <CardContent className="p-6 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
               <div className="relative md:col-span-2">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
                 <Input
                   placeholder="Search by name, email, subject or message"
                   className="pl-9"
@@ -186,13 +186,13 @@ export default function AdminContactsPage() {
                       <TableCell className="font-medium">{c.name}</TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-1">
-                          <Mail className="h-3.5 w-3.5 text-gray-400" />
+                          <Mail className="h-3.5 w-3.5 text-muted-foreground/80" />
                           <span>{c.email}</span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-1">
-                          <Phone className="h-3.5 w-3.5 text-gray-400" />
+                          <Phone className="h-3.5 w-3.5 text-muted-foreground/80" />
                           <span>{c.phone || '-'}</span>
                         </div>
                       </TableCell>
@@ -218,7 +218,7 @@ export default function AdminContactsPage() {
                   ))}
                   {!loading && contacts.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center text-gray-500">
+                      <TableCell colSpan={6} className="text-center text-muted-foreground">
                         No contact forms found
                       </TableCell>
                     </TableRow>
@@ -228,11 +228,11 @@ export default function AdminContactsPage() {
             </div>
 
             {loading && (
-              <div className="text-center text-sm text-gray-600">Loading...</div>
+              <div className="text-center text-sm text-muted-foreground">Loading...</div>
             )}
 
             <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-muted-foreground">
                 Page {page} of {totalPages} • {contacts.length} of {total} items {loading ? '(Loading...)' : ''}
               </div>
               {totalPages > 1 && (

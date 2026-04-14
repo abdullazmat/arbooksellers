@@ -162,19 +162,29 @@ export async function PUT(
     // Find and update product
     let product;
     try {
-      product = await Product.findByIdAndUpdate(
-        id,
-        productData,
-        { new: true, runValidators: true }
-      )
-      .populate('category', 'name slug')
-      .populate('subcategory', 'name slug')
-    } catch (populateError: any) {
-      // Fallback to product without population
-      product = await Product.findByIdAndUpdate(
-        id,
-        productData,
-        { new: true, runValidators: true }
+      product = await Product.findById(id);
+      if (!product) {
+        return NextResponse.json(
+          { error: 'Product not found' },
+          { status: 404 }
+        )
+      }
+
+      // Update basic fields
+      Object.assign(product, productData);
+      
+      await product.save();
+
+      // Population after save
+      product = await Product.findById(id)
+        .populate('category', 'name slug')
+        .populate('subcategory', 'name slug')
+        .lean();
+    } catch (saveError: any) {
+      console.error("Save error:", saveError);
+      return NextResponse.json(
+        { error: 'Failed to update product', details: saveError.message },
+        { status: 500 }
       );
     }
 

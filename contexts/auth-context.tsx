@@ -41,6 +41,7 @@ interface AuthContextType {
   ) => Promise<boolean>;
   signOut: () => void;
   updateUser: (userData: Partial<User>) => void;
+  login: (user: User, token: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -86,6 +87,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 403 && data.requiresVerification) {
+          toast({
+            title: "Verification Required",
+            description: "Please verify your account to continue.",
+          });
+          router.push(`/auth/verify?email=${encodeURIComponent(data.email)}`);
+          return false;
+        }
+
         toast({
           title: "Login Failed",
           description: data.error || "Invalid email or password",
@@ -105,13 +115,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: `Welcome back, ${data.user.name}!`,
       });
 
+      let redirectPath = "/dashboard";
       if (data.user.role === "admin") {
-        // Redirect admin to admin panel
-        router.push("/admin");
+        redirectPath = "/admin";
       } else {
-        // Redirect regular user to dashboard
-        router.push("/dashboard");
+        // Redirect to checkout if cart has items
+        try {
+          const cartItem = localStorage.getItem("cart");
+          if (cartItem) {
+            const parsedCart = JSON.parse(cartItem);
+            if (Array.isArray(parsedCart) && parsedCart.length > 0) {
+              redirectPath = "/checkout";
+            }
+          }
+        } catch (e) {}
       }
+      
+      router.push(redirectPath);
 
       return true;
     } catch (error) {
@@ -154,6 +174,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false;
       }
 
+      if (data.requiresVerification) {
+        toast({
+          title: "Verification Required",
+          description: "A verification code has been sent to your email.",
+        });
+        router.push(`/auth/verify?email=${encodeURIComponent(data.email)}`);
+        return false;
+      }
+
       setUser(data.user);
       setToken(data.token);
 
@@ -165,12 +194,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: `Welcome, ${data.user.name}! Your account has been created.`,
       });
 
-      // Redirect based on user role
+      let redirectPath = "/dashboard";
       if (data.user.role === "admin") {
-        router.push("/admin");
+        redirectPath = "/admin";
       } else {
-        router.push("/dashboard");
+        // Redirect to checkout if cart has items
+        try {
+          const cartItem = localStorage.getItem("cart");
+          if (cartItem) {
+            const parsedCart = JSON.parse(cartItem);
+            if (Array.isArray(parsedCart) && parsedCart.length > 0) {
+              redirectPath = "/checkout";
+            }
+          }
+        } catch (e) {}
       }
+      
+      router.push(redirectPath);
 
       return true;
     } catch (error) {
@@ -207,6 +247,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const login = (userData: User, tokenData: string) => {
+    setUser(userData);
+    setToken(tokenData);
+    localStorage.setItem("token", tokenData);
+    localStorage.setItem("user", JSON.stringify(userData));
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -217,6 +264,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signUp,
         signOut,
         updateUser,
+        login,
       }}
     >
       {children}

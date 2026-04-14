@@ -34,10 +34,15 @@ export async function GET(request: NextRequest) {
       ),
     }));
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       categories: organizedCategories,
       total: allCategories.length,
     });
+
+    // Add caching headers
+    response.headers.set('Cache-Control', 'public, max-age=600, s-maxage=1800');
+    
+    return response;
   } catch (error: any) {
     return NextResponse.json(
       { error: "Internal server error" },

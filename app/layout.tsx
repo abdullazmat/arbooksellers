@@ -21,16 +21,94 @@ const amiri = Amiri({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://arbooksellers.com'),
   title: {
     template: '%s | AR Book Sellers',
-    default: 'AR Book Sellers | Quran & Islamic Books Store in Pakistan',
+    default: 'Islamic BookStore in Pakistan | AR Book Sellers',
   },
-  description: 'AR Book Sellers is your trusted Islamic books store in Pakistan. Buy Quran, Hadith, Tafsir, and Islamic literature online with fast delivery across Pakistan.',
-  keywords: 'Islamic books, Quran, Hadith, Islamic literature, Islamic books store in Pakistan, online Islamic bookstore',
+  description: 'Shop authentic Quran, Hadith, Tafsir, and Islamic literature from AR Book Sellers. Your trusted online Islamic bookstore in Pakistan.',
+  keywords: ['Islamic books', 'Quran', 'Hadith', 'Tafsir', 'Seerah', 'Islamic bookstore Pakistan', 'Islamic gift sets', 'Original Islamic Books', 'Urdu Bazar Lahore'],
+  authors: [{ name: 'AR Book Sellers' }],
+  creator: 'AR Book Sellers',
+  publisher: 'AR Book Sellers',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: process.env.NEXT_PUBLIC_APP_URL || 'https://arbooksellers.com',
+    siteName: 'AR Book Sellers',
+    title: 'AR Book Sellers | Authentic Islamic Books in Pakistan',
+    description: 'Shop authentic Quran, Hadith, Tafsir, and Islamic literature. Your trusted online Islamic bookstore in Pakistan.',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'AR Book Sellers - Islamic Bookstore',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AR Book Sellers | Authentic Islamic Books in Pakistan',
+    description: 'Shop authentic Quran, Hadith, Tafsir, and Islamic literature. Your trusted online Islamic bookstore in Pakistan.',
+    images: ['/og-image.png'],
+    creator: '@arbooksellers',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   verification: {
-    google: 'YOUR_GOOGLE_VERIFICATION_CODE_HERE',
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
   },
-  generator: 'v0.dev'
+}
+
+function OrganizationSchema() {
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'OnlineStore',
+          name: 'AR Book Sellers',
+          url: process.env.NEXT_PUBLIC_APP_URL || 'https://arbooksellers.com',
+          logo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://arbooksellers.com'}/logo.png`,
+          sameAs: [
+            'https://facebook.com/arbooksellers',
+            'https://instagram.com/arbooksellers',
+          ],
+          contactPoint: {
+            '@type': 'ContactPoint',
+            telephone: '+92-300-8016812',
+            contactType: 'customer service',
+            areaServed: 'PK',
+            availableLanguage: ['Urdu', 'English'],
+          },
+          address: {
+            '@type': 'PostalAddress',
+            streetAddress: '17 Aziz Market, Urdu Bazar',
+            addressLocality: 'Lahore',
+            addressRegion: 'Punjab',
+            postalCode: '54000',
+            addressCountry: 'PK',
+          },
+        }),
+      }}
+    />
+  )
 }
 
 export default function RootLayout({
@@ -41,7 +119,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${amiri.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning={true}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} forcedTheme="light" disableTransitionOnChange>
+        <OrganizationSchema />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <AuthProvider>
             <CartProvider>
               <WishlistProvider>

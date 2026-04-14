@@ -17,6 +17,15 @@ export interface IProduct extends Document {
   specifications?: Record<string, any>
   category?: mongoose.Types.ObjectId
   subcategory?: mongoose.Types.ObjectId
+  metaTitle?: string
+  metaDescription?: string
+  focusKeywords?: string
+  slug: string
+  reviews?: {
+    name: string
+    rating: number
+    content: string
+  }[]
   createdAt: Date
   updatedAt: Date
 }
@@ -25,6 +34,13 @@ const productSchema = new Schema<IProduct>({
   title: {
     type: String,
     required: true,
+    trim: true,
+  },
+  slug: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
     trim: true,
   },
   author: {
@@ -90,6 +106,23 @@ const productSchema = new Schema<IProduct>({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',
   },
+  metaTitle: {
+    type: String,
+    trim: true,
+  },
+  metaDescription: {
+    type: String,
+    trim: true,
+  },
+  focusKeyword: {
+    type: String,
+    trim: true,
+  },
+  reviews: [{
+    name: { type: String, required: true },
+    rating: { type: Number, required: true, min: 1, max: 5 },
+    content: { type: String, required: true }
+  }],
 }, {
   timestamps: true,
 })
@@ -106,4 +139,27 @@ productSchema.virtual('discountPercentage').get(function() {
 productSchema.set('toJSON', { virtuals: true })
 productSchema.set('toObject', { virtuals: true })
 
-export default mongoose.models.Product || mongoose.model<IProduct>('Product', productSchema) 
+// Create slug from title if not manually provided
+productSchema.pre("save", function (next) {
+  // If slug is explicitly modified, just sanitize it
+  if (this.isModified("slug") && this.slug) {
+    this.slug = this.slug
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+    return next();
+  }
+
+  // Otherwise, if title is modified or it's new, generate from title
+  if (this.isModified("title") || this.isNew || !this.slug) {
+    this.slug = this.title
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+  }
+  next();
+});
+
+export default mongoose.models.Product || mongoose.model<IProduct>("Product", productSchema);

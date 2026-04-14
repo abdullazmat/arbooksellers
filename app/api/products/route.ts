@@ -51,25 +51,37 @@ export async function GET(request: NextRequest) {
     }
 
     if (category) {
-      // Validate ObjectId before usage
-      if (!mongoose.Types.ObjectId.isValid(category)) {
-        return NextResponse.json(
-          { error: "Invalid category ID format" },
-          { status: 400 }
-        );
-      }
-      try {
-        // Check if the category ID is a subcategory by looking it up
-        const categoryDoc: any = await Category.findById(category).lean();
-        if (categoryDoc && categoryDoc.parent) {
-          // If it's a subcategory, filter by subcategory field
-          query.subcategory = new mongoose.Types.ObjectId(category);
+      const categoryInputs = category.split(",");
+      const validIds: mongoose.Types.ObjectId[] = [];
+      const slugs: string[] = [];
+      
+      for (const input of categoryInputs) {
+        if (mongoose.Types.ObjectId.isValid(input)) {
+          validIds.push(new mongoose.Types.ObjectId(input));
         } else {
-          // If it's a main category, filter by category field
-          query.category = new mongoose.Types.ObjectId(category);
+          slugs.push(input);
         }
-      } catch (catError: any) {
-        query.category = new mongoose.Types.ObjectId(category);
+      }
+
+      if (slugs.length > 0) {
+        try {
+          const resolvedCategories = await Category.find({ 
+            slug: { $in: slugs.map(s => s.toLowerCase().trim()) } 
+          }).select('_id');
+          resolvedCategories.forEach(c => validIds.push(c._id));
+        } catch (error) {
+          console.error('Error resolving category slugs:', error);
+        }
+      }
+
+      if (validIds.length > 0) {
+        query.$and = query.$and || [];
+        query.$and.push({
+          $or: [
+            { category: { $in: validIds } },
+            { subcategory: { $in: validIds } }
+          ]
+        });
       }
     }
 
@@ -143,6 +155,7 @@ export async function GET(request: NextRequest) {
           binding: 1,
           category: 1,
           subcategory: 1,
+          slug: 1,
           createdAt: 1
         }},
         { $sort: sortObj },
@@ -157,7 +170,7 @@ export async function GET(request: NextRequest) {
       } catch (aggError: any) {
         // Fallback to simple find() if aggregation fails
         basicProducts = await Product.find(query)
-          .select('_id title author price originalPrice images inStock stockQuantity featured description size pages paper binding category subcategory createdAt')
+          .select('_id title author price originalPrice images inStock stockQuantity featured description size pages paper binding category subcategory slug createdAt')
           .sort(sortObj)
           .skip(skip)
           .limit(limit)
@@ -221,6 +234,7 @@ export async function GET(request: NextRequest) {
             pages: 1,
             paper: 1,
             binding: 1,
+            slug: 1,
             createdAt: 1
           }},
           { $sort: sortObj },
@@ -247,7 +261,7 @@ export async function GET(request: NextRequest) {
           delete emergencyQuery.price;
           
           products = await Product.find(emergencyQuery)
-            .select('_id title author price originalPrice images inStock stockQuantity featured description size pages paper binding createdAt')
+            .select('_id title author price originalPrice images inStock stockQuantity featured description size pages paper binding slug createdAt')
             .limit(Math.min(limit, 10)) // Limit to 10 items max
             .lean();
           

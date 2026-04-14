@@ -290,10 +290,10 @@ export default function AdminCommentsPage() {
       <div className="p-6 space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-3xl font-bold text-foreground">
               Comment Management
             </h1>
-            <p className="text-gray-600 mt-2">
+            <p className="text-muted-foreground mt-2">
               Manage product reviews and comments
             </p>
           </div>
@@ -352,7 +352,7 @@ export default function AdminCommentsPage() {
           <CardContent className="p-6">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
                 <Input
                   placeholder="Search by user name, email, or content..."
                   value={search}
@@ -393,12 +393,12 @@ export default function AdminCommentsPage() {
             {loading ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
-                <p className="mt-2 text-gray-600">Loading comments...</p>
+                <p className="mt-2 text-muted-foreground">Loading comments...</p>
               </div>
             ) : comments.length === 0 ? (
               <div className="text-center py-8">
-                <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">No comments found</p>
+                <MessageSquare className="h-12 w-12 text-muted-foreground/80 mx-auto mb-4" />
+                <p className="text-muted-foreground">No comments found</p>
               </div>
             ) : (
               <>
@@ -421,7 +421,7 @@ export default function AdminCommentsPage() {
                           <TableCell>
                             <div>
                               <p className="font-medium">{comment.userName}</p>
-                              <p className="text-sm text-gray-500">
+                              <p className="text-sm text-muted-foreground">
                                 {comment.userEmail}
                               </p>
                             </div>
@@ -446,7 +446,7 @@ export default function AdminCommentsPage() {
                                   )}
                                 <div className="flex-1 min-w-0">
                                   <p
-                                    className="text-sm font-medium text-gray-900 truncate hover:text-green-600 cursor-pointer"
+                                    className="text-sm font-medium text-foreground truncate hover:text-green-600 cursor-pointer"
                                     onClick={() =>
                                       router.push(
                                         `/products/${comment.productId}`
@@ -455,7 +455,7 @@ export default function AdminCommentsPage() {
                                   >
                                     {comment.product.title}
                                   </p>
-                                  <p className="text-xs text-gray-500">
+                                  <p className="text-xs text-muted-foreground">
                                     Rs{" "}
                                     {comment.product.price.toLocaleString(
                                       "en-IN"
@@ -476,12 +476,12 @@ export default function AdminCommentsPage() {
                                 </Button>
                               </div>
                             ) : (
-                              <div className="text-sm text-gray-500">
+                              <div className="text-sm text-muted-foreground">
                                 <p className="font-medium">Product ID: {comment.productId}</p>
                                 <p className="text-xs text-orange-500 bg-orange-50 px-2 py-1 rounded">
                                   Product deleted or not found
                                 </p>
-                                <p className="text-xs text-gray-400 mt-1">
+                                <p className="text-xs text-muted-foreground/80 mt-1">
                                   This comment references a product that no longer exists
                                 </p>
                               </div>
@@ -494,7 +494,7 @@ export default function AdminCommentsPage() {
                           </TableCell>
                           <TableCell>
                             <div className="max-w-xs">
-                              <p className="text-sm text-gray-900 line-clamp-3">
+                              <p className="text-sm text-foreground line-clamp-3">
                                 {comment.content}
                               </p>
                               {comment.isEdited && (
@@ -517,10 +517,10 @@ export default function AdminCommentsPage() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <div className="text-sm text-gray-600">
+                            <div className="text-sm text-muted-foreground">
                               <p>{formatDate(comment.createdAt)}</p>
                               {comment.editedAt && (
-                                <p className="text-xs text-gray-400">
+                                <p className="text-xs text-muted-foreground/80">
                                   Edited: {formatDate(comment.editedAt)}
                                 </p>
                               )}
@@ -679,7 +679,7 @@ export default function AdminCommentsPage() {
                       </PaginationContent>
                     </Pagination>
 
-                    <div className="text-center text-sm text-gray-600 mt-4">
+                    <div className="text-center text-sm text-muted-foreground mt-4">
                       Page {currentPage} of {totalPages} • {comments.length}{" "}
                       comments per page
                     </div>
@@ -698,36 +698,36 @@ export default function AdminCommentsPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-600">
+                    <label className="text-sm font-medium text-muted-foreground">
                       User Name:
                     </label>
-                    <p className="text-gray-900">{selectedComment.userName}</p>
+                    <p className="text-foreground">{selectedComment.userName}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-600">
+                    <label className="text-sm font-medium text-muted-foreground">
                       User Email:
                     </label>
-                    <p className="text-gray-900">{selectedComment.userEmail}</p>
+                    <p className="text-foreground">{selectedComment.userEmail}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-600">
+                    <label className="text-sm font-medium text-muted-foreground">
                       Product:
                     </label>
                     {selectedComment.product ? (
                       <div>
-                        <p className="text-gray-900 font-medium">{selectedComment.product.title}</p>
-                        <p className="text-sm text-gray-500">ID: {selectedComment.productId}</p>
-                        <p className="text-sm text-gray-500">Price: Rs {selectedComment.product.price.toLocaleString("en-IN")}</p>
+                        <p className="text-foreground font-medium">{selectedComment.product.title}</p>
+                        <p className="text-sm text-muted-foreground">ID: {selectedComment.productId}</p>
+                        <p className="text-sm text-muted-foreground">Price: Rs {selectedComment.product.price.toLocaleString("en-IN")}</p>
                       </div>
                     ) : (
                       <div>
-                        <p className="text-gray-900 font-medium">Product ID: {selectedComment.productId}</p>
+                        <p className="text-foreground font-medium">Product ID: {selectedComment.productId}</p>
                         <p className="text-sm text-orange-500">Product deleted or not found</p>
                       </div>
                     )}
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-600">
+                    <label className="text-sm font-medium text-muted-foreground">
                       Rating:
                     </label>
                     <div className="flex gap-1 mt-1">
@@ -737,17 +737,17 @@ export default function AdminCommentsPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-600">
+                  <label className="text-sm font-medium text-muted-foreground">
                     Comment:
                   </label>
-                  <p className="text-gray-900 mt-1 p-3 bg-gray-50 rounded-md">
+                  <p className="text-foreground mt-1 p-3 bg-zinc-50 dark:bg-zinc-950/20 rounded-md">
                     {selectedComment.content}
                   </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-600">
+                    <label className="text-sm font-medium text-muted-foreground">
                       Status:
                     </label>
                     <Badge
@@ -759,19 +759,19 @@ export default function AdminCommentsPage() {
                     </Badge>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-600">
+                    <label className="text-sm font-medium text-muted-foreground">
                       Created:
                     </label>
-                    <p className="text-gray-900">
+                    <p className="text-foreground">
                       {formatDate(selectedComment.createdAt)}
                     </p>
                   </div>
                   {selectedComment.isEdited && (
                     <div>
-                      <label className="text-sm font-medium text-gray-600">
+                      <label className="text-sm font-medium text-muted-foreground">
                         Edited:
                       </label>
-                      <p className="text-gray-900">
+                      <p className="text-foreground">
                         {formatDate(selectedComment.editedAt!)}
                       </p>
                     </div>

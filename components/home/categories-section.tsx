@@ -5,32 +5,39 @@ import { BookOpen, ChurchIcon as Mosque, Lightbulb, Users } from 'lucide-react'
 
 const categories = [
   {
-    name: 'Quran & Tafsir',
-    description: 'Deep dive into the Holy Quran and its interpretations.',
+    name: 'Quran',
+    description: 'The Holy Quran in various formats and translations.',
     icon: BookOpen,
     image: '/islamic-calligraphy-quran.png',
     href: '/products?category=quran',
   },
   {
-    name: 'Hadith Collections',
-    description: 'Authentic sayings and traditions of Prophet Muhammad (PBUH).',
+    name: 'Paras',
+    description: 'Individual Paras and complete Para sets for daily recitation.',
+    icon: BookOpen,
+    image: '/placeholder.jpg',
+    href: '/products?category=para-individual',
+  },
+  {
+    name: 'Wazaif',
+    description: 'Authentic collections of Islamic Duas and Wazaif.',
     icon: Mosque,
-    image: '/islamic-hadith-collection.png',
-    href: '/products?category=hadith',
+    image: '/placeholder.jpg',
+    href: '/products?category=wazaif',
   },
   {
-    name: 'Islamic Studies',
-    description: 'Comprehensive guides on Islamic jurisprudence, history, and ethics.',
+    name: 'Qaida & Surah',
+    description: 'Essential Qaidas for beginners and individual Surahs.',
     icon: Lightbulb,
-    image: '/islamic-studies-books.png',
-    href: '/products?category=islamic-studies',
+    image: '/placeholder.jpg',
+    href: '/products?category=qaida-surah',
   },
   {
-    name: 'Children Books',
-    description: 'Engaging stories and educational content for young Muslims.',
+    name: 'Accessories',
+    description: 'Rahals, covers, and other Islamic accessories.',
     icon: Users,
-    image: '/islamic-children-book-prophets.png',
-    href: '/products?category=kids',
+    image: '/placeholder.jpg',
+    href: '/products?category=accessories',
   },
 ]
 
@@ -47,7 +54,7 @@ export default function CategoriesSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-16">
           {categories.map((category, index) => (
             <Link key={category.name} href={category.href} className={`block animate-fade-in-up stagger-${index + 3}`}>
               <Card className="overflow-hidden rounded-xl shadow-modern hover:shadow-lg transition-all duration-300 hover-lift group">
@@ -56,6 +63,7 @@ export default function CategoriesSection() {
                     src={category.image || "/placeholder.svg"}
                     alt={category.name}
                     fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 20vw"
                     style={{ objectFit: 'cover' }}
                     className="transition-transform duration-300 group-hover:scale-105"
                   />

@@ -3,7 +3,8 @@ import dbConnect from '@/lib/db';
 import User from '@/models/User';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'islamic-books-jwt-secret-key-2024-very-secure';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) console.warn("WARNING: JWT_SECRET is not defined in environment variables");
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,6 +38,15 @@ export async function POST(request: NextRequest) {
         { error: 'Invalid email or password' },
         { status: 401 }
       );
+    }
+
+    // Check if user is verified
+    const { APP_CONFIG } = await import('@/lib/config');
+    if (APP_CONFIG.auth.requireEmailVerification && !user.isVerified) {
+      // Legacy account fix: If they are in the main User collection, they are considered verified in the new system.
+      // Update their status to prevent the infinite loop.
+      user.isVerified = true;
+      await user.save();
     }
 
     // Generate JWT token

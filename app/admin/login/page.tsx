@@ -58,72 +58,77 @@ function AdminLoginPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo and Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <Image
-              src="/logo.png"
-              alt="Islamic Books"
-              width={80}
-              height={80}
-              className="rounded-lg"
-            />
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 selection:bg-islamic-green-100 selection:text-islamic-green-900">
+      <div className="w-full max-w-[480px]">
+        {/* Logo and Greeting */}
+        <div className="text-center mb-10">
+          <div className="flex justify-center mb-6">
+            <div className="relative group cursor-pointer" onClick={() => router.push('/')}>
+              <div className="absolute -inset-4 bg-islamic-green-500/20 rounded-full blur-2xl group-hover:bg-islamic-green-500/30 transition-all duration-500" />
+              <Image
+                src="/logo.png"
+                alt="AR Publishers Admin"
+                width={100}
+                height={100}
+                className="relative h-24 w-24 object-contain transform group-hover:scale-110 transition-transform duration-500"
+              />
+            </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Panel</h1>
-          <p className="text-gray-600">Access your administrative dashboard</p>
+          <h1 className="text-4xl lg:text-5xl font-black text-foreground tracking-tight">Admin Login</h1>
+          <p className="text-muted-foreground font-medium mt-3">Sign in to access the admin dashboard</p>
         </div>
 
         {/* Login Form */}
-        <Card className="shadow-xl border-0">
-          <CardHeader className="text-center pb-4">
-            <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <Shield className="h-6 w-6 text-green-600" />
+        <Card className="bg-card border border-border/50 dark:border-white/5 shadow-2xl rounded-[2.5rem] overflow-hidden">
+          <CardHeader className="pt-10 pb-2 text-center">
+            <div className="bg-islamic-green-500/10 dark:bg-islamic-green-500/20 text-islamic-green-600 dark:text-islamic-green-400 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-islamic-green-500/20 shadow-sm">
+                <Shield className="h-7 w-7" />
             </div>
-            <CardTitle className="text-2xl">Sign In</CardTitle>
-            <CardDescription>
-              Enter your admin credentials to continue
+            <CardTitle className="text-3xl font-black text-foreground tracking-tight">Sign In</CardTitle>
+            <CardDescription className="text-muted-foreground font-bold uppercase tracking-widest text-[10px] mt-2">
+              Enter your email and password
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <CardContent className="px-8 pb-10">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="email" className="text-foreground/80 font-black text-[10px] uppercase tracking-widest px-1">Email</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@islamicbooks.com"
+                  placeholder="admin@arpublishers.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="h-11"
+                  disabled={isLoading}
+                  className="h-14 rounded-2xl bg-zinc-100/50 dark:bg-background border-transparent focus:bg-white dark:focus:bg-zinc-800 focus:border-islamic-green-500 transition-all px-5 font-bold"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
+                <Label htmlFor="password" className="text-foreground/80 font-black text-[10px] uppercase tracking-widest px-1">Password</Label>
+                <div className="relative group">
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="Enter your password"
+                    placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="h-11 pr-10"
+                    disabled={isLoading}
+                    className="h-14 rounded-2xl bg-zinc-100/50 dark:bg-background border-transparent focus:bg-white dark:focus:bg-zinc-800 focus:border-islamic-green-500 transition-all px-5 pr-14 font-bold"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-11 px-3 py-2 hover:bg-transparent"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 p-0 rounded-xl hover:bg-zinc-200/50 dark:hover:bg-white/5 transition-colors"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-500" />
+                      <EyeOff className="h-5 w-5 text-muted-foreground" />
                     ) : (
-                      <Eye className="h-4 w-4 text-gray-500" />
+                      <Eye className="h-5 w-5 text-muted-foreground" />
                     )}
                   </Button>
                 </div>
@@ -131,37 +136,36 @@ function AdminLoginPageContent() {
 
               <Button
                 type="submit"
-                className="w-full h-11 bg-green-600 hover:bg-green-700"
+                className="w-full h-14 bg-foreground text-background dark:bg-white dark:text-black hover:bg-islamic-green-600 hover:text-white transition-all rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl"
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing In...
-                  </>
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Authorizing...</span>
+                  </div>
                 ) : (
                   'Sign In'
                 )}
               </Button>
             </form>
 
-            {/* Back to Main Site */}
-            <div className="mt-6 text-center">
+            <div className="mt-8 text-center pt-6 border-t border-border/30 dark:border-white/5">
               <Button
                 variant="ghost"
                 onClick={() => router.push('/')}
-                className="text-gray-600 hover:text-gray-900"
+                className="h-12 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-zinc-100 dark:hover:bg-white/5 transition-all"
               >
-                ← Back to Main Site
+                ← Return to Store
               </Button>
             </div>
           </CardContent>
         </Card>
 
         {/* Footer */}
-        <div className="text-center mt-8">
-          <p className="text-sm text-gray-500">
-            © 2024 Islamic Books. All rights reserved.
+        <div className="text-center mt-12">
+          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">
+            © 2024 AR Publishers
           </p>
         </div>
       </div>

@@ -203,7 +203,7 @@ export default function AdminSupportPage() {
       case 'closed':
         return 'bg-green-100 text-green-800'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-zinc-100 dark:bg-white/5 text-foreground'
     }
   }
 
@@ -216,7 +216,7 @@ export default function AdminSupportPage() {
       case 'low':
         return 'bg-green-100 text-green-800'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-zinc-100 dark:bg-white/5 text-foreground'
     }
   }
 
@@ -229,9 +229,9 @@ export default function AdminSupportPage() {
       case 'payment':
         return 'bg-orange-100 text-orange-800'
       case 'technical':
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-zinc-100 dark:bg-white/5 text-foreground'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-zinc-100 dark:bg-white/5 text-foreground'
     }
   }
 
@@ -270,8 +270,8 @@ export default function AdminSupportPage() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Support Tickets</h1>
-            <p className="text-gray-600">Manage customer support requests and inquiries</p>
+            <h1 className="text-2xl font-bold text-foreground">Support Tickets</h1>
+            <p className="text-muted-foreground">Manage customer support requests and inquiries</p>
           </div>
         </div>
 
@@ -282,7 +282,7 @@ export default function AdminSupportPage() {
               <div className="flex items-center space-x-2">
                 <AlertCircle className="h-5 w-5 text-red-500" />
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Open Tickets</p>
+                  <p className="text-sm font-medium text-muted-foreground">Open Tickets</p>
                   <p className="text-2xl font-bold">{tickets.filter(t => t.status === 'open').length}</p>
                 </div>
               </div>
@@ -293,7 +293,7 @@ export default function AdminSupportPage() {
               <div className="flex items-center space-x-2">
                 <Clock className="h-5 w-5 text-yellow-500" />
                 <div>
-                  <p className="text-sm font-medium text-gray-600">In Progress</p>
+                  <p className="text-sm font-medium text-muted-foreground">In Progress</p>
                   <p className="text-2xl font-bold">{tickets.filter(t => t.status === 'in_progress').length}</p>
                 </div>
               </div>
@@ -304,7 +304,7 @@ export default function AdminSupportPage() {
               <div className="flex items-center space-x-2">
                 <CheckCircle className="h-5 w-5 text-green-500" />
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Closed</p>
+                  <p className="text-sm font-medium text-muted-foreground">Closed</p>
                   <p className="text-2xl font-bold">{tickets.filter(t => t.status === 'closed').length}</p>
                 </div>
               </div>
@@ -315,7 +315,7 @@ export default function AdminSupportPage() {
               <div className="flex items-center space-x-2">
                 <MessageSquare className="h-5 w-5 text-blue-500" />
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Tickets</p>
+                  <p className="text-sm font-medium text-muted-foreground">Total Tickets</p>
                   <p className="text-2xl font-bold">{tickets.length}</p>
                 </div>
               </div>
@@ -328,7 +328,7 @@ export default function AdminSupportPage() {
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground/80 h-4 w-4" />
                 <Input
                   placeholder="Search tickets..."
                   value={searchTerm}
@@ -409,14 +409,14 @@ export default function AdminSupportPage() {
                         </Avatar>
                         <div>
                           <div className="font-medium">{ticket.customer.name}</div>
-                          <div className="text-sm text-gray-500">{ticket.customer.email}</div>
+                          <div className="text-sm text-muted-foreground">{ticket.customer.email}</div>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
                         <div className="font-medium">{ticket.subject}</div>
-                        <div className="text-sm text-gray-500 line-clamp-1">{ticket.message}</div>
+                        <div className="text-sm text-muted-foreground line-clamp-1">{ticket.message}</div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -457,23 +457,23 @@ export default function AdminSupportPage() {
                           </DialogHeader>
                           <div className="space-y-6">
                             {/* Customer Information */}
-                            <div className="bg-gray-50 p-4 rounded-lg">
+                            <div className="bg-zinc-50 dark:bg-zinc-950/20 p-4 rounded-lg">
                               <h3 className="font-semibold mb-3">Customer Information</h3>
                               <div className="grid grid-cols-2 gap-4 text-sm">
                                 <div className="flex items-center space-x-2">
-                                  <User className="h-4 w-4 text-gray-400" />
+                                  <User className="h-4 w-4 text-muted-foreground/80" />
                                   <span>{ticket.customer.name}</span>
                                 </div>
                                 <div className="flex items-center space-x-2">
-                                  <Mail className="h-4 w-4 text-gray-400" />
+                                  <Mail className="h-4 w-4 text-muted-foreground/80" />
                                   <span>{ticket.customer.email}</span>
                                 </div>
                                 <div className="flex items-center space-x-2">
-                                  <Phone className="h-4 w-4 text-gray-400" />
+                                  <Phone className="h-4 w-4 text-muted-foreground/80" />
                                   <span>{ticket.customer.phone}</span>
                                 </div>
                                 <div className="flex items-center space-x-2">
-                                  <Calendar className="h-4 w-4 text-gray-400" />
+                                  <Calendar className="h-4 w-4 text-muted-foreground/80" />
                                   <span>Created: {formatDate(ticket.createdAt)}</span>
                                 </div>
                               </div>
@@ -504,18 +504,18 @@ export default function AdminSupportPage() {
                                     className={`p-4 rounded-lg ${
                                       reply.from === 'admin'
                                         ? 'bg-blue-50 border border-blue-200'
-                                        : 'bg-gray-50 border border-gray-200'
+                                        : 'bg-zinc-50 dark:bg-zinc-950/20 border border-border/50'
                                     }`}
                                   >
                                     <div className="flex items-center justify-between mb-2">
                                       <span className="font-medium">
                                         {reply.from === 'admin' ? 'Admin' : ticket.customer.name}
                                       </span>
-                                      <span className="text-sm text-gray-500">
+                                      <span className="text-sm text-muted-foreground">
                                         {formatDate(reply.timestamp)}
                                       </span>
                                     </div>
-                                    <p className="text-gray-700">{reply.message}</p>
+                                    <p className="text-muted-foreground">{reply.message}</p>
                                   </div>
                                 ))}
                               </div>

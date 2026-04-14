@@ -21,9 +21,10 @@ import {
 import { useAuth } from '@/contexts/auth-context'
 import { useCart } from '@/contexts/cart-context'
 import { useWishlist } from '@/contexts/wishlist-context'
-import { ShoppingCart, Heart, User, Search, Menu, Home, BookOpen, Info, LayoutDashboard, LogOut, LogIn, UserPlus, X, Mail } from 'lucide-react'
+import { ShoppingCart, Heart, User, Search, Menu, Home, BookOpen, Info, LayoutDashboard, LogOut, LogIn, UserPlus, X, Mail, ChevronDown } from 'lucide-react'
 import { formatPrice, getProductImageUrl } from '@/lib/utils'
-import { CategoryNavbar } from '@/components/layout/category-navbar'
+import { ThemeToggle } from './theme-toggle'
+// removed CategoryNavbar import
 
 interface SearchResult {
   _id: string
@@ -35,6 +36,7 @@ interface SearchResult {
   featured: boolean
   inStock: boolean
   discount: number
+  slug: string
 }
 
 export function Header() {
@@ -44,14 +46,15 @@ export function Header() {
   const [isSearching, setIsSearching] = useState(false)
   const [showSearchResults, setShowSearchResults] = useState(false)
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
+  const [categories, setCategories] = useState<any[]>([])
+  const [loadingCategories, setLoadingCategories] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
   const { user, signOut } = useAuth()
-  const { items: cartItems } = useCart()
+  const { items: cartItems, itemCount: cartItemCount } = useCart()
   const { items: wishlistItems } = useWishlist()
   const pathname = usePathname()
   const router = useRouter()
 
-  const cartItemCount = cartItems.length
   const wishlistCount = wishlistItems.length
 
   useEffect(() => {
@@ -61,6 +64,24 @@ export function Header() {
 
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoadingCategories(true)
+        const response = await fetch('/api/categories')
+        if (response.ok) {
+          const data = await response.json()
+          setCategories(data.categories || [])
+        }
+      } catch (error) {
+        console.error('Failed to fetch categories')
+      } finally {
+        setLoadingCategories(false)
+      }
+    }
+    fetchCategories()
   }, [])
 
   // Close search results when clicking outside
@@ -133,8 +154,8 @@ export function Header() {
     }
   }
 
-  const handleResultClick = (productId: string) => {
-    router.push(`/products/${productId}`)
+  const handleResultClick = (idOrSlug: string) => {
+    router.push(`/products/${idOrSlug}`)
     setShowSearchResults(false)
     setSearchQuery('')
   }
@@ -148,34 +169,61 @@ export function Header() {
   return (
     <>
       <header
-        className={`sticky top-0 z-50 w-full transition-all duration-300 ${
-          isScrolled ? 'bg-background/80 backdrop-blur-md shadow-md' : 'bg-background'
+        className={`sticky top-0 z-50 w-full transition-all duration-300 border-b border-border/50 ${
+          isScrolled ? 'bg-background/80 backdrop-blur-md shadow-lg shadow-black/5' : 'bg-background'
         }`}
       >
         <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
         {/* Logo */}
         <Link className="flex items-center" href="/">
-          <img src="/logo.png" alt="AR Book Sellers | Quran & Islamic Books Store in Pakistan" className="h-16 w-[80px]" />
+          <img src="/logo.png" alt="AR Book Sellers | Quran & Islamic BookStore in Pakistan" className="h-12 md:h-16 w-auto" />
         </Link>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6">
-          <Link className="text-sm font-medium text-gray-700 hover:text-islamic-green-600 transition-colors" href="/">
+          <Link className="text-sm font-semibold text-muted-foreground hover:text-islamic-green-600 dark:hover:text-islamic-green-400 transition-colors" href="/">
             Home
           </Link>
-          <Link className="text-sm font-medium text-gray-700 hover:text-islamic-green-600 transition-colors" href="/products">
-            Products
-          </Link>
-          <Link className="text-sm font-medium text-gray-700 hover:text-islamic-green-600 transition-colors" href="/about">
+          <div className="relative group">
+            <Link 
+              className="text-sm font-semibold text-muted-foreground hover:text-islamic-green-600 dark:hover:text-islamic-green-400 transition-colors flex items-center gap-1 py-4" 
+              href="/products"
+            >
+              Products
+              <ChevronDown className="h-3 w-3 transition-transform group-hover:rotate-180" />
+            </Link>
+            
+            {/* Simple Dropdown Menu on Hover */}
+            <div className="absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[100]">
+              <div className="bg-card/95 backdrop-blur-xl border border-border/50 shadow-xl rounded-xl p-2 w-48 flex flex-col gap-1">
+                {[
+                  { name: 'Quran', slug: 'quran' },
+                  { name: 'Paras', slug: 'para-individual' },
+                  { name: 'Wazaif', slug: 'wazaif' },
+                  { name: 'Qaida & Surah', slug: 'qaida-surah' },
+                  { name: 'Accessories', slug: 'accessories' }
+                ].map((category) => (
+                  <Link 
+                    key={category.slug} 
+                    href={`/products?category=${category.slug}`}
+                    className="px-4 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-accent hover:text-foreground rounded-lg transition-colors block"
+                  >
+                    {category.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+          <Link className="text-sm font-semibold text-muted-foreground hover:text-islamic-green-600 dark:hover:text-islamic-green-400 transition-colors" href="/about">
             About Us
           </Link>
-          <Link className="text-sm font-medium text-gray-700 hover:text-islamic-green-600 transition-colors" href="/contact">
+          <Link className="text-sm font-semibold text-muted-foreground hover:text-islamic-green-600 dark:hover:text-islamic-green-400 transition-colors" href="/contact">
             Contact Us
           </Link>
         </nav>
 
         {/* Search and Icons */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
           <div className="relative hidden md:block" ref={searchRef}>
             <form onSubmit={handleSearchSubmit} className="relative">
               <Input
@@ -183,7 +231,7 @@ export function Header() {
                 placeholder="Search books..."
                 value={searchQuery}
                 onChange={handleSearchChange}
-                className="w-64 pl-10 pr-10 rounded-full bg-gray-100 focus:bg-white focus:border-islamic-green-500 transition-all duration-300"
+                className="w-64 pl-10 pr-10 rounded-full bg-accent/50 focus:bg-background focus:ring-2 focus:ring-islamic-green-500/30 border-none transition-all duration-300"
               />
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
               {searchQuery && (
@@ -201,23 +249,23 @@ export function Header() {
 
             {/* Search Results Dropdown */}
             {showSearchResults && searchResults.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+              <div className="absolute top-full left-0 right-0 mt-4 bg-card/95 backdrop-blur-xl border border-border rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-50 max-h-[70vh] overflow-y-auto scrollbar-hide">
                 <div className="p-2">
-                  <div className="text-sm text-gray-500 mb-2 px-2">
+                  <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 px-3">
                     {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} found
                   </div>
                   {searchResults.map((result) => (
                     <div
                       key={result._id}
-                      className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-md cursor-pointer transition-colors"
-                      onClick={() => handleResultClick(result._id)}
+                      className="flex items-center gap-4 p-3 hover:bg-accent/50 rounded-2xl cursor-pointer transition-all duration-200"
+                      onClick={() => handleResultClick(result.slug || result._id)}
                     >
-                      <div className="w-12 h-16 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
+                      <div className="w-14 h-20 bg-accent/30 rounded-xl overflow-hidden flex-shrink-0 border border-border/50">
                         {result.images && result.images.length > 0 ? (
                           <img
                             src={getProductImageUrl(result.images[0], '/placeholder.jpg')}
                             alt={result.title}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain p-1 mix-blend-multiply dark:mix-blend-screen"
                             onError={(e) => {
                               e.currentTarget.src = '/placeholder.jpg'
                             }}
@@ -229,7 +277,7 @@ export function Header() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-sm text-gray-900 truncate">
+                        <h4 className="font-bold text-sm text-foreground truncate">
                           {result.title}
                         </h4>
                         <p className="text-xs text-gray-500 truncate">
@@ -258,12 +306,12 @@ export function Header() {
                       )}
                     </div>
                   ))}
-                  <div className="border-t pt-2 mt-2">
+                  <div className="border-t border-border mt-3 p-2">
                     <Button
                       type="button"
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
-                      className="w-full"
+                      className="w-full font-bold text-xs uppercase tracking-widest text-islamic-green-600 dark:text-islamic-green-400 hover:bg-islamic-green-500/10 rounded-xl"
                       onClick={() => {
                         router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`)
                         setShowSearchResults(false)
@@ -279,10 +327,10 @@ export function Header() {
 
             {/* Loading State */}
             {isSearching && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-4">
+              <div className="absolute top-full left-0 right-0 mt-4 bg-card/95 backdrop-blur-xl border border-border rounded-3xl shadow-xl z-50 p-6">
                 <div className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-islamic-green-600"></div>
-                  <span className="ml-2 text-sm text-gray-600">Searching...</span>
+                  <span className="ml-3 text-sm font-bold text-foreground">Searching...</span>
                 </div>
               </div>
             )}
@@ -298,8 +346,8 @@ export function Header() {
           </div>
 
           <Link className="relative" href="/wishlist">
-            <Button className="rounded-full" size="icon" variant="ghost">
-              <Heart className="h-5 w-5 text-gray-600 hover:text-red-500 transition-colors" />
+            <Button className="rounded-full hover:bg-accent/50 transition-colors" size="icon" variant="ghost">
+              <Heart className="h-5 w-5 text-muted-foreground hover:text-red-500 transition-colors" />
             </Button>
             {wishlistCount > 0 && (
               <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white animate-bounce-in min-w-[20px] min-h-[20px] border-2 border-white">
@@ -309,8 +357,8 @@ export function Header() {
           </Link>
 
           <Link className="relative" href="/cart">
-            <Button className="rounded-full" size="icon" variant="ghost">
-              <ShoppingCart className="h-5 w-5 text-gray-600 hover:text-islamic-green-600 transition-colors" />
+            <Button className="rounded-full hover:bg-accent/50 transition-colors" size="icon" variant="ghost">
+              <ShoppingCart className="h-5 w-5 text-muted-foreground hover:text-islamic-green-600 transition-colors" />
             </Button>
             {cartItemCount > 0 && (
               <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-islamic-green-600 text-xs font-bold text-white animate-bounce-in min-w-[20px] min-h-[20px] border-2 border-white">
@@ -319,11 +367,13 @@ export function Header() {
             )}
           </Link>
 
+          <ThemeToggle />
+
           {/* User Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button className="rounded-full" size="icon" variant="ghost">
-                <User className="h-5 w-5 text-gray-600 hover:text-blue-600 transition-colors" />
+              <Button className="rounded-full hover:bg-accent/50 transition-colors" size="icon" variant="ghost">
+                <User className="h-5 w-5 text-muted-foreground hover:text-blue-500 transition-colors" />
                 <span className="sr-only">User menu</span>
               </Button>
             </DropdownMenuTrigger>
@@ -378,6 +428,10 @@ export function Header() {
             </SheetTrigger>
             <SheetContent side="right">
               <div className="flex flex-col gap-6 p-6">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-black uppercase tracking-widest text-muted-foreground">Menu</span>
+                  <ThemeToggle />
+                </div>
                 <Link className="flex items-center gap-3 text-lg font-semibold" href="/">
                   <Home className="h-5 w-5 text-islamic-green-600" />
                   Home
@@ -512,7 +566,6 @@ export function Header() {
         </div>
       </div>
       </header>
-      <CategoryNavbar />
     </>
   )
 }

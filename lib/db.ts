@@ -1,12 +1,10 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI =
-  process.env.MONGO_URI ||
-  "mongodb+srv://codeflamme:codeflamme@main.dkwovzc.mongodb.net/quran_ecommerce?retryWrites=true&w=majority&appName=quran_ecommerce";
+const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI;
 
 if (!MONGODB_URI) {
   throw new Error(
-    "Please define the MONGO_URI environment variable inside .env.local"
+    "Please define the MONGODB_URI environment variable inside cPanel or .env.local"
   );
 }
 

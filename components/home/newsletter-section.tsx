@@ -69,55 +69,55 @@ export default function NewsletterSection() {
   }
 
   return (
-    <section className="py-24 bg-white font-inter relative border-y border-gray-100 overflow-hidden">
+    <section className="py-24 bg-background font-inter relative border-y border-border overflow-hidden">
       {/* Subtle organic background elements to match the theme */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-islamic-green-50 rounded-full blur-[100px] -mr-48 -mt-48 opacity-60"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-islamic-gold-50 rounded-full blur-[100px] -ml-48 -mb-48 opacity-60"></div>
+      <div className="absolute top-0 right-0 w-96 h-96 bg-islamic-green-50 dark:bg-islamic-green-950/20 rounded-full blur-[100px] -mr-48 -mt-48 opacity-60"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-islamic-gold-50 dark:bg-islamic-gold-950/20 rounded-full blur-[100px] -ml-48 -mb-48 opacity-60"></div>
       
       <div className="container mx-auto px-4 md:px-6 relative z-10">
         <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
           
           <div className="w-full lg:w-1/2 space-y-8 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-islamic-green-50 text-islamic-green-700 border border-islamic-green-100 text-xs font-bold uppercase tracking-widest">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-islamic-green-50 dark:bg-islamic-green-950/30 text-islamic-green-700 dark:text-islamic-green-400 border border-islamic-green-100 dark:border-islamic-green-800 text-xs font-bold uppercase tracking-widest">
               <BellRing className="w-4 h-4" />
               <span>Join our community of seekers</span>
             </div>
-            <h2 className="text-4xl md:text-5xl font-black text-gray-900 leading-[1.1]">
+            <h2 className="text-4xl md:text-5xl font-black text-foreground leading-[1.1]">
               Your Journey of <span className="text-islamic-green-600">Knowledge</span> Continues Here
             </h2>
-            <p className="text-xl text-gray-600 leading-relaxed font-medium">
+            <p className="text-xl text-muted-foreground leading-relaxed font-medium">
                Subscribe to get early access to new arrivals from Darussalam and spiritual reminders that matter to your study.
             </p>
             
             <div className="flex items-center justify-center lg:justify-start gap-4 pt-4">
                <div className="flex -space-x-3">
                   {['aisha-rahman', 'omar-khan', 'fatima-ali', 'ahmed-hassan'].map(name => (
-                    <div key={name} className="w-10 h-10 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center overflow-hidden">
+                    <div key={name} className="w-10 h-10 rounded-full border-2 border-background bg-muted flex items-center justify-center overflow-hidden">
                       <img src={`/${name}-profile.png`} alt="User" className="w-full h-full object-cover" />
                     </div>
                   ))}
                </div>
-               <p className="text-sm font-bold text-gray-500">Liked by 50,000+ Students</p>
+               <p className="text-sm font-bold text-muted-foreground">Liked by 50,000+ Students</p>
             </div>
           </div>
 
           <div className="w-full lg:w-1/2">
-            <div className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-[0_20px_50px_rgba(20,83,45,0.1)] border border-gray-50 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-islamic-green-50 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700"></div>
+            <div className="bg-card p-8 md:p-12 rounded-[2.5rem] shadow-[0_20px_50px_rgba(20,83,45,0.1)] dark:shadow-none border border-border relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-islamic-green-50 dark:bg-islamic-green-950/20 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700"></div>
               
               {subscribed ? (
                 <div className="text-center space-y-6 py-10 relative z-10">
                   <div className="w-20 h-20 bg-islamic-green-500 rounded-full flex items-center justify-center mx-auto shadow-xl shadow-islamic-green-200">
                     <CheckCircle className="w-10 h-10 text-white" />
                   </div>
-                  <h3 className="text-2xl font-black text-gray-900 leading-tight">JazakAllah Khairan for Joining!</h3>
-                  <p className="text-gray-500">We’ve added you to our community. Look out for our welcome message.</p>
+                  <h3 className="text-2xl font-black text-foreground leading-tight">JazakAllah Khairan for Joining!</h3>
+                  <p className="text-muted-foreground">We’ve added you to our community. Look out for our welcome message.</p>
                 </div>
               ) : (
                 <div className="space-y-8 relative z-10">
                   <div className="space-y-2">
-                    <h3 className="text-2xl font-black text-gray-900">Don't Miss a New Chapter</h3>
-                    <p className="text-gray-500">Enter your email for the latest updates on Quran para sets and new literature.</p>
+                    <h3 className="text-2xl font-black text-foreground">Don't Miss a New Chapter</h3>
+                    <p className="text-muted-foreground">Enter your email for the latest updates on Quran para sets and new literature.</p>
                   </div>
 
                   <form onSubmit={handleSubmit} className="space-y-4">
@@ -129,7 +129,7 @@ export default function NewsletterSection() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
-                        className="h-16 pl-12 pr-6 bg-gray-50 border-gray-100 rounded-2xl focus:bg-white focus:border-islamic-green-500 transition-all text-lg"
+                        className="h-16 pl-12 pr-6 bg-accent/20 border-border rounded-2xl focus:bg-card focus:border-islamic-green-500 transition-all text-lg"
                       />
                     </div>
                     <Button

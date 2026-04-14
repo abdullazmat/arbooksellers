@@ -312,7 +312,7 @@ export default function AdminCategoriesPage() {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
-            <p className="mt-2 text-gray-600">Loading categories...</p>
+            <p className="mt-2 text-muted-foreground">Loading categories...</p>
           </div>
         </div>
       </AdminLayout>
@@ -321,38 +321,45 @@ export default function AdminCategoriesPage() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="space-y-8 selection:bg-islamic-green-100 selection:text-islamic-green-900">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Categories</h1>
-            <p className="text-gray-600">Manage product categories and subcategories</p>
+            <h1 className="text-4xl font-black text-foreground tracking-tight">Taxonomy Control</h1>
+            <p className="text-muted-foreground font-medium mt-1">Organize and structure your product hierarchy</p>
           </div>
           <Button
-            className="bg-green-600 hover:bg-green-700"
+            className="h-12 px-8 rounded-2xl font-black text-[10px] uppercase tracking-widest bg-foreground text-background hover:bg-islamic-green-600 hover:text-white transition-all shadow-xl shadow-islamic-green-600/10"
             onClick={openAddDialog}
           >
             <Plus className="mr-2 h-4 w-4" />
-            Add Category
+            Add Classification
           </Button>
         </div>
 
         {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Filters</CardTitle>
-            <CardDescription>Search categories</CardDescription>
+        <Card className="bg-card border-border/50 dark:border-white/5 shadow-xl rounded-[2rem] overflow-hidden">
+          <CardHeader className="border-b border-border/50 bg-zinc-50/50 dark:bg-white/2 pb-6 px-8 pt-8">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-500/10 rounded-xl">
+                <Search className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-black text-foreground">Hierarchy Search</CardTitle>
+                <CardDescription className="font-medium">Filter the taxonomy registry</CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-8">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <div className="relative group">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5 group-focus-within:text-islamic-green-600 transition-colors" />
                   <Input
-                    placeholder="Search categories..."
+                    placeholder="Search by classification name or slug..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
+                    className="pl-12 h-14 rounded-2xl bg-zinc-100/50 dark:bg-background border-transparent focus:bg-white dark:focus:bg-zinc-800 focus:border-islamic-green-500 transition-all font-medium"
                   />
                 </div>
               </div>
@@ -361,63 +368,68 @@ export default function AdminCategoriesPage() {
         </Card>
 
         {/* Categories List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Categories</CardTitle>
-            <CardDescription>{parentCategories.length} main categories found</CardDescription>
+        <Card className="bg-card border-border/50 dark:border-white/5 shadow-2xl rounded-[2rem] overflow-hidden">
+          <CardHeader className="border-b border-border/50 bg-zinc-50/50 dark:bg-white/2 p-8 text-center sm:text-left">
+            <CardTitle className="text-2xl font-black text-foreground tracking-tight">Active Classifications</CardTitle>
+            <CardDescription className="font-medium mt-1">{parentCategories.length} root levels identified</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
+          <CardContent className="p-4 sm:p-8">
+            <div className="space-y-4">
               {parentCategories.map((category) => (
-                <div key={category._id} className="border rounded-lg">
+                <div key={category._id} className="border border-border/50 dark:border-white/5 rounded-[2rem] overflow-hidden bg-zinc-50/30 dark:bg-white/1 transition-all hover:bg-zinc-50/50 dark:hover:bg-white/2">
                   {/* Parent Category */}
-                  <div className="flex items-center justify-between p-4 hover:bg-gray-50">
-                    <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-between p-6">
+                    <div className="flex items-center gap-5">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => toggleExpanded(category._id)}
-                        className="p-1"
+                        className="h-10 w-10 p-0 rounded-xl hover:bg-zinc-200 dark:hover:bg-white/10"
                       >
                         {expandedCategories.has(category._id) ? (
-                          <ChevronDown className="h-4 w-4" />
+                          <ChevronDown className="h-5 w-5 text-foreground" />
                         ) : (
-                          <ChevronRight className="h-4 w-4" />
+                          <ChevronRight className="h-5 w-5 text-muted-foreground" />
                         )}
                       </Button>
-                      <Folder className="h-5 w-5 text-blue-500" />
+                      <div className="h-12 w-12 bg-blue-500/10 rounded-2xl flex items-center justify-center border border-blue-500/20 shadow-sm">
+                        <Folder className="h-6 w-6 text-blue-600" />
+                      </div>
                       <div>
-                        <div className="font-medium text-gray-900">
+                        <div className="font-black text-foreground text-lg tracking-tight">
                           {category.name}
                         </div>
+                        <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">Slug: {category.slug}</div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={category.isActive ? "default" : "secondary"}>
-                        {category.isActive ? "Active" : "Inactive"}
+                    <div className="flex items-center gap-4">
+                      <Badge className={`${category.isActive ? "bg-islamic-green-500/10 text-islamic-green-600" : "bg-zinc-200 dark:bg-white/5 text-muted-foreground"} border-none text-[9px] font-black uppercase tracking-widest h-6 px-3 rounded-lg shadow-sm`}>
+                        {category.isActive ? "Online" : "Terminated"}
                       </Badge>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-2">
                         <Button
                           variant="ghost"
                           size="sm"
+                          className="h-10 w-10 p-0 rounded-xl hover:bg-blue-500/10 hover:text-blue-600 transition-colors"
                           onClick={() => openViewDialog(category)}
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-5 w-5" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
+                          className="h-10 w-10 p-0 rounded-xl hover:bg-zinc-800 dark:hover:bg-white hover:text-background transition-all"
                           onClick={() => openEditDialog(category)}
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-5 w-5" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDeleteCategory(category._id)}
-                          className="text-red-600 hover:text-red-700"
+                          className="h-10 w-10 p-0 rounded-xl text-red-600 hover:text-red-700 hover:bg-red-500/10 transition-colors"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-5 w-5" />
                         </Button>
                       </div>
                     </div>
@@ -425,25 +437,30 @@ export default function AdminCategoriesPage() {
 
                   {/* Subcategories */}
                   {expandedCategories.has(category._id) && category.subcategories && (
-                    <div className="border-t bg-gray-50">
+                    <div className="border-t border-border/30 bg-white/5 dark:bg-black/5 divide-y divide-border/20 px-4 py-2">
                       {category.subcategories.map((subcategory) => (
-                        <div key={subcategory._id} className="flex items-center justify-between p-4 pl-12 hover:bg-gray-100">
-                          <div className="flex items-center gap-3">
-                            <FolderOpen className="h-4 w-4 text-green-500" />
+                        <div key={subcategory._id} className="flex items-center justify-between p-5 pl-14 hover:bg-zinc-100/50 dark:hover:bg-white/2 rounded-2xl transition-all group">
+                          <div className="flex items-center gap-4">
+                            <div className="h-1 w-4 bg-border/50 rounded-full" />
+                            <div className="p-2 bg-islamic-green-500/10 rounded-lg group-hover:scale-110 transition-transform">
+                              <FolderOpen className="h-4 w-4 text-islamic-green-600" />
+                            </div>
                             <div>
-                              <div className="font-medium text-gray-900">
-                                {subcategory.name}
-                              </div>
+                                <div className="font-bold text-foreground text-sm">
+                                  {subcategory.name}
+                                </div>
+                                <div className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">SUB-REF: {subcategory._id.slice(-6)}</div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant={subcategory.isActive ? "default" : "secondary"}>
-                              {subcategory.isActive ? "Active" : "Inactive"}
+                          <div className="flex items-center gap-4">
+                            <Badge className={`${subcategory.isActive ? "bg-islamic-green-500/10 text-islamic-green-600" : "bg-zinc-200 dark:bg-white/5 text-muted-foreground"} border-none text-[8px] font-black uppercase tracking-widest h-5 px-2 rounded-md`}>
+                              {subcategory.isActive ? "Active" : "Locked"}
                             </Badge>
                             <div className="flex items-center gap-1">
                               <Button
                                 variant="ghost"
                                 size="sm"
+                                className="h-9 w-9 p-0 rounded-lg hover:bg-blue-500/10 hover:text-blue-600"
                                 onClick={() => openViewDialog(subcategory)}
                               >
                                 <Eye className="h-4 w-4" />
@@ -451,6 +468,7 @@ export default function AdminCategoriesPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
+                                className="h-9 w-9 p-0 rounded-lg hover:bg-zinc-800 dark:hover:bg-white hover:text-background"
                                 onClick={() => openEditDialog(subcategory)}
                               >
                                 <Edit className="h-4 w-4" />
@@ -459,7 +477,7 @@ export default function AdminCategoriesPage() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleDeleteCategory(subcategory._id)}
-                                className="text-red-600 hover:text-red-700"
+                                className="h-9 w-9 p-0 rounded-lg text-red-600 hover:text-red-700 hover:bg-red-500/10"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -467,6 +485,11 @@ export default function AdminCategoriesPage() {
                           </div>
                         </div>
                       ))}
+                      {category.subcategories.length === 0 && (
+                        <div className="p-10 text-center">
+                           <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] opacity-50">Empty Subset Registry</p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -475,51 +498,62 @@ export default function AdminCategoriesPage() {
           </CardContent>
         </Card>
 
-        {/* Add Category Dialog */}
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Add New Category</DialogTitle>
-              <DialogDescription>
-                Create a new category for your products
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Add/Edit Category Dialog */}
+        <Dialog open={isAddDialogOpen || isEditDialogOpen} onOpenChange={(open) => { if(!open) { setIsAddDialogOpen(false); setIsEditDialogOpen(false); setSelectedCategory(null); resetForm(); } }}>
+          <DialogContent className="bg-background border border-border/50 shadow-[0_32px_128px_-16px_rgba(0,0,0,0.5)] rounded-[3rem] max-w-2xl w-full p-10">
+            <DialogHeader className="mb-8 text-left">
+              <div className="flex items-center gap-4">
+                <div className="h-14 w-14 rounded-2xl bg-islamic-green-500/10 flex items-center justify-center border border-islamic-green-500/20">
+                  <Plus className="h-7 w-7 text-islamic-green-600" />
+                </div>
                 <div>
-                  <Label htmlFor="name">Category Name *</Label>
+                  <DialogTitle className="text-3xl font-black text-foreground tracking-tighter">
+                   {isEditDialogOpen ? 'Update Classification' : 'New Classification'}
+                  </DialogTitle>
+                  <DialogDescription className="text-muted-foreground font-bold uppercase tracking-widest text-[10px] mt-1">Configure taxonomy parameters</DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Classification Name</Label>
                   <Input
                     id="name"
                     value={formData.name}
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
                     }
+                    placeholder="e.g. Traditional Sciences"
                     required
+                    className="h-14 rounded-2xl bg-zinc-100/50 dark:bg-white/5 border-transparent focus:bg-white dark:focus:bg-zinc-800 focus:border-islamic-green-500 transition-all px-5 font-bold"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="parent">Parent Category</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="parent" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Level Authority</Label>
                   <Select
                     value={formData.parent}
                     onValueChange={(value) =>
                       setFormData({ ...formData, parent: value })
                     }
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select parent category" />
+                    <SelectTrigger className="h-14 rounded-2xl bg-zinc-100/50 dark:bg-white/5 border-transparent px-5 font-bold focus:ring-islamic-green-600">
+                      <SelectValue placeholder="Select parent classification" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None (Main Category)</SelectItem>
-                      {categories.filter(cat => !cat.parent).map((category) => (
-                        <SelectItem key={category._id} value={category._id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
+                    <SelectContent className="bg-background border-border/50 rounded-2xl shadow-2xl">
+                      <SelectItem value="none" className="font-bold py-3">Root Authority (Main)</SelectItem>
+                      {categories
+                        .filter(cat => !cat.parent && cat._id !== selectedCategory?._id)
+                        .map((category) => (
+                          <SelectItem key={category._id} value={category._id} className="font-bold py-3">
+                            {category.name}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label htmlFor="sortOrder">Sort Order</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="sortOrder" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Priority Index</Label>
                   <Input
                     id="sortOrder"
                     type="number"
@@ -527,123 +561,39 @@ export default function AdminCategoriesPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, sortOrder: e.target.value })
                     }
+                    className="h-14 rounded-2xl bg-zinc-100/50 dark:bg-white/5 border-transparent focus:bg-white dark:focus:bg-zinc-800 focus:border-islamic-green-500 transition-all px-5 font-bold"
                   />
                 </div>
+                <div className="flex items-center justify-between p-5 bg-zinc-100/50 dark:bg-white/5 rounded-2xl border border-transparent mt-auto">
+                    <Label htmlFor="isActive" className="text-sm font-black text-foreground">Operational Status</Label>
+                    <Switch
+                      id="isActive"
+                      checked={formData.isActive}
+                      onCheckedChange={(checked) =>
+                        setFormData({ ...formData, isActive: checked })
+                      }
+                      className="data-[state=checked]:bg-islamic-green-600"
+                    />
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="isActive"
-                  checked={formData.isActive}
-                  onCheckedChange={(checked) =>
-                    setFormData({ ...formData, isActive: checked })
-                  }
-                />
-                <Label htmlFor="isActive">Active</Label>
-              </div>
-              <div className="flex justify-end space-x-2">
+              
+              <div className="flex justify-end gap-3 pt-6">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setIsAddDialogOpen(false)}
+                  className="h-14 px-8 rounded-2xl font-black text-[10px] uppercase tracking-widest border-border/50"
+                  onClick={() => { setIsAddDialogOpen(false); setIsEditDialogOpen(false); setSelectedCategory(null); resetForm(); }}
                 >
-                  Cancel
+                  Discard
                 </Button>
-                <Button type="submit" disabled={submitting}>
+                <Button type="submit" disabled={submitting} className="h-14 px-10 rounded-2xl font-black text-[10px] uppercase tracking-widest bg-foreground text-background hover:bg-islamic-green-600 hover:text-white transition-all shadow-xl">
                   {submitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating...
+                      Processing...
                     </>
                   ) : (
-                    "Create Category"
-                  )}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-
-        {/* Edit Category Dialog */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Edit Category</DialogTitle>
-              <DialogDescription>Update category information</DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="edit-name">Category Name *</Label>
-                  <Input
-                    id="edit-name"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit-parent">Parent Category</Label>
-                  <Select
-                    value={formData.parent}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, parent: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select parent category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None (Main Category)</SelectItem>
-                      {categories
-                        .filter(cat => !cat.parent && cat._id !== selectedCategory?._id)
-                        .map((category) => (
-                          <SelectItem key={category._id} value={category._id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="edit-sortOrder">Sort Order</Label>
-                  <Input
-                    id="edit-sortOrder"
-                    type="number"
-                    value={formData.sortOrder}
-                    onChange={(e) =>
-                      setFormData({ ...formData, sortOrder: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="edit-isActive"
-                  checked={formData.isActive}
-                  onCheckedChange={(checked) =>
-                    setFormData({ ...formData, isActive: checked })
-                  }
-                />
-                <Label htmlFor="edit-isActive">Active</Label>
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsEditDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={submitting}>
-                  {submitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Updating...
-                    </>
-                  ) : (
-                    "Update Category"
+                    isEditDialogOpen ? "Update Record" : "Execute Entry"
                   )}
                 </Button>
               </div>
@@ -653,72 +603,60 @@ export default function AdminCategoriesPage() {
 
         {/* View Category Dialog */}
         <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Category Details</DialogTitle>
-              <DialogDescription>
-                View complete category information
-              </DialogDescription>
+          <DialogContent className="bg-background border border-border/50 shadow-[0_32px_128px_-16px_rgba(0,0,0,0.5)] rounded-[3rem] max-w-2xl w-full p-10">
+            <DialogHeader className="mb-10 text-left">
+               <div className="flex items-center gap-4">
+                  <div className="h-14 w-14 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                     <Eye className="h-7 w-7 text-blue-600" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-3xl font-black text-foreground tracking-tighter">Classification Insight</DialogTitle>
+                    <DialogDescription className="text-muted-foreground font-bold uppercase tracking-widest text-[10px] mt-1">Deep analysis of taxonomy node</DialogDescription>
+                  </div>
+               </div>
             </DialogHeader>
             {selectedCategory && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium text-gray-500">
-                      Name
-                    </Label>
-                    <p className="text-gray-900">{selectedCategory.name}</p>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium text-gray-500">
-                      Slug
-                    </Label>
-                    <p className="text-gray-900">{selectedCategory.slug}</p>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium text-gray-500">
-                      Sort Order
-                    </Label>
-                    <p className="text-gray-900">{selectedCategory.sortOrder}</p>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium text-gray-500">
-                      Status
-                    </Label>
-                    <Badge variant={selectedCategory.isActive ? "default" : "secondary"}>
-                      {selectedCategory.isActive ? "Active" : "Inactive"}
-                    </Badge>
-                  </div>
+              <div className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {[
+                    { label: "Classification Ident", value: selectedCategory.name },
+                    { label: "URL Identifier (Slug)", value: selectedCategory.slug },
+                    { label: "Sequence Index", value: selectedCategory.sortOrder },
+                    { label: "Lifecycle Status", value: selectedCategory.isActive ? "Active" : "Inactive", isBadge: true },
+                    { label: "First Entry", value: new Date(selectedCategory.createdAt).toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric' }) },
+                  ].map((item, i) => (
+                    <div key={i} className="space-y-1.5 p-6 bg-zinc-50/50 dark:bg-white/2 border border-border/30 rounded-2xl">
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{item.label}</p>
+                      {item.isBadge ? (
+                        <Badge className={`${selectedCategory.isActive ? "bg-islamic-green-500/10 text-islamic-green-600" : "bg-red-500/10 text-red-600"} border-none text-[9px] font-black uppercase tracking-widest h-6 px-3 rounded-lg mt-1`}>{item.value}</Badge>
+                      ) : (
+                        <p className="text-base font-black text-foreground tracking-tight">{item.value}</p>
+                      )}
+                    </div>
+                  ))}
                 </div>
+                
                 {selectedCategory.subcategories && selectedCategory.subcategories.length > 0 && (
-                  <div>
-                    <Label className="text-sm font-medium text-gray-500">
-                      Subcategories
-                    </Label>
-                    <div className="mt-2 space-y-1">
+                  <div className="pt-4 px-2">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-4">Direct Genetic Subsets</p>
+                    <div className="flex flex-wrap gap-2">
                       {selectedCategory.subcategories.map((sub) => (
-                        <div key={sub._id} className="flex items-center gap-2">
-                          <FolderOpen className="h-4 w-4 text-green-500" />
-                          <span className="text-sm">{sub.name}</span>
+                        <div key={sub._id} className="flex items-center gap-2 bg-zinc-100/50 dark:bg-white/5 py-2.5 px-4 rounded-xl border border-border/30 shadow-sm">
+                          <FolderOpen className="h-4 w-4 text-islamic-green-600" />
+                          <span className="text-sm font-black text-foreground">{sub.name}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
-                <div>
-                  <Label className="text-sm font-medium text-gray-500">
-                    Created
-                  </Label>
-                  <p className="text-gray-900">
-                    {new Date(selectedCategory.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-                <div className="flex justify-end">
+
+                <div className="flex justify-end pt-6">
                   <Button
                     variant="outline"
+                    className="h-14 px-10 rounded-2xl font-black text-[10px] uppercase tracking-widest border-border/50 hover:bg-foreground hover:text-background transition-all"
                     onClick={() => setIsViewDialogOpen(false)}
                   >
-                    Close
+                    Close Analysis
                   </Button>
                 </div>
               </div>

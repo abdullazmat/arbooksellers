@@ -16,6 +16,11 @@ export interface IUser extends mongoose.Document {
     country: string;
     isDefault: boolean;
   }>;
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
+  isVerified: boolean;
+  verificationOTP?: string;
+  verificationOTPExpires?: Date;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -79,13 +84,21 @@ const userSchema = new mongoose.Schema<IUser>({
       default: false,
     },
   }],
+  resetPasswordToken: String,
+  resetPasswordExpires: Date,
+  isVerified: {
+    type: Boolean,
+    default: false,
+  },
+  verificationOTP: String,
+  verificationOTPExpires: Date,
 }, {
   timestamps: true,
 });
 
 // Hash password before saving
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
+  if (!this.isModified('password') || this.password.startsWith('$2a$') || this.password.startsWith('$2b$')) return next();
   
   try {
     const salt = await bcrypt.genSalt(12);

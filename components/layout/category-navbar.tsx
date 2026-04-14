@@ -3,13 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface Category {
   _id: string
@@ -115,47 +109,20 @@ export function CategoryNavbar() {
             className="flex items-center justify-center gap-2 overflow-x-auto scrollbar-hide flex-1"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {categories.map((category) => (
+            {categories
+              .filter(cat => !['sawab', 'digital quran'].includes(cat.name.toLowerCase()))
+              .map((category) => (
               <div key={category._id} className="flex-shrink-0">
-                {category.subcategories && category.subcategories.length > 0 ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 px-3 text-sm font-medium text-gray-700 hover:text-green-600 hover:bg-green-50 whitespace-nowrap"
-                      >
-                        {category.name}
-                        <ChevronDown className="ml-1 h-3 w-3" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-48">
-                      <DropdownMenuItem asChild>
-                        <Link href={`/products?category=${category._id}`} className="w-full">
-                          All {category.name}
-                        </Link>
-                      </DropdownMenuItem>
-                      {category.subcategories.map((subcategory) => (
-                        <DropdownMenuItem key={subcategory._id} asChild>
-                          <Link href={`/products?category=${subcategory._id}`} className="w-full">
-                            {subcategory.name}
-                          </Link>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    asChild
-                    className="h-8 px-3 text-sm font-medium text-gray-700 hover:text-green-600 hover:bg-green-50 whitespace-nowrap"
-                  >
-                    <Link href={`/products?category=${category._id}`}>
-                      {category.name}
-                    </Link>
-                  </Button>
-                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  asChild
+                  className="h-8 px-3 text-sm font-medium text-gray-700 hover:text-green-600 hover:bg-green-50 whitespace-nowrap"
+                >
+                  <Link href={`/products?category=${category._id}`}>
+                    {category.name}
+                  </Link>
+                </Button>
               </div>
             ))}
           </div>

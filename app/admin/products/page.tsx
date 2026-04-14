@@ -47,6 +47,7 @@ import {
   Package,
   Filter,
   Loader2,
+  ArrowRight
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -75,6 +76,11 @@ interface Product {
   pages?: number;
   paper?: string;
   binding?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  focusKeyword: string;
+  slug: string;
+  reviews?: { name: string; rating: number; content: string }[];
   category?: {
     _id: string;
     name: string;
@@ -90,6 +96,7 @@ interface Product {
 
 interface ProductFormData {
   title: string;
+  slug: string;
   author: string;
   price: string;
   originalPrice: string;
@@ -102,6 +109,10 @@ interface ProductFormData {
   pages: string;
   paper: string;
   binding: string;
+  metaTitle: string;
+  metaDescription: string;
+  focusKeyword: string;
+  reviews: { name: string; rating: number; content: string }[];
   category: string;
   subcategory: string;
 }
@@ -120,6 +131,7 @@ export default function AdminProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState<ProductFormData>({
     title: "",
+    slug: "",
     author: "",
     price: "",
     originalPrice: "",
@@ -132,6 +144,10 @@ export default function AdminProductsPage() {
     pages: "",
     paper: "",
     binding: "",
+    metaTitle: "",
+    metaDescription: "",
+    focusKeyword: "",
+    reviews: [],
     category: "",
     subcategory: "",
   });
@@ -243,6 +259,7 @@ export default function AdminProductsPage() {
   const resetForm = () => {
     setFormData({
       title: "",
+      slug: "",
       author: "",
       price: "",
       originalPrice: "",
@@ -255,6 +272,10 @@ export default function AdminProductsPage() {
       pages: "",
       paper: "",
       binding: "",
+      metaTitle: "",
+      metaDescription: "",
+      focusKeyword: "",
+      reviews: [],
       category: "",
       subcategory: "",
     });
@@ -269,6 +290,7 @@ export default function AdminProductsPage() {
     setSelectedProduct(product);
     setFormData({
       title: product.title,
+      slug: product.slug || "",
       author: product.author || "",
       price: product.price.toString(),
       originalPrice: product.originalPrice?.toString() || "",
@@ -281,6 +303,10 @@ export default function AdminProductsPage() {
       pages: product.pages?.toString() || "",
       paper: product.paper || "",
       binding: product.binding || "",
+      metaTitle: product.metaTitle || "",
+      metaDescription: product.metaDescription || "",
+      focusKeyword: product.focusKeyword || "",
+      reviews: product.reviews || [],
       category: product.category?._id || "",
       subcategory: product.subcategory?._id || "",
     });
@@ -290,6 +316,31 @@ export default function AdminProductsPage() {
   const openViewDialog = (product: Product) => {
     setSelectedProduct(product);
     setIsViewDialogOpen(true);
+  };
+
+  const addReview = () => {
+    setFormData({
+      ...formData,
+      reviews: [...formData.reviews, { name: "", rating: 5, content: "" }],
+    });
+  };
+
+  const removeReview = (index: number) => {
+    const newReviews = [...formData.reviews];
+    newReviews.splice(index, 1);
+    setFormData({
+      ...formData,
+      reviews: newReviews,
+    });
+  };
+
+  const updateReview = (index: number, field: string, value: any) => {
+    const newReviews = [...formData.reviews];
+    newReviews[index] = { ...newReviews[index], [field]: value };
+    setFormData({
+      ...formData,
+      reviews: newReviews,
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -482,7 +533,7 @@ export default function AdminProductsPage() {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
-            <p className="mt-2 text-gray-600">Loading products...</p>
+            <p className="mt-2 text-muted-foreground">Loading products...</p>
           </div>
         </div>
       </AdminLayout>
@@ -491,51 +542,60 @@ export default function AdminProductsPage() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="space-y-8">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Products</h1>
-            <p className="text-gray-600">Manage your product catalog</p>
+            <h1 className="text-4xl font-black text-foreground tracking-tight">Products</h1>
+            <p className="text-muted-foreground font-medium mt-1">Manage your storefront inventory and catalogs</p>
           </div>
           <Button
-            className="bg-green-600 hover:bg-green-700"
+            className="bg-foreground text-background hover:bg-islamic-green-600 hover:text-white h-14 rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl transition-all px-8"
             onClick={openAddDialog}
           >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Product
+            <Plus className="mr-2 h-5 w-5" />
+            Add New Product
           </Button>
         </div>
 
         {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Filters</CardTitle>
-            <CardDescription>Search products</CardDescription>
+        <Card className="bg-card border-border/50 dark:border-white/5 shadow-xl rounded-[2rem] overflow-hidden">
+          <CardHeader className="border-b border-border/50 bg-zinc-50/50 dark:bg-white/2 pb-6 px-8">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-islamic-green-500/10 rounded-xl">
+                <Filter className="h-5 w-5 text-islamic-green-600" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-black text-foreground">Quick Filters</CardTitle>
+                <CardDescription className="font-medium">Refine your product view</CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="flex flex-col sm:flex-row gap-4">
+          <CardContent className="p-8">
+            <div className="flex flex-col lg:flex-row gap-6">
               <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <div className="relative group">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground group-focus-within:text-islamic-green-600 h-5 w-5 transition-colors" />
                   <Input
-                    placeholder="Search products..."
+                    placeholder="Search by title, author, or SKU..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
+                    className="pl-12 h-14 rounded-2xl bg-zinc-100/50 dark:bg-background border-transparent focus:bg-white dark:focus:bg-zinc-800 focus:border-islamic-green-500 transition-all font-medium"
                   />
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <Button 
                   variant="outline" 
+                   className="h-14 rounded-2xl font-bold px-6 border-border/50 hover:border-islamic-green-500 transition-colors"
                   onClick={() => {
                     setLoading(true);
                     fetchProducts();
                   }}
                   disabled={loading}
                 >
-                  <Filter className="h-4 w-4" />
+                  <Filter className="mr-2 h-4 w-4" />
+                  Apply Filters
                 </Button>
               </div>
             </div>
@@ -543,173 +603,166 @@ export default function AdminProductsPage() {
         </Card>
 
         {/* Products Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Product List</CardTitle>
-            <CardDescription>{products.length} products found</CardDescription>
+        <Card className="bg-card border-border/50 dark:border-white/5 shadow-2xl rounded-[2rem] overflow-hidden">
+          <CardHeader className="border-b border-border/50 bg-zinc-50/50 dark:bg-white/2 p-8">
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="text-2xl font-black text-foreground tracking-tight">Product Catalog</CardTitle>
+                <CardDescription className="font-medium mt-1">Showing {totalProducts} active products in your store</CardDescription>
+              </div>
+              <Badge variant="outline" className="h-8 rounded-xl font-bold border-islamic-green-500/30 text-islamic-green-600 bg-islamic-green-500/10 px-4">
+                Total: {totalProducts}
+              </Badge>
+            </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Product</TableHead>
-                    <TableHead>Details</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Stock</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                <TableHeader className="bg-zinc-50/50 dark:bg-white/2">
+                  <TableRow className="hover:bg-transparent border-border/50 h-16">
+                    <TableHead className="px-8 font-black uppercase tracking-widest text-[10px] text-muted-foreground">Product</TableHead>
+                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Specifications</TableHead>
+                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Classification</TableHead>
+                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Pricing</TableHead>
+                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Inventory</TableHead>
+                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Status</TableHead>
+                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Added On</TableHead>
+                    <TableHead className="text-right px-8 font-black uppercase tracking-widest text-[10px] text-muted-foreground">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {products.map((product) => (
-                    <TableRow key={product._id}>
-                      <TableCell>
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                    <TableRow key={product._id} className="border-border/50 hover:bg-zinc-50/50 dark:hover:bg-white/2 transition-colors">
+                      <TableCell className="px-8 py-6">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-16 h-20 bg-zinc-100 dark:bg-background rounded-2xl flex items-center justify-center overflow-hidden border border-border/50 group shrink-0">
                             {product.images && product.images.length > 0 ? (
                               <img
                                 src={getProductImageUrl(product.images[0], "/placeholder.jpg")}
                                 alt={product.title}
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                 onError={(e) => {
                                   e.currentTarget.src = "/placeholder.jpg";
                                 }}
                               />
                             ) : (
-                              <Package className="h-5 w-5 text-gray-600" />
+                              <Package className="h-8 w-8 text-muted-foreground/30" />
                             )}
                           </div>
-                          <div>
-                            <div className="font-medium text-gray-900">
+                          <div className="min-w-0 max-w-[240px]">
+                            <div className="font-black text-foreground truncate group-hover:text-islamic-green-600 transition-colors">
                               {product.title}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-xs font-bold text-muted-foreground mt-1 uppercase tracking-wider">
                               by {product.author || "N/A"}
                             </div>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="text-sm space-y-1">
-                          {product.author && (
-                            <div>
-                              <span className="font-medium">Author:</span>{" "}
-                              {product.author}
-                            </div>
-                          )}
-                          {product.size && (
-                            <div>
-                              <span className="font-medium">Size:</span>{" "}
-                              {product.size}
+                        <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest space-y-2">
+                           {product.size && (
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-foreground/40 font-black">Size:</span>{" "}
+                              <span className="text-foreground/70">{product.size}</span>
                             </div>
                           )}
                           {product.pages && (
-                            <div>
-                              <span className="font-medium">Pages:</span>{" "}
-                              {product.pages}
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-foreground/40 font-black">Pages:</span>{" "}
+                              <span className="text-foreground/70">{product.pages}</span>
                             </div>
                           )}
-                          {product.paper && (
-                            <div>
-                              <span className="font-medium">Paper:</span>{" "}
-                              {product.paper}
-                            </div>
-                          )}
-                          {product.binding && (
-                            <div>
-                              <span className="font-medium">Binding:</span>{" "}
-                              {product.binding}
+                           {product.binding && (
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-foreground/40 font-black">Type:</span>{" "}
+                              <span className="text-foreground/70">{product.binding}</span>
                             </div>
                           )}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="text-sm space-y-1">
+                        <div className="text-[11px] font-black uppercase tracking-widest space-y-2.5">
                           {product.category && (
-                            <div>
-                              <span className="font-medium">Category:</span>{" "}
+                            <Badge variant="outline" className="bg-zinc-100 dark:bg-white/5 border-none text-[9px] h-6 px-3 rounded-lg text-foreground/70">
                               {product.category.name}
-                            </div>
+                            </Badge>
                           )}
                           {product.subcategory && (
-                            <div>
-                              <span className="font-medium">Subcategory:</span>{" "}
-                              {product.subcategory.name}
+                            <div className="text-muted-foreground flex items-center gap-1.5 text-[9px]">
+                               <ArrowRight className="h-3 w-3" />
+                               {product.subcategory.name}
                             </div>
-                          )}
-                          {!product.category && !product.subcategory && (
-                            <div className="text-gray-400">No category</div>
                           )}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="text-sm">
-                          <div className="font-medium">
+                        <div className="space-y-1">
+                          <div className="font-black text-foreground text-lg tracking-tight">
                             {formatCurrency(product.price)}
                           </div>
                           {product.originalPrice &&
                             product.originalPrice > product.price && (
-                              <div className="text-xs text-gray-500 line-through">
+                              <div className="text-xs text-muted-foreground font-bold line-through">
                                 {formatCurrency(product.originalPrice)}
                               </div>
                             )}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="text-sm">
-                          <div className="font-medium">
-                            {product.stockQuantity}
+                        <div className="space-y-1.5">
+                          <div className={`text-sm font-black ${product.stockQuantity < 10 ? 'text-red-500' : 'text-foreground'}`}>
+                            {product.stockQuantity} Units
                           </div>
-                          <div className="text-xs text-gray-500">
-                            {product.inStock ? "In Stock" : "Out of Stock"}
+                          <div className={`text-[9px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-md inline-block ${product.inStock ? 'bg-islamic-green-500/10 text-islamic-green-600' : 'bg-red-500/10 text-red-600'}`}>
+                            {product.inStock ? "Available" : "Stockout"}
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex flex-col gap-2 scale-90 origin-left">
                           {product.featured && (
-                            <Badge variant="secondary">Featured</Badge>
+                            <Badge className="bg-yellow-500/10 text-yellow-600 border-none font-black text-[9px] uppercase tracking-widest px-3 h-6 rounded-lg">Featured</Badge>
                           )}
                           <Badge
-                            variant={
-                              product.inStock ? "default" : "destructive"
-                            }
+                            className={`border-none font-black text-[9px] uppercase tracking-widest px-3 h-6 rounded-lg ${
+                              product.inStock ? "bg-islamic-green-500/10 text-islamic-green-600" : "bg-red-500/10 text-red-600"
+                            }`}
                           >
-                            {product.inStock ? "Active" : "Inactive"}
+                            {product.inStock ? "Live" : "Archived"}
                           </Badge>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                           {formatDate(product.createdAt)}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end space-x-2">
+                      <TableCell className="text-right px-8">
+                        <div className="flex items-center justify-end space-x-1.5">
                           <Button
                             variant="ghost"
                             size="sm"
+                            className="h-10 w-10 p-0 rounded-xl hover:bg-islamic-green-500/10 hover:text-islamic-green-600 transition-colors"
                             onClick={() => openViewDialog(product)}
                           >
-                            <Eye className="h-4 w-4" />
+                            <Eye className="h-5 w-5" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
+                            className="h-10 w-10 p-0 rounded-xl hover:bg-foreground hover:text-background transition-colors"
                             onClick={() => openEditDialog(product)}
                           >
-                            <Edit className="h-4 w-4" />
+                            <Edit className="h-5 w-5" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDeleteProduct(product._id)}
-                            className="text-red-600 hover:text-red-700"
+                            className="h-10 w-10 p-0 rounded-xl text-red-600 hover:text-white hover:bg-red-600 transition-colors"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-5 w-5" />
                           </Button>
                         </div>
                       </TableCell>
@@ -720,11 +773,11 @@ export default function AdminProductsPage() {
             </div>
 
             {/* Pagination */}
-            <div className="mt-6">
+            <div className="p-8 border-t border-border/50 bg-zinc-50/50 dark:bg-white/2">
               {loading && (
                 <div className="flex justify-center items-center py-4">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
-                  <span className="ml-2 text-sm text-gray-600">Loading products...</span>
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-islamic-green-600"></div>
+                  <span className="ml-3 text-xs font-black uppercase tracking-widest text-muted-foreground">Updating product list...</span>
                 </div>
               )}
               {totalPages > 1 && !loading && (
@@ -742,8 +795,8 @@ export default function AdminProductsPage() {
                         }}
                         className={
                           currentPage === 1
-                            ? "pointer-events-none opacity-50"
-                            : ""
+                            ? "pointer-events-none opacity-50 h-10 rounded-xl"
+                            : "h-10 rounded-xl bg-background border-border/50 font-bold"
                         }
                       />
                     </PaginationItem>
@@ -852,7 +905,7 @@ export default function AdminProductsPage() {
                 </Pagination>
               )}
 
-              <div className="text-center text-sm text-gray-600 mt-4">
+              <div className="text-center text-sm text-muted-foreground mt-4">
                 {loading ? (
                   <span>Loading...</span>
                 ) : (
@@ -874,25 +927,55 @@ export default function AdminProductsPage() {
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="title">Title *</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) =>
-                      setFormData({ ...formData, title: e.target.value })
-                    }
-                    required
-                  />
+                <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="title">Title *</Label>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => {
+                        const newTitle = e.target.value;
+                        const newSlug = newTitle
+                          .toLowerCase()
+                          .replace(/[^a-z0-9]+/g, "-")
+                          .replace(/(^-|-$)/g, "");
+                        setFormData({ 
+                          ...formData, 
+                          title: newTitle,
+                          slug: newSlug // Auto-generate slug on title change
+                        });
+                      }}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="slug">Product Slug (URL) *</Label>
+                    <Input
+                      id="slug"
+                      value={formData.slug}
+                      onChange={(e) =>
+                        setFormData({ 
+                          ...formData, 
+                          slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, "-") 
+                        })
+                      }
+                      placeholder="product-url-slug"
+                      required
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1 italic">
+                      This determines the URL of the product. Keep it short and keyword-rich.
+                    </p>
+                  </div>
                 </div>
                 <div>
-                  <Label htmlFor="author">Author</Label>
+                  <Label htmlFor="author">Author *</Label>
                   <Input
                     id="author"
                     value={formData.author}
                     onChange={(e) =>
                       setFormData({ ...formData, author: e.target.value })
                     }
+                    required
                   />
                 </div>
                 <div>
@@ -1058,6 +1141,97 @@ export default function AdminProductsPage() {
                   rows={4}
                 />
               </div>
+              <div className="pt-4 border-t border-border/50">
+                <h3 className="text-md font-semibold mb-3 text-foreground">SEO Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="metaTitle">Meta Title (Page Title)</Label>
+                    <Input
+                      id="metaTitle"
+                      value={formData.metaTitle}
+                      onChange={(e) =>
+                        setFormData({ ...formData, metaTitle: e.target.value })
+                      }
+                      placeholder="SEO Page Title"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="focusKeyword">Focus Keyword</Label>
+                    <Input
+                      id="focusKeyword"
+                      value={formData.focusKeyword}
+                      onChange={(e) =>
+                        setFormData({ ...formData, focusKeyword: e.target.value })
+                      }
+                      placeholder="Primary keyword for search ranking"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label htmlFor="metaDescription">Meta Description</Label>
+                    <Textarea
+                      id="metaDescription"
+                      value={formData.metaDescription}
+                      onChange={(e) =>
+                        setFormData({ ...formData, metaDescription: e.target.value })
+                      }
+                      rows={2}
+                      placeholder="Brief description for search engines"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="pt-4 border-t border-border/50">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-md font-semibold text-foreground">Custom Reviews</h3>
+                  <Button type="button" variant="outline" size="sm" onClick={addReview}>
+                    <Plus className="mr-2 h-4 w-4" /> Add Review
+                  </Button>
+                </div>
+                {formData.reviews.map((review, index) => (
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 p-4 border rounded-md relative">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute top-2 right-2 text-red-500 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => removeReview(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                    <div className="md:col-span-4">
+                      <Label>Reviewer Name</Label>
+                      <Input
+                        value={review.name}
+                        onChange={(e) => updateReview(index, "name", e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label>Rating (1-5)</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        max="5"
+                        value={review.rating}
+                        onChange={(e) => updateReview(index, "rating", Number(e.target.value))}
+                        required
+                      />
+                    </div>
+                    <div className="md:col-span-6">
+                      <Label>Review Content</Label>
+                      <Textarea
+                        value={review.content}
+                        onChange={(e) => updateReview(index, "content", e.target.value)}
+                        required
+                        rows={2}
+                      />
+                    </div>
+                  </div>
+                ))}
+                {formData.reviews.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4 border rounded-md border-dashed">No custom reviews added.</p>
+                )}
+              </div>
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
                   <Switch
@@ -1112,16 +1286,34 @@ export default function AdminProductsPage() {
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="edit-title">Title *</Label>
-                  <Input
-                    id="edit-title"
-                    value={formData.title}
-                    onChange={(e) =>
-                      setFormData({ ...formData, title: e.target.value })
-                    }
-                    required
-                  />
+                <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-title">Title *</Label>
+                    <Input
+                      id="edit-title"
+                      value={formData.title}
+                      onChange={(e) => {
+                        const newTitle = e.target.value;
+                        setFormData({ ...formData, title: newTitle });
+                      }}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-slug">Product Slug (URL) *</Label>
+                    <Input
+                      id="edit-slug"
+                      value={formData.slug}
+                      onChange={(e) =>
+                        setFormData({ 
+                          ...formData, 
+                          slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, "-") 
+                        })
+                      }
+                      placeholder="product-url-slug"
+                      required
+                    />
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="edit-author">Author</Label>
@@ -1298,6 +1490,97 @@ export default function AdminProductsPage() {
                   rows={4}
                 />
               </div>
+              <div className="pt-4 border-t border-border/50">
+                <h3 className="text-md font-semibold mb-3 text-foreground">SEO Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-metaTitle">Meta Title (Page Title)</Label>
+                    <Input
+                      id="edit-metaTitle"
+                      value={formData.metaTitle}
+                      onChange={(e) =>
+                        setFormData({ ...formData, metaTitle: e.target.value })
+                      }
+                      placeholder="SEO Page Title"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-focusKeywords">Focus Keywords</Label>
+                    <Input
+                      id="edit-focusKeywords"
+                      value={formData.focusKeywords}
+                      onChange={(e) =>
+                        setFormData({ ...formData, focusKeywords: e.target.value })
+                      }
+                      placeholder="keyword1, keyword2"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label htmlFor="edit-metaDescription">Meta Description</Label>
+                    <Textarea
+                      id="edit-metaDescription"
+                      value={formData.metaDescription}
+                      onChange={(e) =>
+                        setFormData({ ...formData, metaDescription: e.target.value })
+                      }
+                      rows={2}
+                      placeholder="Brief description for search engines"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="pt-4 border-t border-border/50">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-md font-semibold text-foreground">Custom Reviews</h3>
+                  <Button type="button" variant="outline" size="sm" onClick={addReview}>
+                    <Plus className="mr-2 h-4 w-4" /> Add Review
+                  </Button>
+                </div>
+                {formData.reviews.map((review, index) => (
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 p-4 border rounded-md relative">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute top-2 right-2 text-red-500 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => removeReview(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                    <div className="md:col-span-4">
+                      <Label>Reviewer Name</Label>
+                      <Input
+                        value={review.name}
+                        onChange={(e) => updateReview(index, "name", e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label>Rating (1-5)</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        max="5"
+                        value={review.rating}
+                        onChange={(e) => updateReview(index, "rating", Number(e.target.value))}
+                        required
+                      />
+                    </div>
+                    <div className="md:col-span-6">
+                      <Label>Review Content</Label>
+                      <Textarea
+                        value={review.content}
+                        onChange={(e) => updateReview(index, "content", e.target.value)}
+                        required
+                        rows={2}
+                      />
+                    </div>
+                  </div>
+                ))}
+                {formData.reviews.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4 border rounded-md border-dashed">No custom reviews added.</p>
+                )}
+              </div>
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
                   <Switch
@@ -1356,79 +1639,93 @@ export default function AdminProductsPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-sm font-medium text-gray-500">
+                    <Label className="text-sm font-medium text-muted-foreground">
                       Title
                     </Label>
-                    <p className="text-gray-900">{selectedProduct.title}</p>
+                    <p className="text-foreground">{selectedProduct.title}</p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-gray-500">
+                    <Label className="text-sm font-medium text-muted-foreground">
+                      Slug (URL)
+                    </Label>
+                    <p className="text-foreground font-mono text-xs">{selectedProduct.slug}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">
+                      Focus Keyword
+                    </Label>
+                    <p className="text-foreground">
+                      {selectedProduct.focusKeyword || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">
                       Author
                     </Label>
-                    <p className="text-gray-900">
+                    <p className="text-foreground">
                       {selectedProduct.author || "N/A"}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-gray-500">
+                    <Label className="text-sm font-medium text-muted-foreground">
                       Stock Quantity
                     </Label>
-                    <p className="text-gray-900">
+                    <p className="text-foreground">
                       {selectedProduct.stockQuantity}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-gray-500">
+                    <Label className="text-sm font-medium text-muted-foreground">
                       Price
                     </Label>
-                    <p className="text-gray-900">
+                    <p className="text-foreground">
                       {formatCurrency(selectedProduct.price)}
                     </p>
                   </div>
                   {selectedProduct.originalPrice && (
                     <div>
-                      <Label className="text-sm font-medium text-gray-500">
+                      <Label className="text-sm font-medium text-muted-foreground">
                         Original Price
                       </Label>
-                      <p className="text-gray-900 line-through">
+                      <p className="text-foreground line-through">
                         {formatCurrency(selectedProduct.originalPrice)}
                       </p>
                     </div>
                   )}
                   <div>
-                    <Label className="text-sm font-medium text-gray-500">
+                    <Label className="text-sm font-medium text-muted-foreground">
                       Size
                     </Label>
-                    <p className="text-gray-900">
+                    <p className="text-foreground">
                       {selectedProduct.size || "N/A"}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-gray-500">
+                    <Label className="text-sm font-medium text-muted-foreground">
                       Pages
                     </Label>
-                    <p className="text-gray-900">
+                    <p className="text-foreground">
                       {selectedProduct.pages || "N/A"}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-gray-500">
+                    <Label className="text-sm font-medium text-muted-foreground">
                       Paper
                     </Label>
-                    <p className="text-gray-900">
+                    <p className="text-foreground">
                       {selectedProduct.paper || "N/A"}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-gray-500">
+                    <Label className="text-sm font-medium text-muted-foreground">
                       Binding
                     </Label>
-                    <p className="text-gray-900">
+                    <p className="text-foreground">
                       {selectedProduct.binding || "N/A"}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-gray-500">
+                    <Label className="text-sm font-medium text-muted-foreground">
                       Status
                     </Label>
                     <div className="flex items-center space-x-2">
@@ -1447,10 +1744,10 @@ export default function AdminProductsPage() {
                 </div>
                 {selectedProduct.description && (
                   <div>
-                    <Label className="text-sm font-medium text-gray-500">
+                    <Label className="text-sm font-medium text-muted-foreground">
                       Description
                     </Label>
-                    <p className="text-gray-900">
+                    <p className="text-foreground">
                       {selectedProduct.description}
                     </p>
                   </div>
@@ -1458,13 +1755,13 @@ export default function AdminProductsPage() {
                 {selectedProduct.images &&
                   selectedProduct.images.length > 0 && (
                     <div>
-                      <Label className="text-sm font-medium text-gray-500">
+                      <Label className="text-sm font-medium text-muted-foreground">
                         Images
                       </Label>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-3">
                         {selectedProduct.images.map((image, index) => (
                           <div key={index} className="image-preview-item">
-                            <div className="aspect-square rounded-lg overflow-hidden border border-gray-200">
+                            <div className="aspect-square rounded-lg overflow-hidden border border-border/50">
                               <img
                                 src={getProductImageUrl(image, "/placeholder.jpg")}
                                 alt={`Product ${index + 1}`}
@@ -1487,10 +1784,10 @@ export default function AdminProductsPage() {
                     </div>
                   )}
                 <div>
-                  <Label className="text-sm font-medium text-gray-500">
+                  <Label className="text-sm font-medium text-muted-foreground">
                     Created
                   </Label>
-                  <p className="text-gray-900">
+                  <p className="text-foreground">
                     {formatDate(selectedProduct.createdAt)}
                   </p>
                 </div>

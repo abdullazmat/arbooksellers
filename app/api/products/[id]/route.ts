@@ -13,9 +13,15 @@ export async function GET(
 
     const { id } = await params;
     
+    // Determine if we should query by ID or Slug
+    const isObjectId = mongoose.Types.ObjectId.isValid(id);
+    const matchQuery = isObjectId 
+      ? { _id: new mongoose.Types.ObjectId(id) } 
+      : { slug: id.toLowerCase().trim() };
+
     // Get product with rating aggregation
     const products = await Product.aggregate([
-      { $match: { _id: new mongoose.Types.ObjectId(id) } },
+      { $match: matchQuery },
       {
         $lookup: {
           from: 'comments',

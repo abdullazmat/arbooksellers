@@ -2,7 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import Order from "@/models/Order";
 import { verifyToken } from "@/lib/auth";
-import { generateOrderNumber } from "@/lib/utils";
+import { generateOrderNumber, formatPrice } from "@/lib/utils";
+import nodemailer from "nodemailer";
+import { APP_CONFIG } from "@/lib/config";
+
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || "",
+  port: parseInt(process.env.SMTP_PORT || "587"),
+  secure: process.env.SMTP_SECURE === "true",
+  auth: {
+    user: process.env.SMTP_USER || "contact@arbooksellers.com",
+    pass: process.env.SMTP_PASSWORD || "",
+  },
+});
 
 // POST - Create new order
 export async function POST(request: NextRequest) {
@@ -91,61 +103,65 @@ export async function POST(request: NextRequest) {
     
     // Create and save the order
     const order = new Order(orderDataWithNumber);
+    let savedOrder;
     
     try {
       await order.save();
-      
-      // Fetch the saved order to ensure all fields are present
-      const savedOrder = await Order.findById(order._id);
+      savedOrder = await Order.findById(order._id).lean();
       
       if (!savedOrder?.orderNumber) {
-        console.error('CRITICAL: Order number still missing after save');
         throw new Error('Failed to save order number');
       }
-      
-      return NextResponse.json({
-        message: 'Order created successfully',
-        order: savedOrder,
-      }, { status: 201 });
-      
     } catch (saveError: any) {
       console.error('Error saving order:', saveError);
-      
-      // If there's a duplicate key error, try with a different order number
       if (saveError.code === 11000) {
-        console.error('Duplicate order number error - trying again');
-        
-        // Generate a new order number
         const newOrderNumber = generateOrderNumber();
-        
-        try {
-          // Update the order with new order number
-          order.orderNumber = newOrderNumber;
-          await order.save();
-          
-          // Fetch the saved order
-          const retryOrder = await Order.findById(order._id);
-          
-          if (retryOrder && retryOrder.orderNumber) {
-            return NextResponse.json({
-              message: 'Order created successfully',
-              order: retryOrder,
-            }, { status: 201 });
-          } else {
-            throw new Error('Failed to save order with new order number');
-          }
-        } catch (retryError) {
-          console.error('Retry failed:', retryError);
-          throw retryError;
-        }
+        order.orderNumber = newOrderNumber;
+        await order.save();
+        savedOrder = await Order.findById(order._id).lean();
+      } else {
+        throw saveError;
       }
-      
-      throw saveError;
     }
+
+    // Send Emails (Don't await to avoid blocking the user response)
+    const sendEmails = async () => {
+      try {
+        const { getOrderConfirmationEmail, getAdminOrderNotificationEmail } = await import('@/lib/email-templates');
+        
+        // 1. Email to Customer
+        await transporter.sendMail({
+          from: `"AR Book Sellers" <${process.env.SMTP_USER || "contact@arbooksellers.com"}>`,
+          to: savedOrder.shippingAddress.email,
+          subject: `Order Confirmed: #${savedOrder.orderNumber} - AR Book Sellers`,
+          html: getOrderConfirmationEmail(savedOrder),
+        });
+
+        // 2. Email to Admin
+        await transporter.sendMail({
+          from: `"System Notification" <${process.env.SMTP_USER || "contact@arbooksellers.com"}>`,
+          to: "contact@arbooksellers.com",
+          subject: `NEW ORDER: #${savedOrder.orderNumber} from ${savedOrder.shippingAddress.fullName}`,
+          html: getAdminOrderNotificationEmail(savedOrder),
+        });
+
+      } catch (err: any) {
+        console.error('Email notification failed:', err.message);
+      }
+    };
+
+    // Execute email sending in background
+    sendEmails();
+
+    return NextResponse.json({
+      message: 'Order created successfully',
+      order: savedOrder,
+    }, { status: 201 });
+
   } catch (error: any) {
     console.error("Create order error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: error.message || "Internal server error" },
       { status: 500 }
     );
   }

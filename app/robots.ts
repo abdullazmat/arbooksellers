@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/admin/', '/dashboard/', '/api/'],
     },
-    sitemap: 'https://quran-ecommerce.com/sitemap.xml',
+    sitemap: `${process.env.NEXT_PUBLIC_APP_URL || 'https://arbooksellers.com'}/sitemap.xml`,
   }
 }

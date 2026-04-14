@@ -169,8 +169,8 @@ export default function NewsletterPage() {
       <div className="p-6 space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Newsletter Management</h1>
-            <p className="text-gray-600 mt-2">Manage newsletter subscriptions and subscriber data</p>
+            <h1 className="text-3xl font-bold text-foreground">Newsletter Management</h1>
+            <p className="text-muted-foreground mt-2">Manage newsletter subscriptions and subscriber data</p>
           </div>
           <Button onClick={exportSubscriptions} className="bg-green-600 hover:bg-green-700">
             <Download className="h-4 w-4 mr-2" />
@@ -223,7 +223,7 @@ export default function NewsletterPage() {
           <CardContent className="p-6">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
                 <Input
                   placeholder="Search by email or name..."
                   value={search}
@@ -264,12 +264,12 @@ export default function NewsletterPage() {
             {loading ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
-                <p className="mt-2 text-gray-600">Loading subscriptions...</p>
+                <p className="mt-2 text-muted-foreground">Loading subscriptions...</p>
               </div>
             ) : subscriptions.length === 0 ? (
               <div className="text-center py-8">
-                <Mail className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">No subscriptions found</p>
+                <Mail className="h-12 w-12 text-muted-foreground/80 mx-auto mb-4" />
+                <p className="text-muted-foreground">No subscriptions found</p>
               </div>
             ) : (
               <>
@@ -427,7 +427,7 @@ export default function NewsletterPage() {
                       </PaginationContent>
                     </Pagination>
                     
-                    <div className="text-center text-sm text-gray-600 mt-4">
+                    <div className="text-center text-sm text-muted-foreground mt-4">
                       Page {currentPage} of {totalPages} • {subscriptions.length} subscriptions per page
                     </div>
                   </div>
@@ -444,32 +444,32 @@ export default function NewsletterPage() {
               <h3 className="text-lg font-semibold mb-4">Subscription Details</h3>
               <div className="space-y-3">
                 <div>
-                  <label className="text-sm font-medium text-gray-600">Email:</label>
-                  <p className="text-gray-900">{selectedSubscription.email}</p>
+                  <label className="text-sm font-medium text-muted-foreground">Email:</label>
+                  <p className="text-foreground">{selectedSubscription.email}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-600">Name:</label>
-                  <p className="text-gray-900">{selectedSubscription.name || 'Not provided'}</p>
+                  <label className="text-sm font-medium text-muted-foreground">Name:</label>
+                  <p className="text-foreground">{selectedSubscription.name || 'Not provided'}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-600">Status:</label>
+                  <label className="text-sm font-medium text-muted-foreground">Status:</label>
                   <Badge variant={selectedSubscription.subscribed ? 'default' : 'secondary'}>
                     {selectedSubscription.subscribed ? 'Subscribed' : 'Unsubscribed'}
                   </Badge>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-600">Subscribed Date:</label>
-                  <p className="text-gray-900">{formatDate(selectedSubscription.subscribedAt)}</p>
+                  <label className="text-sm font-medium text-muted-foreground">Subscribed Date:</label>
+                  <p className="text-foreground">{formatDate(selectedSubscription.subscribedAt)}</p>
                 </div>
                 {selectedSubscription.unsubscribedAt && (
                   <div>
-                    <label className="text-sm font-medium text-gray-600">Unsubscribed Date:</label>
-                    <p className="text-gray-900">{formatDate(selectedSubscription.unsubscribedAt)}</p>
+                    <label className="text-sm font-medium text-muted-foreground">Unsubscribed Date:</label>
+                    <p className="text-foreground">{formatDate(selectedSubscription.unsubscribedAt)}</p>
                   </div>
                 )}
                 <div>
-                  <label className="text-sm font-medium text-gray-600">Created Date:</label>
-                  <p className="text-gray-900">{formatDate(selectedSubscription.createdAt)}</p>
+                  <label className="text-sm font-medium text-muted-foreground">Created Date:</label>
+                  <p className="text-foreground">{formatDate(selectedSubscription.createdAt)}</p>
                 </div>
               </div>
               <div className="flex gap-2 mt-6">
