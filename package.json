@@ -4,14 +4,20 @@
   "private": true,
   "scripts": {
     "build": "next build",
+    "build:cpanel": "next build",
     "dev": "next dev",
     "lint": "next lint",
     "start": "node server.js",
+    "start:cpanel": "node server.js",
     "seed": "tsx scripts/seed-database.ts",
     "migrate": "tsx scripts/migrate-order-numbers.ts",
     "migrate:images": "tsx scripts/migrate-product-images.ts",
     "update:image-urls": "tsx scripts/update-product-image-urls.ts",
     "migrate:image-base-url": "tsx scripts/migrate-product-image-base-url.ts"
+  },
+  "engines": {
+    "node": ">=18.18.0 <23",
+    "npm": ">=9"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

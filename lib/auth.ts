@@ -1,8 +1,20 @@
 import jwt from "jsonwebtoken";
 import { NextRequest } from "next/server";
 
-const JWT_SECRET =
-  process.env.JWT_SECRET || "islamic-books-jwt-secret-key-2024-very-secure";
+const JWT_SECRET = process.env.JWT_SECRET;
+const DEV_FALLBACK_JWT_SECRET = "islamic-books-jwt-secret-key-2024-very-secure";
+
+function getJwtSecret(): string {
+  if (JWT_SECRET) {
+    return JWT_SECRET;
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("JWT_SECRET is required in production environment");
+  }
+
+  return DEV_FALLBACK_JWT_SECRET;
+}
 
 export interface DecodedToken {
   userId: string;
@@ -18,7 +30,7 @@ export interface AuthResult {
 
 export async function verifyToken(token: string): Promise<DecodedToken | null> {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
+    const decoded = jwt.verify(token, getJwtSecret()) as DecodedToken;
     return decoded;
   } catch (error) {
     return null;
@@ -30,7 +42,7 @@ export function generateToken(payload: {
   email: string;
   role: string;
 }): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: "7d" });
 }
 
 export function verifyAuth(request: NextRequest): AuthResult | null {
@@ -50,7 +62,7 @@ export function verifyAuth(request: NextRequest): AuthResult | null {
     // For API routes, we need to verify the token synchronously
     // Since this is a server-side function, we can use the synchronous version
     try {
-      const decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
+      const decoded = jwt.verify(token, getJwtSecret()) as DecodedToken;
       return {
         userId: decoded.userId,
         email: decoded.email,

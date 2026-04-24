@@ -47,7 +47,8 @@ import {
   Package,
   Filter,
   Loader2,
-  ArrowRight
+  ArrowRight,
+  ExternalLink,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -59,7 +60,11 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { formatPrice, clearExpiredAdminTokens, getProductImageUrl } from "@/lib/utils";
+import {
+  formatPrice,
+  clearExpiredAdminTokens,
+  getProductImageUrl,
+} from "@/lib/utils";
 
 interface Product {
   _id: string;
@@ -435,13 +440,13 @@ export default function AdminProductsPage() {
           throw new Error(
             `Server error: ${response.status} - ${responseText.substring(
               0,
-              200
-            )}`
+              200,
+            )}`,
           );
         }
         console.error("API Error:", errorData);
         throw new Error(
-          errorData.details || errorData.error || "Failed to save product"
+          errorData.details || errorData.error || "Failed to save product",
         );
       }
 
@@ -546,8 +551,12 @@ export default function AdminProductsPage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-4xl font-black text-foreground tracking-tight">Products</h1>
-            <p className="text-muted-foreground font-medium mt-1">Manage your storefront inventory and catalogs</p>
+            <h1 className="text-4xl font-black text-foreground tracking-tight">
+              Products
+            </h1>
+            <p className="text-muted-foreground font-medium mt-1">
+              Manage your storefront inventory and catalogs
+            </p>
           </div>
           <Button
             className="bg-foreground text-background hover:bg-islamic-green-600 hover:text-white h-14 rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl transition-all px-8"
@@ -566,8 +575,12 @@ export default function AdminProductsPage() {
                 <Filter className="h-5 w-5 text-islamic-green-600" />
               </div>
               <div>
-                <CardTitle className="text-xl font-black text-foreground">Quick Filters</CardTitle>
-                <CardDescription className="font-medium">Refine your product view</CardDescription>
+                <CardTitle className="text-xl font-black text-foreground">
+                  Quick Filters
+                </CardTitle>
+                <CardDescription className="font-medium">
+                  Refine your product view
+                </CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -585,9 +598,9 @@ export default function AdminProductsPage() {
                 </div>
               </div>
               <div className="flex gap-3">
-                <Button 
-                  variant="outline" 
-                   className="h-14 rounded-2xl font-bold px-6 border-border/50 hover:border-islamic-green-500 transition-colors"
+                <Button
+                  variant="outline"
+                  className="h-14 rounded-2xl font-bold px-6 border-border/50 hover:border-islamic-green-500 transition-colors"
                   onClick={() => {
                     setLoading(true);
                     fetchProducts();
@@ -607,10 +620,17 @@ export default function AdminProductsPage() {
           <CardHeader className="border-b border-border/50 bg-zinc-50/50 dark:bg-white/2 p-8">
             <div className="flex justify-between items-center">
               <div>
-                <CardTitle className="text-2xl font-black text-foreground tracking-tight">Product Catalog</CardTitle>
-                <CardDescription className="font-medium mt-1">Showing {totalProducts} active products in your store</CardDescription>
+                <CardTitle className="text-2xl font-black text-foreground tracking-tight">
+                  Product Catalog
+                </CardTitle>
+                <CardDescription className="font-medium mt-1">
+                  Showing {totalProducts} active products in your store
+                </CardDescription>
               </div>
-              <Badge variant="outline" className="h-8 rounded-xl font-bold border-islamic-green-500/30 text-islamic-green-600 bg-islamic-green-500/10 px-4">
+              <Badge
+                variant="outline"
+                className="h-8 rounded-xl font-bold border-islamic-green-500/30 text-islamic-green-600 bg-islamic-green-500/10 px-4"
+              >
                 Total: {totalProducts}
               </Badge>
             </div>
@@ -620,25 +640,47 @@ export default function AdminProductsPage() {
               <Table>
                 <TableHeader className="bg-zinc-50/50 dark:bg-white/2">
                   <TableRow className="hover:bg-transparent border-border/50 h-16">
-                    <TableHead className="px-8 font-black uppercase tracking-widest text-[10px] text-muted-foreground">Product</TableHead>
-                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Specifications</TableHead>
-                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Classification</TableHead>
-                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Pricing</TableHead>
-                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Inventory</TableHead>
-                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Status</TableHead>
-                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Added On</TableHead>
-                    <TableHead className="text-right px-8 font-black uppercase tracking-widest text-[10px] text-muted-foreground">Actions</TableHead>
+                    <TableHead className="px-8 font-black uppercase tracking-widest text-[10px] text-muted-foreground">
+                      Product
+                    </TableHead>
+                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">
+                      Specifications
+                    </TableHead>
+                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">
+                      Classification
+                    </TableHead>
+                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">
+                      Pricing
+                    </TableHead>
+                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">
+                      Inventory
+                    </TableHead>
+                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">
+                      Status
+                    </TableHead>
+                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">
+                      Added On
+                    </TableHead>
+                    <TableHead className="text-right px-8 font-black uppercase tracking-widest text-[10px] text-muted-foreground">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {products.map((product) => (
-                    <TableRow key={product._id} className="border-border/50 hover:bg-zinc-50/50 dark:hover:bg-white/2 transition-colors">
+                    <TableRow
+                      key={product._id}
+                      className="border-border/50 hover:bg-zinc-50/50 dark:hover:bg-white/2 transition-colors"
+                    >
                       <TableCell className="px-8 py-6">
                         <div className="flex items-center space-x-4">
                           <div className="w-16 h-20 bg-zinc-100 dark:bg-background rounded-2xl flex items-center justify-center overflow-hidden border border-border/50 group shrink-0">
                             {product.images && product.images.length > 0 ? (
                               <img
-                                src={getProductImageUrl(product.images[0], "/placeholder.jpg")}
+                                src={getProductImageUrl(
+                                  product.images[0],
+                                  "/placeholder.jpg",
+                                )}
                                 alt={product.title}
                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                 onError={(e) => {
@@ -661,22 +703,34 @@ export default function AdminProductsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest space-y-2">
-                           {product.size && (
+                          {product.size && (
                             <div className="flex items-center gap-1.5">
-                              <span className="text-foreground/40 font-black">Size:</span>{" "}
-                              <span className="text-foreground/70">{product.size}</span>
+                              <span className="text-foreground/40 font-black">
+                                Size:
+                              </span>{" "}
+                              <span className="text-foreground/70">
+                                {product.size}
+                              </span>
                             </div>
                           )}
                           {product.pages && (
                             <div className="flex items-center gap-1.5">
-                              <span className="text-foreground/40 font-black">Pages:</span>{" "}
-                              <span className="text-foreground/70">{product.pages}</span>
+                              <span className="text-foreground/40 font-black">
+                                Pages:
+                              </span>{" "}
+                              <span className="text-foreground/70">
+                                {product.pages}
+                              </span>
                             </div>
                           )}
-                           {product.binding && (
+                          {product.binding && (
                             <div className="flex items-center gap-1.5">
-                              <span className="text-foreground/40 font-black">Type:</span>{" "}
-                              <span className="text-foreground/70">{product.binding}</span>
+                              <span className="text-foreground/40 font-black">
+                                Type:
+                              </span>{" "}
+                              <span className="text-foreground/70">
+                                {product.binding}
+                              </span>
                             </div>
                           )}
                         </div>
@@ -684,14 +738,17 @@ export default function AdminProductsPage() {
                       <TableCell>
                         <div className="text-[11px] font-black uppercase tracking-widest space-y-2.5">
                           {product.category && (
-                            <Badge variant="outline" className="bg-zinc-100 dark:bg-white/5 border-none text-[9px] h-6 px-3 rounded-lg text-foreground/70">
+                            <Badge
+                              variant="outline"
+                              className="bg-zinc-100 dark:bg-white/5 border-none text-[9px] h-6 px-3 rounded-lg text-foreground/70"
+                            >
                               {product.category.name}
                             </Badge>
                           )}
                           {product.subcategory && (
                             <div className="text-muted-foreground flex items-center gap-1.5 text-[9px]">
-                               <ArrowRight className="h-3 w-3" />
-                               {product.subcategory.name}
+                              <ArrowRight className="h-3 w-3" />
+                              {product.subcategory.name}
                             </div>
                           )}
                         </div>
@@ -711,10 +768,14 @@ export default function AdminProductsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1.5">
-                          <div className={`text-sm font-black ${product.stockQuantity < 10 ? 'text-red-500' : 'text-foreground'}`}>
+                          <div
+                            className={`text-sm font-black ${product.stockQuantity < 10 ? "text-red-500" : "text-foreground"}`}
+                          >
                             {product.stockQuantity} Units
                           </div>
-                          <div className={`text-[9px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-md inline-block ${product.inStock ? 'bg-islamic-green-500/10 text-islamic-green-600' : 'bg-red-500/10 text-red-600'}`}>
+                          <div
+                            className={`text-[9px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-md inline-block ${product.inStock ? "bg-islamic-green-500/10 text-islamic-green-600" : "bg-red-500/10 text-red-600"}`}
+                          >
                             {product.inStock ? "Available" : "Stockout"}
                           </div>
                         </div>
@@ -722,11 +783,15 @@ export default function AdminProductsPage() {
                       <TableCell>
                         <div className="flex flex-col gap-2 scale-90 origin-left">
                           {product.featured && (
-                            <Badge className="bg-yellow-500/10 text-yellow-600 border-none font-black text-[9px] uppercase tracking-widest px-3 h-6 rounded-lg">Featured</Badge>
+                            <Badge className="bg-yellow-500/10 text-yellow-600 border-none font-black text-[9px] uppercase tracking-widest px-3 h-6 rounded-lg">
+                              Featured
+                            </Badge>
                           )}
                           <Badge
                             className={`border-none font-black text-[9px] uppercase tracking-widest px-3 h-6 rounded-lg ${
-                              product.inStock ? "bg-islamic-green-500/10 text-islamic-green-600" : "bg-red-500/10 text-red-600"
+                              product.inStock
+                                ? "bg-islamic-green-500/10 text-islamic-green-600"
+                                : "bg-red-500/10 text-red-600"
                             }`}
                           >
                             {product.inStock ? "Live" : "Archived"}
@@ -740,6 +805,22 @@ export default function AdminProductsPage() {
                       </TableCell>
                       <TableCell className="text-right px-8">
                         <div className="flex items-center justify-end space-x-1.5">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            asChild
+                            className="h-10 w-10 p-0 rounded-xl hover:bg-islamic-green-500/10 hover:text-islamic-green-600 transition-colors"
+                          >
+                            <a
+                              href={`/products/${product.slug || product._id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              aria-label={`Open ${product.title} in storefront`}
+                              title="Open product page"
+                            >
+                              <ExternalLink className="h-5 w-5" />
+                            </a>
+                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -777,7 +858,9 @@ export default function AdminProductsPage() {
               {loading && (
                 <div className="flex justify-center items-center py-4">
                   <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-islamic-green-600"></div>
-                  <span className="ml-3 text-xs font-black uppercase tracking-widest text-muted-foreground">Updating product list...</span>
+                  <span className="ml-3 text-xs font-black uppercase tracking-widest text-muted-foreground">
+                    Updating product list...
+                  </span>
                 </div>
               )}
               {totalPages > 1 && !loading && (
@@ -891,7 +974,9 @@ export default function AdminProductsPage() {
                           e.preventDefault();
                           if (currentPage < totalPages) {
                             setLoading(true);
-                            setCurrentPage(Math.min(totalPages, currentPage + 1));
+                            setCurrentPage(
+                              Math.min(totalPages, currentPage + 1),
+                            );
                           }
                         }}
                         className={
@@ -909,7 +994,10 @@ export default function AdminProductsPage() {
                 {loading ? (
                   <span>Loading...</span>
                 ) : (
-                  <span>Page {currentPage} of {totalPages} • {products.length} of {totalProducts} products</span>
+                  <span>
+                    Page {currentPage} of {totalPages} • {products.length} of{" "}
+                    {totalProducts} products
+                  </span>
                 )}
               </div>
             </div>
@@ -939,10 +1027,10 @@ export default function AdminProductsPage() {
                           .toLowerCase()
                           .replace(/[^a-z0-9]+/g, "-")
                           .replace(/(^-|-$)/g, "");
-                        setFormData({ 
-                          ...formData, 
+                        setFormData({
+                          ...formData,
                           title: newTitle,
-                          slug: newSlug // Auto-generate slug on title change
+                          slug: newSlug, // Auto-generate slug on title change
                         });
                       }}
                       required
@@ -954,16 +1042,19 @@ export default function AdminProductsPage() {
                       id="slug"
                       value={formData.slug}
                       onChange={(e) =>
-                        setFormData({ 
-                          ...formData, 
-                          slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, "-") 
+                        setFormData({
+                          ...formData,
+                          slug: e.target.value
+                            .toLowerCase()
+                            .replace(/[^a-z0-9-]+/g, "-"),
                         })
                       }
                       placeholder="product-url-slug"
                       required
                     />
                     <p className="text-[10px] text-muted-foreground mt-1 italic">
-                      This determines the URL of the product. Keep it short and keyword-rich.
+                      This determines the URL of the product. Keep it short and
+                      keyword-rich.
                     </p>
                   </div>
                 </div>
@@ -1142,7 +1233,9 @@ export default function AdminProductsPage() {
                 />
               </div>
               <div className="pt-4 border-t border-border/50">
-                <h3 className="text-md font-semibold mb-3 text-foreground">SEO Information</h3>
+                <h3 className="text-md font-semibold mb-3 text-foreground">
+                  SEO Information
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="metaTitle">Meta Title (Page Title)</Label>
@@ -1161,7 +1254,10 @@ export default function AdminProductsPage() {
                       id="focusKeyword"
                       value={formData.focusKeyword}
                       onChange={(e) =>
-                        setFormData({ ...formData, focusKeyword: e.target.value })
+                        setFormData({
+                          ...formData,
+                          focusKeyword: e.target.value,
+                        })
                       }
                       placeholder="Primary keyword for search ranking"
                     />
@@ -1172,7 +1268,10 @@ export default function AdminProductsPage() {
                       id="metaDescription"
                       value={formData.metaDescription}
                       onChange={(e) =>
-                        setFormData({ ...formData, metaDescription: e.target.value })
+                        setFormData({
+                          ...formData,
+                          metaDescription: e.target.value,
+                        })
                       }
                       rows={2}
                       placeholder="Brief description for search engines"
@@ -1182,13 +1281,23 @@ export default function AdminProductsPage() {
               </div>
               <div className="pt-4 border-t border-border/50">
                 <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-md font-semibold text-foreground">Custom Reviews</h3>
-                  <Button type="button" variant="outline" size="sm" onClick={addReview}>
+                  <h3 className="text-md font-semibold text-foreground">
+                    Custom Reviews
+                  </h3>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addReview}
+                  >
                     <Plus className="mr-2 h-4 w-4" /> Add Review
                   </Button>
                 </div>
                 {formData.reviews.map((review, index) => (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 p-4 border rounded-md relative">
+                  <div
+                    key={index}
+                    className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 p-4 border rounded-md relative"
+                  >
                     <Button
                       type="button"
                       variant="ghost"
@@ -1202,7 +1311,9 @@ export default function AdminProductsPage() {
                       <Label>Reviewer Name</Label>
                       <Input
                         value={review.name}
-                        onChange={(e) => updateReview(index, "name", e.target.value)}
+                        onChange={(e) =>
+                          updateReview(index, "name", e.target.value)
+                        }
                         required
                       />
                     </div>
@@ -1213,7 +1324,9 @@ export default function AdminProductsPage() {
                         min="1"
                         max="5"
                         value={review.rating}
-                        onChange={(e) => updateReview(index, "rating", Number(e.target.value))}
+                        onChange={(e) =>
+                          updateReview(index, "rating", Number(e.target.value))
+                        }
                         required
                       />
                     </div>
@@ -1221,7 +1334,9 @@ export default function AdminProductsPage() {
                       <Label>Review Content</Label>
                       <Textarea
                         value={review.content}
-                        onChange={(e) => updateReview(index, "content", e.target.value)}
+                        onChange={(e) =>
+                          updateReview(index, "content", e.target.value)
+                        }
                         required
                         rows={2}
                       />
@@ -1229,7 +1344,9 @@ export default function AdminProductsPage() {
                   </div>
                 ))}
                 {formData.reviews.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-4 border rounded-md border-dashed">No custom reviews added.</p>
+                  <p className="text-sm text-muted-foreground text-center py-4 border rounded-md border-dashed">
+                    No custom reviews added.
+                  </p>
                 )}
               </div>
               <div className="flex items-center space-x-4">
@@ -1305,9 +1422,11 @@ export default function AdminProductsPage() {
                       id="edit-slug"
                       value={formData.slug}
                       onChange={(e) =>
-                        setFormData({ 
-                          ...formData, 
-                          slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, "-") 
+                        setFormData({
+                          ...formData,
+                          slug: e.target.value
+                            .toLowerCase()
+                            .replace(/[^a-z0-9-]+/g, "-"),
                         })
                       }
                       placeholder="product-url-slug"
@@ -1491,10 +1610,14 @@ export default function AdminProductsPage() {
                 />
               </div>
               <div className="pt-4 border-t border-border/50">
-                <h3 className="text-md font-semibold mb-3 text-foreground">SEO Information</h3>
+                <h3 className="text-md font-semibold mb-3 text-foreground">
+                  SEO Information
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="edit-metaTitle">Meta Title (Page Title)</Label>
+                    <Label htmlFor="edit-metaTitle">
+                      Meta Title (Page Title)
+                    </Label>
                     <Input
                       id="edit-metaTitle"
                       value={formData.metaTitle}
@@ -1505,23 +1628,31 @@ export default function AdminProductsPage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="edit-focusKeywords">Focus Keywords</Label>
+                    <Label htmlFor="edit-focusKeyword">Focus Keywords</Label>
                     <Input
-                      id="edit-focusKeywords"
-                      value={formData.focusKeywords}
+                      id="edit-focusKeyword"
+                      value={formData.focusKeyword}
                       onChange={(e) =>
-                        setFormData({ ...formData, focusKeywords: e.target.value })
+                        setFormData({
+                          ...formData,
+                          focusKeyword: e.target.value,
+                        })
                       }
                       placeholder="keyword1, keyword2"
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <Label htmlFor="edit-metaDescription">Meta Description</Label>
+                    <Label htmlFor="edit-metaDescription">
+                      Meta Description
+                    </Label>
                     <Textarea
                       id="edit-metaDescription"
                       value={formData.metaDescription}
                       onChange={(e) =>
-                        setFormData({ ...formData, metaDescription: e.target.value })
+                        setFormData({
+                          ...formData,
+                          metaDescription: e.target.value,
+                        })
                       }
                       rows={2}
                       placeholder="Brief description for search engines"
@@ -1531,13 +1662,23 @@ export default function AdminProductsPage() {
               </div>
               <div className="pt-4 border-t border-border/50">
                 <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-md font-semibold text-foreground">Custom Reviews</h3>
-                  <Button type="button" variant="outline" size="sm" onClick={addReview}>
+                  <h3 className="text-md font-semibold text-foreground">
+                    Custom Reviews
+                  </h3>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addReview}
+                  >
                     <Plus className="mr-2 h-4 w-4" /> Add Review
                   </Button>
                 </div>
                 {formData.reviews.map((review, index) => (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 p-4 border rounded-md relative">
+                  <div
+                    key={index}
+                    className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 p-4 border rounded-md relative"
+                  >
                     <Button
                       type="button"
                       variant="ghost"
@@ -1551,7 +1692,9 @@ export default function AdminProductsPage() {
                       <Label>Reviewer Name</Label>
                       <Input
                         value={review.name}
-                        onChange={(e) => updateReview(index, "name", e.target.value)}
+                        onChange={(e) =>
+                          updateReview(index, "name", e.target.value)
+                        }
                         required
                       />
                     </div>
@@ -1562,7 +1705,9 @@ export default function AdminProductsPage() {
                         min="1"
                         max="5"
                         value={review.rating}
-                        onChange={(e) => updateReview(index, "rating", Number(e.target.value))}
+                        onChange={(e) =>
+                          updateReview(index, "rating", Number(e.target.value))
+                        }
                         required
                       />
                     </div>
@@ -1570,7 +1715,9 @@ export default function AdminProductsPage() {
                       <Label>Review Content</Label>
                       <Textarea
                         value={review.content}
-                        onChange={(e) => updateReview(index, "content", e.target.value)}
+                        onChange={(e) =>
+                          updateReview(index, "content", e.target.value)
+                        }
                         required
                         rows={2}
                       />
@@ -1578,7 +1725,9 @@ export default function AdminProductsPage() {
                   </div>
                 ))}
                 {formData.reviews.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-4 border rounded-md border-dashed">No custom reviews added.</p>
+                  <p className="text-sm text-muted-foreground text-center py-4 border rounded-md border-dashed">
+                    No custom reviews added.
+                  </p>
                 )}
               </div>
               <div className="flex items-center space-x-4">
@@ -1648,7 +1797,9 @@ export default function AdminProductsPage() {
                     <Label className="text-sm font-medium text-muted-foreground">
                       Slug (URL)
                     </Label>
-                    <p className="text-foreground font-mono text-xs">{selectedProduct.slug}</p>
+                    <p className="text-foreground font-mono text-xs">
+                      {selectedProduct.slug}
+                    </p>
                   </div>
                   <div>
                     <Label className="text-sm font-medium text-muted-foreground">
@@ -1763,7 +1914,10 @@ export default function AdminProductsPage() {
                           <div key={index} className="image-preview-item">
                             <div className="aspect-square rounded-lg overflow-hidden border border-border/50">
                               <img
-                                src={getProductImageUrl(image, "/placeholder.jpg")}
+                                src={getProductImageUrl(
+                                  image,
+                                  "/placeholder.jpg",
+                                )}
                                 alt={`Product ${index + 1}`}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {

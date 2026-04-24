@@ -13,8 +13,8 @@ export const ALLOWED_MIME_TYPES = [
 
 export const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"] as const;
 
-/** Max upload size: 5MB */
-export const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+/** Max upload size: 20MB */
+export const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024;
 
 export function isAllowedMimeType(mime: string): boolean {
   return (ALLOWED_MIME_TYPES as readonly string[]).includes(mime);

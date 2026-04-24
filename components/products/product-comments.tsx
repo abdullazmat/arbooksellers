@@ -34,9 +34,10 @@ interface Comment {
 
 interface ProductCommentsProps {
   productId: string;
+  customReviews?: { name: string; rating: number; content: string }[];
 }
 
-export default function ProductComments({ productId }: ProductCommentsProps) {
+export default function ProductComments({ productId, customReviews = [] }: ProductCommentsProps) {
   const { toast } = useToast();
   const { user } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
@@ -235,7 +236,7 @@ export default function ProductComments({ productId }: ProductCommentsProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5" />
-            Customer Reviews ({totalComments})
+            Customer Reviews ({totalComments + customReviews.length})
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -339,7 +340,7 @@ export default function ProductComments({ productId }: ProductCommentsProps) {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
               <p className="mt-2 text-gray-600">Loading comments...</p>
             </div>
-          ) : totalComments === 0 ? (
+          ) : (totalComments === 0 && customReviews.length === 0) ? (
             <div className="text-center py-8">
               <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-600">
@@ -348,6 +349,42 @@ export default function ProductComments({ productId }: ProductCommentsProps) {
             </div>
           ) : (
             <div className="space-y-6">
+              {/* Render custom reviews from product data first (only on page 1) */}
+              {currentPage === 1 && customReviews.map((review, idx) => (
+                <div
+                  key={`custom-${idx}`}
+                  className="border-b border-gray-200 pb-6 last:border-b-0"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                        <span className="text-amber-700 font-semibold">
+                          {review.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-gray-900">
+                            {review.name}
+                          </p>
+                          <Badge variant="outline" className="text-[9px] uppercase tracking-tighter bg-amber-50 text-amber-600 border-amber-200">Verified Review</Badge>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex gap-1">
+                            {renderStars(review.rating)}
+                          </div>
+                          <span className="text-xs text-muted-foreground uppercase font-bold tracking-widest opacity-60">Customer Review</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-gray-700 leading-relaxed italic">
+                    "{review.content}"
+                  </p>
+                </div>
+              ))}
+
+              {/* Render dynamic comments from API */}
               {comments.map((comment) => (
                 <div
                   key={comment._id}

@@ -5,7 +5,17 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/admin/', '/dashboard/', '/api/'],
+      disallow: [
+        '/admin/', 
+        '/dashboard/', 
+        '/api/', 
+        '/categories/', 
+        '/tags/', 
+        '/search', 
+        '/auth/', 
+        '/cart', 
+        '/checkout'
+      ],
     },
     sitemap: `${process.env.NEXT_PUBLIC_APP_URL || 'https://arbooksellers.com'}/sitemap.xml`,
   }

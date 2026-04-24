@@ -3,9 +3,20 @@
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
-import { X, Upload } from "lucide-react";
+import {
+  X,
+  Upload,
+  ArrowLeft,
+  ArrowRight,
+  Loader2,
+  CheckCircle2,
+  ExternalLink,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import imageCompression from "browser-image-compression";
+import { getProductImageUrl } from "@/lib/utils";
+import { Progress } from "@/components/ui/progress";
+import { MAX_FILE_SIZE_BYTES } from "@/lib/uploadValidation";
 
 interface ImageUploadProps {
   images: string[];
@@ -13,7 +24,7 @@ interface ImageUploadProps {
   maxImages?: number;
   className?: string;
   useCloudUpload?: boolean;
-  isAdmin?: boolean; // New prop to identify admin uploads
+  isAdmin?: boolean;
 }
 
 export function ImageUpload({
@@ -25,6 +36,7 @@ export function ImageUpload({
   isAdmin = false,
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const { toast } = useToast();
 
   const onDrop = useCallback(
@@ -39,10 +51,17 @@ export function ImageUpload({
       }
 
       setUploading(true);
+      setUploadProgress(0);
       try {
         const newImages: string[] = [];
+        const totalFiles = acceptedFiles.length;
 
-        for (const file of acceptedFiles) {
+        for (let i = 0; i < totalFiles; i++) {
+          const file = acceptedFiles[i];
+
+          // Update progress
+          setUploadProgress(Math.round((i / totalFiles) * 100));
+
           // Validate file type
           if (!file.type.startsWith("image/")) {
             toast({
@@ -53,11 +72,11 @@ export function ImageUpload({
             continue;
           }
 
-          // Validate file size - no limit for admin, 5MB for regular users
-          if (!isAdmin && file.size > 5 * 1024 * 1024) {
+          // Validate file size - use MAX_FILE_SIZE_BYTES from lib
+          if (file.size > MAX_FILE_SIZE_BYTES) {
             toast({
               title: "File too large",
-              description: `${file.name} is too large. Maximum size is 5MB per image.`,
+              description: `${file.name} is too large. Maximum size is ${MAX_FILE_SIZE_BYTES / 1024 / 1024}MB.`,
               variant: "destructive",
             });
             continue;
@@ -66,7 +85,6 @@ export function ImageUpload({
           let imageUrl: string;
 
           try {
-            // For admin/server upload: send file to API; server converts to WebP and returns URL.
             if (useCloudUpload && isAdmin) {
               const formData = new FormData();
               formData.append("file", file);
@@ -85,7 +103,6 @@ export function ImageUpload({
               if (!data.url) throw new Error("No URL returned from upload");
               imageUrl = data.url;
             } else {
-              // Non-admin or local: compress and use base64 (e.g. for non-product uploads)
               const compressedFile = await compressImage(file);
               if (useCloudUpload) {
                 try {
@@ -121,12 +138,13 @@ export function ImageUpload({
           }
         }
 
+        setUploadProgress(100);
         onChange([...images, ...newImages]);
 
         if (newImages.length > 0) {
           toast({
-            title: "Images uploaded",
-            description: `${newImages.length} image(s) uploaded and compressed successfully`,
+            title: "Success",
+            description: `${newImages.length} image(s) uploaded successfully`,
           });
         }
       } catch (error) {
@@ -137,10 +155,13 @@ export function ImageUpload({
           variant: "destructive",
         });
       } finally {
-        setUploading(false);
+        setTimeout(() => {
+          setUploading(false);
+          setUploadProgress(0);
+        }, 500);
       }
     },
-    [images, onChange, maxImages, useCloudUpload, toast]
+    [images, onChange, maxImages, useCloudUpload, toast, isAdmin],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -157,53 +178,40 @@ export function ImageUpload({
   const removeImage = (index: number) => {
     const newImages = images.filter((_, i) => i !== index);
     onChange(newImages);
-    toast({
-      title: "Image removed",
-      description: "Image has been removed",
-    });
+  };
+
+  const moveImage = (index: number, direction: "left" | "right") => {
+    const newImages = [...images];
+    const newIndex = direction === "left" ? index - 1 : index + 1;
+
+    if (newIndex >= 0 && newIndex < newImages.length) {
+      [newImages[index], newImages[newIndex]] = [
+        newImages[newIndex],
+        newImages[index],
+      ];
+      onChange(newImages);
+    }
   };
 
   const compressImage = async (file: File): Promise<File> => {
-    // Different compression settings for admin vs regular users
     const options = isAdmin
       ? {
-          maxSizeMB: 1.5, // Larger size limit for admin (1.5MB)
-          maxWidthOrHeight: 2560, // Higher resolution for admin (2560px)
+          maxSizeMB: 1.5,
+          maxWidthOrHeight: 2560,
           useWebWorker: true,
-          quality: 0.85, // Higher quality for admin (85%)
-          initialQuality: 0.9, // Start with higher quality
+          quality: 0.85,
+          initialQuality: 0.9,
         }
       : {
-          maxSizeMB: 0.8, // Regular size limit (0.8MB)
-          maxWidthOrHeight: 1920, // Regular resolution (1920px)
+          maxSizeMB: 0.8,
+          maxWidthOrHeight: 1920,
           useWebWorker: true,
-          quality: 0.8, // Regular quality (80%)
+          quality: 0.8,
         };
 
     try {
-      const compressedFile = await imageCompression(file, options);
-
-      // Log compression details for admin
-      if (isAdmin) {
-        const originalSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-        const compressedSizeMB = (compressedFile.size / (1024 * 1024)).toFixed(
-          2
-        );
-        const compressionRatio = (
-          ((file.size - compressedFile.size) / file.size) *
-          100
-        ).toFixed(1);
-
-        console.log(`Admin Image Compression: ${file.name}`);
-        console.log(
-          `Original: ${originalSizeMB}MB → Compressed: ${compressedSizeMB}MB (${compressionRatio}% reduction)`
-        );
-      }
-
-      return compressedFile;
+      return await imageCompression(file, options);
     } catch (error) {
-      console.error("Image compression failed:", error);
-      // Return original file if compression fails
       return file;
     }
   };
@@ -222,10 +230,10 @@ export function ImageUpload({
       {/* Upload Area */}
       <div
         {...getRootProps()}
-        className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+        className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-300 ${
           isDragActive
-            ? "border-green-500 bg-green-50"
-            : "border-gray-300 hover:border-gray-400"
+            ? "border-islamic-green-500 bg-islamic-green-500/5"
+            : "border-border/50 hover:border-islamic-green-500 hover:bg-zinc-50 dark:hover:bg-white/2"
         } ${
           uploading || images.length >= maxImages
             ? "opacity-50 cursor-not-allowed"
@@ -233,76 +241,152 @@ export function ImageUpload({
         }`}
       >
         <input {...getInputProps()} />
-        <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-        <p className="text-sm text-gray-600 mb-2">
+        <div className="bg-zinc-100 dark:bg-white/5 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 transition-transform group-hover:scale-110">
+          <Upload className="h-8 w-8 text-islamic-green-600" />
+        </div>
+        <p className="text-sm font-black text-foreground mb-1 uppercase tracking-wider">
           {isDragActive
-            ? "Drop the images here..."
-            : "Drag & drop images here, or click to select files"}
+            ? "Drop your files here"
+            : "Drop images here, or click to browse"}
         </p>
-        <p className="text-xs text-gray-500">
-          PNG, JPG, WEBP up to 5MB each. Max {maxImages} images.
+        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+          PNG, JPG, WEBP • MAX {MAX_FILE_SIZE_BYTES / 1024 / 1024}MB • UP TO{" "}
+          {maxImages} IMAGES
         </p>
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="mt-3"
+          className="mt-6 h-10 rounded-xl font-black uppercase tracking-widest text-[10px] px-6 border-border/50 hover:border-islamic-green-500 hover:bg-islamic-green-500/10 transition-all"
           disabled={uploading || images.length >= maxImages}
         >
-          Select Images
+          Select Files
         </Button>
       </div>
 
+      {/* Upload Progress */}
+      {uploading && (
+        <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.2em] text-islamic-green-600">
+            <span className="flex items-center gap-2">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Uploading Images...
+            </span>
+            <span>{uploadProgress}%</span>
+          </div>
+          <Progress
+            value={uploadProgress}
+            className="h-1.5 bg-islamic-green-500/10"
+          />
+        </div>
+      )}
+
       {/* Image Previews */}
       {images.length > 0 && (
-        <div className="space-y-3">
-          <p className="text-sm">
-            Uploaded Images ({images.length}/{maxImages})
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="space-y-4 pt-2">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+              Uploaded Gallery ({images.length}/{maxImages})
+            </p>
+            <p className="text-[9px] font-bold text-islamic-green-600 uppercase tracking-widest flex items-center gap-1.5">
+              <CheckCircle2 className="h-3 w-3" />
+              First image is primary
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {images.map((image, index) => (
-              <div key={index} className="image-preview-item">
-                <div className="aspect-square rounded-lg overflow-hidden border border-gray-200">
-                  <img
-                    src={image}
-                    alt={`Product ${index + 1}`}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = "/placeholder.jpg";
-                    }}
-                  />
-                </div>
+              <div key={index} className="group relative">
+                {(() => {
+                  const imageUrl = getProductImageUrl(
+                    image,
+                    "/placeholder.jpg",
+                  );
 
-                {/* Remove Button */}
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  className="image-preview-actions h-6 w-6 p-0"
-                  onClick={() => removeImage(index)}
-                >
-                  <X className="h-3 w-3" />
-                </Button>
+                  return (
+                    <div
+                      className={`aspect-square rounded-2xl overflow-hidden border-2 transition-all duration-300 ${
+                        index === 0
+                          ? "border-islamic-green-500 shadow-lg shadow-islamic-green-500/20"
+                          : "border-border/50"
+                      }`}
+                    >
+                      <img
+                        src={imageUrl}
+                        alt={`Product ${index + 1}`}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        onError={(e) => {
+                          e.currentTarget.src = "/placeholder.jpg";
+                        }}
+                      />
+                      {index === 0 && (
+                        <div className="absolute top-2 left-2 px-2 py-0.5 bg-islamic-green-500 text-white text-[8px] font-black uppercase tracking-widest rounded-md shadow-lg">
+                          Primary
+                        </div>
+                      )}
 
-                {/* Image Info */}
-                <div className="image-preview-info">
-                  <p className="truncate">
-                    {image.startsWith("data:")
-                      ? "Uploaded Image"
-                      : "External URL"}
-                  </p>
+                      {/* Overlay Actions */}
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 pointer-events-none">
+                        <Button
+                          asChild
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 rounded-lg bg-white/20 hover:bg-white text-white hover:text-black transition-colors pointer-events-auto"
+                        >
+                          <a
+                            href={imageUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={`Open image ${index + 1} in new tab`}
+                            title="Open in new tab"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 rounded-lg bg-white/20 hover:bg-white text-white hover:text-black transition-colors pointer-events-auto"
+                          disabled={index === 0}
+                          onClick={() => moveImage(index, "left")}
+                        >
+                          <ArrowLeft className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 rounded-lg bg-white/20 hover:bg-white text-white hover:text-black transition-colors pointer-events-auto"
+                          disabled={index === images.length - 1}
+                          onClick={() => moveImage(index, "right")}
+                        >
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="h-8 w-8 p-0 rounded-lg shadow-xl pointer-events-auto"
+                          onClick={() => removeImage(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Index Indicator */}
+                <div className="mt-2 text-center">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">
+                    Slt #{index + 1}
+                  </span>
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      )}
-
-      {/* Upload Status */}
-      {uploading && (
-        <div className="flex items-center gap-2 text-sm text-blue-600">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-          Uploading images...
         </div>
       )}
     </div>

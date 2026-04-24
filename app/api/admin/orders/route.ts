@@ -1,33 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import mongoose from "mongoose";
+import Order from "@/models/Order";
+import Product from "@/models/Product";
 
 import { verifyAuth } from "@/lib/auth";
 
 // GET - Get all orders with stats
 export async function GET(request: NextRequest) {
   try {
-    // Connect to database
     await dbConnect();
-
-    // Dynamically import models to ensure they are registered
-    try {
-      const UserModel = (await import("@/models/User")).default;
-      const ProductModel = (await import("@/models/Product")).default;
-      const OrderModel = (await import("@/models/Order")).default;
-    } catch (importError) {
-      return NextResponse.json(
-        {
-          error: "Failed to import models",
-          details:
-            importError instanceof Error
-              ? importError.message
-              : "Unknown import error",
-          timestamp: new Date().toISOString(),
-        },
-        { status: 500 }
-      );
-    }
+    await import("@/models/User");
+    await import("@/models/Category");
 
     // Verify models are registered
     if (!mongoose.models.Order) {
@@ -37,7 +21,7 @@ export async function GET(request: NextRequest) {
           availableModels: Object.keys(mongoose.models),
           timestamp: new Date().toISOString(),
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -48,7 +32,7 @@ export async function GET(request: NextRequest) {
           availableModels: Object.keys(mongoose.models),
           timestamp: new Date().toISOString(),
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -59,7 +43,7 @@ export async function GET(request: NextRequest) {
           availableModels: Object.keys(mongoose.models),
           timestamp: new Date().toISOString(),
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -67,14 +51,14 @@ export async function GET(request: NextRequest) {
     if (!auth) {
       return NextResponse.json(
         { error: "Authentication required" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
     if (auth.role !== "admin") {
       return NextResponse.json(
         { error: "Admin access required" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -82,35 +66,98 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
     const status = searchParams.get("status");
-    const search = searchParams.get("search");
+    const search = searchParams.get("search")?.trim();
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+    const category = searchParams.get("category");
 
     const skip = (page - 1) * limit;
 
     // Build query
-    const query: any = {};
+    const query: Record<string, any> = {};
+
     if (status && status !== "all") {
       query.orderStatus = status;
     }
+
     if (search) {
       query.$or = [
         { "shippingAddress.fullName": { $regex: search, $options: "i" } },
         { "shippingAddress.email": { $regex: search, $options: "i" } },
+        { orderNumber: { $regex: search, $options: "i" } },
       ];
+    }
+
+    if (startDate || endDate) {
+      query.createdAt = {};
+
+      if (startDate) {
+        const parsedStart = new Date(startDate);
+        if (!Number.isNaN(parsedStart.getTime())) {
+          parsedStart.setHours(0, 0, 0, 0);
+          query.createdAt.$gte = parsedStart;
+        }
+      }
+
+      if (endDate) {
+        const parsedEnd = new Date(endDate);
+        if (!Number.isNaN(parsedEnd.getTime())) {
+          parsedEnd.setHours(23, 59, 59, 999);
+          query.createdAt.$lte = parsedEnd;
+        }
+      }
+
+      if (Object.keys(query.createdAt).length === 0) {
+        delete query.createdAt;
+      }
+    }
+
+    if (category && category !== "all") {
+      if (!mongoose.Types.ObjectId.isValid(category)) {
+        return NextResponse.json(
+          { error: "Invalid category filter" },
+          { status: 400 },
+        );
+      }
+
+      const matchedProducts = await Product.find({
+        $or: [{ category }, { subcategory: category }],
+      })
+        .select("_id")
+        .lean();
+
+      const productIds = matchedProducts.map((product) => product._id);
+      if (productIds.length === 0) {
+        return NextResponse.json({
+          orders: [],
+          stats: {
+            totalSales: 0,
+            totalOrders: 0,
+            pendingOrders: 0,
+            processingOrders: 0,
+          },
+          pagination: {
+            page,
+            limit,
+            total: 0,
+            pages: 1,
+          },
+        });
+      }
+
+      query["items.product"] = { $in: productIds };
     }
 
     // Fetch orders with pagination
     let orders;
     try {
-      // First try to find orders without populate to test basic query
-      const basicOrders = await mongoose.models.Order.find(query).limit(1);
-
-      // Now try with populate
       orders = await mongoose.models.Order.find(query)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .populate("user", "name email")
-        .populate("items.product", "title images price");
+        .populate("items.product", "title images price category subcategory")
+        .lean();
     } catch (findError: any) {
       // Check if it's a model registration error
       if (
@@ -124,7 +171,7 @@ export async function GET(request: NextRequest) {
             availableModels: Object.keys(mongoose.models),
             timestamp: new Date().toISOString(),
           },
-          { status: 500 }
+          { status: 500 },
         );
       }
 
@@ -134,13 +181,13 @@ export async function GET(request: NextRequest) {
           details: findError.message || "Database query failed",
           timestamp: new Date().toISOString(),
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     // Transform orders to include orderNumber and normalize address
     const transformedOrders = orders.map((order: any) => {
-      const orderObj = order.toObject();
+      const orderObj = order;
 
       // Ensure orderNumber is present
       if (!orderObj.orderNumber) {
@@ -164,34 +211,25 @@ export async function GET(request: NextRequest) {
     });
 
     // Get total count
-    let total;
-    try {
-      total = await mongoose.models.Order.countDocuments(query);
-    } catch (countError: any) {
-      total = 0; // Set default value
-    }
+    const total = await mongoose.models.Order.countDocuments(query);
 
     // Get stats
-    let stats;
-    try {
-      stats = await mongoose.models.Order.aggregate([
-        {
-          $group: {
-            _id: null,
-            totalSales: { $sum: "$total" },
-            totalOrders: { $sum: 1 },
-            pendingOrders: {
-              $sum: { $cond: [{ $eq: ["$orderStatus", "pending"] }, 1, 0] },
-            },
-            processingOrders: {
-              $sum: { $cond: [{ $eq: ["$orderStatus", "processing"] }, 1, 0] },
-            },
+    const stats = await mongoose.models.Order.aggregate([
+      { $match: query },
+      {
+        $group: {
+          _id: null,
+          totalSales: { $sum: "$total" },
+          totalOrders: { $sum: 1 },
+          pendingOrders: {
+            $sum: { $cond: [{ $eq: ["$orderStatus", "pending"] }, 1, 0] },
+          },
+          processingOrders: {
+            $sum: { $cond: [{ $eq: ["$orderStatus", "processing"] }, 1, 0] },
           },
         },
-      ]);
-    } catch (statsError: any) {
-      stats = []; // Set default value
-    }
+      },
+    ]);
 
     const orderStats = stats[0] || {
       totalSales: 0,
@@ -207,7 +245,7 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit),
+        pages: Math.max(1, Math.ceil(total / limit)),
       },
     };
 
@@ -220,7 +258,107 @@ export async function GET(request: NextRequest) {
         details: error.message || "Unknown error occurred",
         timestamp: new Date().toISOString(),
       },
-      { status: 500 }
+      { status: 500 },
+    );
+  }
+}
+
+// DELETE - Clear order history (all or by active filters)
+export async function DELETE(request: NextRequest) {
+  try {
+    await dbConnect();
+
+    const auth = verifyAuth(request);
+    if (!auth || auth.role !== "admin") {
+      return NextResponse.json(
+        { error: "Admin access required" },
+        { status: 403 },
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get("status");
+    const search = searchParams.get("search")?.trim();
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+    const category = searchParams.get("category");
+
+    const query: Record<string, any> = {};
+
+    if (status && status !== "all") {
+      query.orderStatus = status;
+    }
+
+    if (search) {
+      query.$or = [
+        { "shippingAddress.fullName": { $regex: search, $options: "i" } },
+        { "shippingAddress.email": { $regex: search, $options: "i" } },
+        { orderNumber: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    if (startDate || endDate) {
+      query.createdAt = {};
+
+      if (startDate) {
+        const parsedStart = new Date(startDate);
+        if (!Number.isNaN(parsedStart.getTime())) {
+          parsedStart.setHours(0, 0, 0, 0);
+          query.createdAt.$gte = parsedStart;
+        }
+      }
+
+      if (endDate) {
+        const parsedEnd = new Date(endDate);
+        if (!Number.isNaN(parsedEnd.getTime())) {
+          parsedEnd.setHours(23, 59, 59, 999);
+          query.createdAt.$lte = parsedEnd;
+        }
+      }
+
+      if (Object.keys(query.createdAt).length === 0) {
+        delete query.createdAt;
+      }
+    }
+
+    if (category && category !== "all") {
+      if (!mongoose.Types.ObjectId.isValid(category)) {
+        return NextResponse.json(
+          { error: "Invalid category filter" },
+          { status: 400 },
+        );
+      }
+
+      const matchedProducts = await Product.find({
+        $or: [{ category }, { subcategory: category }],
+      })
+        .select("_id")
+        .lean();
+
+      const productIds = matchedProducts.map((product) => product._id);
+      if (productIds.length === 0) {
+        return NextResponse.json({
+          message: "No orders matched the selected filters",
+          deletedCount: 0,
+        });
+      }
+
+      query["items.product"] = { $in: productIds };
+    }
+
+    const result = await Order.deleteMany(query);
+
+    return NextResponse.json({
+      message: "Order history cleared successfully",
+      deletedCount: result.deletedCount || 0,
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      {
+        error: "Internal server error",
+        details: error.message || "Unknown error occurred",
+      },
+      { status: 500 },
     );
   }
 }

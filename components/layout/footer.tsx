@@ -1,26 +1,43 @@
-import Link from 'next/link'
-import { Facebook, Instagram, Mail, Phone, MapPin } from 'lucide-react'
+import Link from "next/link";
+import { Facebook, Instagram, Mail, Phone, MapPin } from "lucide-react";
 
 export function Footer() {
   return (
     <footer className="bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-200 dark:border-white/5 pt-16 md:pt-24 pb-12 font-inter relative overflow-hidden">
       {/* Background Decorative Element */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-islamic-green-500/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-      
+
       <div className="container mx-auto px-4 md:px-6 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
           {/* Company Info */}
           <div className="space-y-6">
-            <Link href="/" className="inline-block group transition-transform hover:scale-105">
-              <img src="/logo.png" alt="AR Book Sellers" className="h-20 w-auto" />
+            <Link
+              href="/"
+              className="inline-block group transition-transform hover:scale-105"
+            >
+              <img
+                src="/logo.png"
+                alt="AR Book Sellers"
+                className="h-20 w-auto"
+              />
             </Link>
             <p className="text-sm leading-relaxed text-muted-foreground font-medium max-w-sm">
-              <strong className="text-foreground">AR Book Sellers</strong> is your trusted partner for authentic Islamic literature in Pakistan. Providing high-quality books since 2009.
+              <strong className="text-foreground">AR Book Sellers</strong> is
+              your trusted partner for authentic Islamic literature in Pakistan.
+              Providing high-quality books since 2009.
             </p>
             <div className="flex space-x-4">
               {[
-                { icon: Facebook, href: "https://www.facebook.com/arbookseller/", label: "Facebook" },
-                { icon: Instagram, href: "https://www.instagram.com/arbooksellers/", label: "Instagram" }
+                {
+                  icon: Facebook,
+                  href: "https://www.facebook.com/arbookseller/",
+                  label: "Facebook",
+                },
+                {
+                  icon: Instagram,
+                  href: "https://www.instagram.com/arbooksellers/",
+                  label: "Instagram",
+                },
               ].map((social, i) => (
                 <Link
                   key={i}
@@ -38,13 +55,15 @@ export function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-black text-foreground mb-6 uppercase tracking-[0.2em] text-[12px]">Quick Links</h3>
+            <h3 className="text-lg font-black text-foreground mb-6 uppercase tracking-[0.2em] text-[12px]">
+              Quick Links
+            </h3>
             <ul className="space-y-4">
               {[
-                { name: 'Home', href: '/' },
-                { name: 'Products', href: '/products' },
-                { name: 'About', href: '/about' },
-                { name: 'Contact', href: '/contact' }
+                { name: "Home", href: "/" },
+                { name: "Products", href: "/products" },
+                { name: "About", href: "/about" },
+                { name: "Contact", href: "/contact" },
               ].map((link) => (
                 <li key={link.name}>
                   <Link
@@ -61,14 +80,16 @@ export function Footer() {
 
           {/* Categories */}
           <div>
-            <h3 className="text-lg font-black text-foreground mb-6 uppercase tracking-[0.2em] text-[12px]">Categories</h3>
+            <h3 className="text-lg font-black text-foreground mb-6 uppercase tracking-[0.2em] text-[12px]">
+              Categories
+            </h3>
             <ul className="space-y-4">
               {[
-                { name: 'Quran', slug: 'quran' },
-                { name: 'Paras', slug: 'para-individual' },
-                { name: 'Wazaif', slug: 'wazaif' },
-                { name: 'Qaida & Surah', slug: 'qaida-surah' },
-                { name: 'Accessories', slug: 'accessories' }
+                { name: "Quran", slug: "quran" },
+                { name: "Paras", slug: "para-individual" },
+                { name: "Wazaif", slug: "wazaif" },
+                { name: "Qaida & Surah", slug: "qaida-surah" },
+                { name: "Accessories", slug: "accessories" },
               ].map((cat) => (
                 <li key={cat.slug}>
                   <Link
@@ -84,7 +105,9 @@ export function Footer() {
 
           {/* Contact Info */}
           <div>
-            <h3 className="text-lg font-black text-foreground mb-6 uppercase tracking-[0.2em] text-[12px]">Contact Us</h3>
+            <h3 className="text-lg font-black text-foreground mb-6 uppercase tracking-[0.2em] text-[12px]">
+              Contact Us
+            </h3>
             <ul className="space-y-5">
               <li className="flex gap-4">
                 <div className="w-10 h-10 rounded-xl bg-islamic-green-50 dark:bg-islamic-green-950/30 flex items-center justify-center flex-shrink-0">
@@ -98,13 +121,18 @@ export function Footer() {
                 <div className="w-10 h-10 rounded-xl bg-islamic-green-50 dark:bg-islamic-green-950/30 flex items-center justify-center flex-shrink-0">
                   <Phone className="h-5 w-5 text-islamic-green-600" />
                 </div>
-                <span className="text-sm text-muted-foreground leading-relaxed font-medium">+92-300-8016812</span>
+                <span className="text-sm text-muted-foreground leading-relaxed font-medium">
+                  +92-300-8016812
+                </span>
               </li>
               <li className="flex gap-4">
                 <div className="w-10 h-10 rounded-xl bg-islamic-green-50 dark:bg-islamic-green-950/30 flex items-center justify-center flex-shrink-0">
                   <Mail className="h-5 w-5 text-islamic-green-600" />
                 </div>
-                <a href="mailto:contact@arbooksellers.com" className="text-sm text-muted-foreground hover:text-islamic-green-600 leading-relaxed font-medium transition-colors">
+                <a
+                  href="mailto:contact@arbooksellers.com"
+                  className="text-sm text-muted-foreground hover:text-islamic-green-600 leading-relaxed font-medium transition-colors"
+                >
                   contact@arbooksellers.com
                 </a>
               </li>
@@ -114,11 +142,21 @@ export function Footer() {
 
         <div className="border-t border-zinc-200 dark:border-white/5 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest text-center md:text-left transition-colors hover:text-foreground">
-            &copy; {new Date().getFullYear()} AR Book Sellers | 15 Years of Trusted Service in Pakistan
+            &copy; {new Date().getFullYear()} AR Book Sellers
           </p>
           <div className="flex gap-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-            <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
+            <Link
+              href="/privacy"
+              className="hover:text-foreground transition-colors"
+            >
+              Privacy Policy
+            </Link>
+            <Link
+              href="/terms"
+              className="hover:text-foreground transition-colors"
+            >
+              Terms of Service
+            </Link>
           </div>
         </div>
       </div>

@@ -31,6 +31,7 @@ import {
   Download,
   X,
   ShoppingCart,
+  Trash2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -42,6 +43,16 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { formatPrice, getProductImageUrl } from "@/lib/utils";
 import { downloadInvoiceAsPDF } from "@/lib/invoice";
 
@@ -79,15 +90,29 @@ interface Order {
   createdAt: string;
 }
 
+interface CategoryOption {
+  _id: string;
+  name: string;
+  label: string;
+}
+
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
+  const [showClearHistoryDialog, setShowClearHistoryDialog] = useState(false);
+  const [deletingOrder, setDeletingOrder] = useState(false);
+  const [clearingHistory, setClearingHistory] = useState(false);
   const { toast } = useToast();
 
   // Check if admin token is expired
@@ -113,7 +138,110 @@ export default function AdminOrdersPage() {
       window.location.href = "/admin/login";
       return;
     }
+
+    fetchCategories();
   }, [toast]);
+
+  const getValidatedToken = () => {
+    const token = localStorage.getItem("adminToken");
+
+    if (!token) {
+      toast({
+        title: "Authentication Error",
+        description: "Admin token not found. Please login again.",
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    if (isTokenExpired(token)) {
+      toast({
+        title: "Session Expired",
+        description: "Your admin session has expired. Please login again.",
+        variant: "destructive",
+      });
+      window.location.href = "/admin/login";
+      return null;
+    }
+
+    return token;
+  };
+
+  const buildOrderQueryParams = (withPagination = true) => {
+    const params = new URLSearchParams();
+
+    if (withPagination) {
+      params.append("page", currentPage.toString());
+      params.append("limit", "20");
+    }
+
+    if (searchTerm.trim()) {
+      params.append("search", searchTerm.trim());
+    }
+
+    if (statusFilter !== "all") {
+      params.append("status", statusFilter);
+    }
+
+    if (categoryFilter !== "all") {
+      params.append("category", categoryFilter);
+    }
+
+    if (startDate) {
+      params.append("startDate", startDate);
+    }
+
+    if (endDate) {
+      params.append("endDate", endDate);
+    }
+
+    return params;
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const token = getValidatedToken();
+      if (!token) {
+        return;
+      }
+
+      const response = await fetch(
+        "/api/admin/categories?includeInactive=true",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        return;
+      }
+
+      const data = await response.json();
+      const flattened: CategoryOption[] = [];
+
+      (data.categories || []).forEach((parent: any) => {
+        flattened.push({
+          _id: parent._id,
+          name: parent.name,
+          label: parent.name,
+        });
+
+        (parent.subcategories || []).forEach((child: any) => {
+          flattened.push({
+            _id: child._id,
+            name: child.name,
+            label: `${parent.name} > ${child.name}`,
+          });
+        });
+      });
+
+      setCategories(flattened);
+    } catch (error) {
+      // Silently fail because this is a secondary enhancement to filtering.
+    }
+  };
 
   const handleDownloadInvoice = (order: Order) => {
     try {
@@ -165,73 +293,68 @@ export default function AdminOrdersPage() {
 
   const exportToCSV = () => {
     if (orders.length === 0) {
-      toast({ title: "No data", description: "There are no orders to export.", variant: "destructive" });
+      toast({
+        title: "No data",
+        description: "There are no orders to export.",
+        variant: "destructive",
+      });
       return;
     }
-    const headers = ["Order ID", "Customer Name", "Customer Email", "Total Items", "Total Amount", "Payment Status", "Payment Method", "Order Status", "Date"];
-    const csvContent = orders.map(order => [
-      order.orderNumber || order._id,
-      `"${order.shippingAddress.fullName || ''}"`,
-      `"${order.user?.email || ''}"`,
-      order.items.length,
-      order.total,
-      order.paymentStatus,
-      order.paymentMethod,
-      order.orderStatus,
-      new Date(order.createdAt).toISOString()
-    ].join(","));
-    
+    const headers = [
+      "Order ID",
+      "Customer Name",
+      "Customer Email",
+      "Total Items",
+      "Total Amount",
+      "Payment Status",
+      "Payment Method",
+      "Order Status",
+      "Date",
+    ];
+    const csvContent = orders.map((order) =>
+      [
+        order.orderNumber || order._id,
+        `"${order.shippingAddress.fullName || ""}"`,
+        `"${order.user?.email || ""}"`,
+        order.items.length,
+        order.total,
+        order.paymentStatus,
+        order.paymentMethod,
+        order.orderStatus,
+        new Date(order.createdAt).toISOString(),
+      ].join(","),
+    );
+
     const csvString = [headers.join(","), ...csvContent].join("\n");
-    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `orders_export_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `orders_export_${new Date().toISOString().split("T")[0]}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   };
 
   useEffect(() => {
     fetchOrders();
-  }, [currentPage, searchTerm, statusFilter]);
+  }, [
+    currentPage,
+    searchTerm,
+    statusFilter,
+    categoryFilter,
+    startDate,
+    endDate,
+  ]);
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("adminToken");
-
+      const token = getValidatedToken();
       if (!token) {
-        toast({
-          title: "Authentication Error",
-          description: "Admin token not found. Please login again.",
-          variant: "destructive",
-        });
         return;
       }
 
-      // Check if token is expired
-      if (isTokenExpired(token)) {
-        toast({
-          title: "Session Expired",
-          description: "Your admin session has expired. Please login again.",
-          variant: "destructive",
-        });
-        window.location.href = "/admin/login";
-        return;
-      }
-
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: "20",
-      });
-
-      if (searchTerm) {
-        params.append("search", searchTerm);
-      }
-
-      if (statusFilter !== "all") {
-        params.append("status", statusFilter);
-      }
+      const params = buildOrderQueryParams(true);
 
       const response = await fetch(`/api/admin/orders?${params.toString()}`, {
         headers: {
@@ -245,7 +368,7 @@ export default function AdminOrdersPage() {
 
       const data = await response.json();
       setOrders(data.orders);
-      setTotalPages(data.pagination.pages);
+      setTotalPages(Math.max(1, data.pagination?.pages || 1));
     } catch (error) {
       toast({
         title: "Error",
@@ -259,25 +382,8 @@ export default function AdminOrdersPage() {
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
-      const token = localStorage.getItem("adminToken");
-
+      const token = getValidatedToken();
       if (!token) {
-        toast({
-          title: "Authentication Error",
-          description: "Admin token not found. Please login again.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Check if token is expired
-      if (isTokenExpired(token)) {
-        toast({
-          title: "Session Expired",
-          description: "Your admin session has expired. Please login again.",
-          variant: "destructive",
-        });
-        window.location.href = "/admin/login";
         return;
       }
 
@@ -303,7 +409,7 @@ export default function AdminOrdersPage() {
           throw new Error(responseData.error || "Invalid request data");
         } else {
           throw new Error(
-            `Server error: ${responseData.error || "Unknown error"}`
+            `Server error: ${responseData.error || "Unknown error"}`,
           );
         }
       }
@@ -337,6 +443,97 @@ export default function AdminOrdersPage() {
             : "Failed to update order status",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleDeleteOrder = async () => {
+    if (!orderToDelete) {
+      return;
+    }
+
+    try {
+      setDeletingOrder(true);
+      const token = getValidatedToken();
+      if (!token) {
+        return;
+      }
+
+      const response = await fetch(`/api/admin/orders/${orderToDelete._id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to delete order");
+      }
+
+      toast({
+        title: "Order Deleted",
+        description: "The selected order has been removed.",
+      });
+
+      if (selectedOrder?._id === orderToDelete._id) {
+        setSelectedOrder(null);
+        setShowOrderModal(false);
+      }
+
+      setOrderToDelete(null);
+      await fetchOrders();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "Failed to delete order",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingOrder(false);
+    }
+  };
+
+  const clearOrderHistory = async () => {
+    try {
+      setClearingHistory(true);
+      const token = getValidatedToken();
+      if (!token) {
+        return;
+      }
+
+      const params = buildOrderQueryParams(false);
+      const response = await fetch(`/api/admin/orders?${params.toString()}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to clear order history");
+      }
+
+      toast({
+        title: "History Cleared",
+        description: `${data.deletedCount || 0} orders deleted successfully.`,
+      });
+
+      setShowClearHistoryDialog(false);
+      setCurrentPage(1);
+      await fetchOrders();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to clear order history",
+        variant: "destructive",
+      });
+    } finally {
+      setClearingHistory(false);
     }
   };
 
@@ -384,6 +581,13 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const hasActiveFilters =
+    statusFilter !== "all" ||
+    categoryFilter !== "all" ||
+    Boolean(searchTerm.trim()) ||
+    Boolean(startDate) ||
+    Boolean(endDate);
+
   if (loading && orders.length === 0) {
     return (
       <AdminLayout>
@@ -403,14 +607,30 @@ export default function AdminOrdersPage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-4xl font-black text-foreground tracking-tight">Order Logs</h1>
-            <p className="text-muted-foreground font-medium mt-1">Track and manage customer transactions worldwide</p>
+            <h1 className="text-4xl font-black text-foreground tracking-tight">
+              Order Logs
+            </h1>
+            <p className="text-muted-foreground font-medium mt-1">
+              Track and manage customer transactions worldwide
+            </p>
           </div>
           <div className="flex gap-3 w-full md:w-auto">
-             <Button variant="outline" onClick={exportToCSV} className="flex-1 md:flex-none h-12 rounded-xl font-bold border-border/50 hover:bg-zinc-50 dark:hover:bg-white/5 transition-all">
-                <Download className="mr-2 h-4 w-4" />
-                Export CSV
-             </Button>
+            <Button
+              variant="destructive"
+              onClick={() => setShowClearHistoryDialog(true)}
+              className="flex-1 md:flex-none h-12 rounded-xl font-bold"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Clear History
+            </Button>
+            <Button
+              variant="outline"
+              onClick={exportToCSV}
+              className="flex-1 md:flex-none h-12 rounded-xl font-bold border-border/50 hover:bg-zinc-50 dark:hover:bg-white/5 transition-all"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Export CSV
+            </Button>
           </div>
         </div>
 
@@ -422,28 +642,38 @@ export default function AdminOrdersPage() {
                 <Filter className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <CardTitle className="text-xl font-black text-foreground">Activity Filters</CardTitle>
-                <CardDescription className="font-medium">Pinpoint specific orders</CardDescription>
+                <CardTitle className="text-xl font-black text-foreground">
+                  Activity Filters
+                </CardTitle>
+                <CardDescription className="font-medium">
+                  Pinpoint specific orders
+                </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="p-8">
-            <div className="flex flex-col lg:flex-row gap-6">
-              <div className="flex-1">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <div className="xl:col-span-2">
                 <div className="relative group">
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground group-focus-within:text-islamic-green-600 h-5 w-5 transition-colors" />
                   <Input
                     placeholder="Search by name, email, or order ID..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setCurrentPage(1);
+                    }}
                     className="pl-12 h-14 rounded-2xl bg-zinc-100/50 dark:bg-background border-transparent focus:bg-white dark:focus:bg-zinc-800 focus:border-islamic-green-500 transition-all font-medium"
                   />
                 </div>
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-3 flex-wrap">
                 <select
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
                   className="h-14 px-6 rounded-2xl bg-zinc-100/50 dark:bg-background border border-border/50 focus:outline-none focus:ring-2 focus:ring-islamic-green-500 font-bold text-sm min-w-[200px] appearance-none cursor-pointer"
                 >
                   <option value="all">All Statuses</option>
@@ -453,11 +683,60 @@ export default function AdminOrdersPage() {
                   <option value="delivered">Delivered</option>
                   <option value="cancelled">Cancelled</option>
                 </select>
-                <Button 
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => {
+                    setCategoryFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="h-14 px-6 rounded-2xl bg-zinc-100/50 dark:bg-background border border-border/50 focus:outline-none focus:ring-2 focus:ring-islamic-green-500 font-bold text-sm min-w-[240px] appearance-none cursor-pointer"
+                >
+                  <option value="all">All Categories</option>
+                  {categories.map((category) => (
+                    <option key={category._id} value={category._id}>
+                      {category.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex gap-3 flex-wrap">
+                <Input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => {
+                    setStartDate(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="h-14 rounded-2xl bg-zinc-100/50 dark:bg-background border-border/50 px-4 font-bold text-sm min-w-[180px]"
+                />
+                <Input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => {
+                    setEndDate(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="h-14 rounded-2xl bg-zinc-100/50 dark:bg-background border-border/50 px-4 font-bold text-sm min-w-[180px]"
+                />
+                <Button
                   className="h-14 w-14 rounded-2xl p-0 bg-background border border-border/50 text-foreground hover:bg-islamic-green-600 hover:text-white transition-all"
                   onClick={fetchOrders}
                 >
                   <Filter className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-14 rounded-2xl px-5 font-black text-[10px] uppercase tracking-widest"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setStatusFilter("all");
+                    setCategoryFilter("all");
+                    setStartDate("");
+                    setEndDate("");
+                    setCurrentPage(1);
+                  }}
+                >
+                  Reset Filters
                 </Button>
               </div>
             </div>
@@ -465,14 +744,21 @@ export default function AdminOrdersPage() {
         </Card>
 
         {/* Orders Table */}
-         <Card className="bg-card border-border/50 dark:border-white/5 shadow-2xl rounded-[2rem] overflow-hidden">
+        <Card className="bg-card border-border/50 dark:border-white/5 shadow-2xl rounded-[2rem] overflow-hidden">
           <CardHeader className="border-b border-border/50 bg-zinc-50/50 dark:bg-white/2 p-8">
             <div className="flex justify-between items-center">
               <div>
-                <CardTitle className="text-2xl font-black text-foreground tracking-tight">Active Transactions</CardTitle>
-                <CardDescription className="font-medium mt-1">Found {orders.length} orders matching your criteria</CardDescription>
+                <CardTitle className="text-2xl font-black text-foreground tracking-tight">
+                  Active Transactions
+                </CardTitle>
+                <CardDescription className="font-medium mt-1">
+                  Found {orders.length} orders matching your criteria
+                </CardDescription>
               </div>
-              <Badge variant="outline" className="h-8 rounded-xl font-bold border-blue-500/30 text-blue-600 bg-blue-500/10 px-4">
+              <Badge
+                variant="outline"
+                className="h-8 rounded-xl font-bold border-blue-500/30 text-blue-600 bg-blue-500/10 px-4"
+              >
                 Refreshed Just Now
               </Badge>
             </div>
@@ -482,19 +768,38 @@ export default function AdminOrdersPage() {
               <Table>
                 <TableHeader className="bg-zinc-50/50 dark:bg-white/2">
                   <TableRow className="hover:bg-transparent border-border/50 h-16">
-                    <TableHead className="px-8 font-black uppercase tracking-widest text-[10px] text-muted-foreground">Reference</TableHead>
-                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Customer</TableHead>
-                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Cart Info</TableHead>
-                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Amount</TableHead>
-                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Payment</TableHead>
-                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Execution Status</TableHead>
-                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Timestamp</TableHead>
-                    <TableHead className="text-right px-8 font-black uppercase tracking-widest text-[10px] text-muted-foreground">Actions</TableHead>
+                    <TableHead className="px-8 font-black uppercase tracking-widest text-[10px] text-muted-foreground">
+                      Reference
+                    </TableHead>
+                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">
+                      Customer
+                    </TableHead>
+                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">
+                      Cart Info
+                    </TableHead>
+                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">
+                      Amount
+                    </TableHead>
+                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">
+                      Payment
+                    </TableHead>
+                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">
+                      Execution Status
+                    </TableHead>
+                    <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">
+                      Timestamp
+                    </TableHead>
+                    <TableHead className="text-right px-8 font-black uppercase tracking-widest text-[10px] text-muted-foreground">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {orders.map((order) => (
-                    <TableRow key={order._id} className="border-border/50 hover:bg-zinc-50/50 dark:hover:bg-white/2 transition-colors">
+                    <TableRow
+                      key={order._id}
+                      className="border-border/50 hover:bg-zinc-50/50 dark:hover:bg-white/2 transition-colors"
+                    >
                       <TableCell className="px-8 py-6">
                         <div className="flex items-center space-x-3">
                           <div className="h-10 w-10 rounded-xl bg-zinc-100 dark:bg-white/5 flex items-center justify-center border border-border/50">
@@ -551,14 +856,16 @@ export default function AdminOrdersPage() {
                             {order.paymentStatus}
                           </Badge>
                           <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
-                             <DollarSign className="h-3 w-3" />
-                             {order.paymentMethod}
+                            <DollarSign className="h-3 w-3" />
+                            {order.paymentMethod}
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="space-y-3">
-                          <Badge className={`${getStatusColor(order.orderStatus)} border-none text-[9px] font-black uppercase tracking-widest h-6 px-3 rounded-lg shadow-sm`}>
+                          <Badge
+                            className={`${getStatusColor(order.orderStatus)} border-none text-[9px] font-black uppercase tracking-widest h-6 px-3 rounded-lg shadow-sm`}
+                          >
                             {order.orderStatus}
                           </Badge>
                           <select
@@ -584,7 +891,7 @@ export default function AdminOrdersPage() {
                       </TableCell>
                       <TableCell className="text-right px-8">
                         <div className="flex items-center justify-end space-x-2">
-                           <Button
+                          <Button
                             variant="ghost"
                             size="sm"
                             className="h-10 w-10 p-0 rounded-xl hover:bg-blue-500/10 hover:text-blue-600 transition-colors"
@@ -602,6 +909,14 @@ export default function AdminOrdersPage() {
                             onClick={() => handleDownloadInvoice(order)}
                           >
                             <Download className="h-5 w-5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-10 w-10 p-0 rounded-xl hover:bg-red-500/10 hover:text-red-600 transition-colors"
+                            onClick={() => setOrderToDelete(order)}
+                          >
+                            <Trash2 className="h-5 w-5" />
                           </Button>
                         </div>
                       </TableCell>
@@ -640,7 +955,7 @@ export default function AdminOrdersPage() {
                             e.preventDefault();
                             setCurrentPage(1);
                           }}
-                           className="h-10 w-10 rounded-xl font-bold border-border/50"
+                          className="h-10 w-10 rounded-xl font-bold border-border/50"
                         >
                           1
                         </PaginationLink>
@@ -701,7 +1016,7 @@ export default function AdminOrdersPage() {
                             e.preventDefault();
                             setCurrentPage(totalPages);
                           }}
-                           className="h-10 w-10 rounded-xl font-bold border-border/50"
+                          className="h-10 w-10 rounded-xl font-bold border-border/50"
                         >
                           {totalPages}
                         </PaginationLink>
@@ -726,8 +1041,17 @@ export default function AdminOrdersPage() {
                 </Pagination>
 
                 <div className="text-center text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mt-6 opacity-60">
-                  Page {currentPage} of {totalPages} • Monitoring {orders.length} Global Transactions
+                  Page {currentPage} of {totalPages} • Monitoring{" "}
+                  {orders.length} Global Transactions
                 </div>
+              </div>
+            )}
+
+            {orders.length === 0 && !loading && (
+              <div className="p-12 text-center border-t border-border/50 bg-zinc-50/30 dark:bg-white/2">
+                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
+                  No orders found for the selected filters.
+                </p>
               </div>
             )}
           </CardContent>
@@ -739,17 +1063,21 @@ export default function AdminOrdersPage() {
             <div className="bg-background border border-border/50 shadow-[0_32px_128px_-16px_rgba(0,0,0,0.5)] rounded-[3rem] max-w-5xl w-full max-h-[90vh] overflow-y-auto overflow-x-hidden relative">
               <div className="p-10">
                 <div className="flex justify-between items-center mb-10">
-                   <div className="flex items-center gap-4">
-                      <div className="h-14 w-14 rounded-2xl bg-islamic-green-500/10 flex items-center justify-center border border-islamic-green-500/20">
-                         <Package className="h-7 w-7 text-islamic-green-600" />
-                      </div>
-                      <div>
-                        <h2 className="text-3xl font-black text-foreground tracking-tighter">
-                          Transaction Details
-                        </h2>
-                        <p className="text-muted-foreground font-bold uppercase tracking-widest text-[10px] mt-1">Reference: #{selectedOrder.orderNumber || selectedOrder._id.slice(-6)}</p>
-                      </div>
-                   </div>
+                  <div className="flex items-center gap-4">
+                    <div className="h-14 w-14 rounded-2xl bg-islamic-green-500/10 flex items-center justify-center border border-islamic-green-500/20">
+                      <Package className="h-7 w-7 text-islamic-green-600" />
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-black text-foreground tracking-tighter">
+                        Transaction Details
+                      </h2>
+                      <p className="text-muted-foreground font-bold uppercase tracking-widest text-[10px] mt-1">
+                        Reference: #
+                        {selectedOrder.orderNumber ||
+                          selectedOrder._id.slice(-6)}
+                      </p>
+                    </div>
+                  </div>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -766,55 +1094,112 @@ export default function AdminOrdersPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                   {/* Order Information */}
                   <Card className="bg-zinc-50/50 dark:bg-white/2 border-border/30 rounded-[2rem] p-8">
-                     <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground mb-6">Core Information</h3>
-                     <div className="space-y-4">
-                        {[
-                          { label: "Execution Ref", value: `#${selectedOrder.orderNumber || selectedOrder._id.slice(-6)}`, type: "text" },
-                          { label: "Timestamp", value: formatDate(selectedOrder.createdAt), type: "text" },
-                          { label: "Operational Status", value: selectedOrder.orderStatus, type: "badge", color: getStatusColor(selectedOrder.orderStatus) },
-                          { label: "Payment Status", value: selectedOrder.paymentStatus, type: "badge", color: getPaymentStatusColor(selectedOrder.paymentStatus) },
-                          { label: "Channel", value: selectedOrder.paymentMethod, type: "text" },
-                        ].map((row, i) => (
-                           <div key={i} className="flex justify-between items-center py-2">
-                              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest leading-none">{row.label}</span>
-                              {row.type === "badge" ? (
-                                <Badge className={`${row.color} border-none text-[9px] font-black uppercase tracking-widest h-6 px-3 rounded-lg`}>{row.value}</Badge>
-                              ) : (
-                                <span className="text-sm font-black text-foreground tracking-tight">{row.value}</span>
-                              )}
-                           </div>
-                        ))}
-                     </div>
+                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground mb-6">
+                      Core Information
+                    </h3>
+                    <div className="space-y-4">
+                      {[
+                        {
+                          label: "Execution Ref",
+                          value: `#${selectedOrder.orderNumber || selectedOrder._id.slice(-6)}`,
+                          type: "text",
+                        },
+                        {
+                          label: "Timestamp",
+                          value: formatDate(selectedOrder.createdAt),
+                          type: "text",
+                        },
+                        {
+                          label: "Operational Status",
+                          value: selectedOrder.orderStatus,
+                          type: "badge",
+                          color: getStatusColor(selectedOrder.orderStatus),
+                        },
+                        {
+                          label: "Payment Status",
+                          value: selectedOrder.paymentStatus,
+                          type: "badge",
+                          color: getPaymentStatusColor(
+                            selectedOrder.paymentStatus,
+                          ),
+                        },
+                        {
+                          label: "Channel",
+                          value: selectedOrder.paymentMethod,
+                          type: "text",
+                        },
+                      ].map((row, i) => (
+                        <div
+                          key={i}
+                          className="flex justify-between items-center py-2"
+                        >
+                          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest leading-none">
+                            {row.label}
+                          </span>
+                          {row.type === "badge" ? (
+                            <Badge
+                              className={`${row.color} border-none text-[9px] font-black uppercase tracking-widest h-6 px-3 rounded-lg`}
+                            >
+                              {row.value}
+                            </Badge>
+                          ) : (
+                            <span className="text-sm font-black text-foreground tracking-tight">
+                              {row.value}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </Card>
 
                   {/* Customer Information */}
-                   <Card className="bg-zinc-50/50 dark:bg-white/2 border-border/30 rounded-[2rem] p-8">
-                     <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground mb-6">Customer Profile</h3>
-                     <div className="space-y-6">
-                        <div className="flex items-center gap-4">
-                           <div className="h-16 w-16 rounded-2xl bg-blue-500/10 flex items-center justify-center">
-                              <span className="text-2xl font-black text-blue-600">{selectedOrder.shippingAddress.fullName.charAt(0)}</span>
-                           </div>
-                           <div>
-                              <p className="text-lg font-black text-foreground">{selectedOrder.shippingAddress.fullName}</p>
-                              <p className="text-sm font-medium text-muted-foreground">{selectedOrder.user?.email || "N/A"}</p>
-                           </div>
+                  <Card className="bg-zinc-50/50 dark:bg-white/2 border-border/30 rounded-[2rem] p-8">
+                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground mb-6">
+                      Customer Profile
+                    </h3>
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-4">
+                        <div className="h-16 w-16 rounded-2xl bg-blue-500/10 flex items-center justify-center">
+                          <span className="text-2xl font-black text-blue-600">
+                            {selectedOrder.shippingAddress.fullName.charAt(0)}
+                          </span>
                         </div>
-                        <div className="pt-4 border-t border-border/30">
-                            <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-3 leading-none">Shipping Destination</h4>
-                            <div className="p-5 bg-card border border-border/30 rounded-2xl text-sm font-bold text-foreground leading-relaxed shadow-sm">
-                              {selectedOrder.shippingAddress.address}<br />
-                              <span className="text-muted-foreground uppercase text-[11px] tracking-wider">{selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state} {selectedOrder.shippingAddress.zipCode}</span><br />
-                              <span className="text-muted-foreground uppercase text-[11px] tracking-wider font-black">{selectedOrder.shippingAddress.country}</span>
-                            </div>
+                        <div>
+                          <p className="text-lg font-black text-foreground">
+                            {selectedOrder.shippingAddress.fullName}
+                          </p>
+                          <p className="text-sm font-medium text-muted-foreground">
+                            {selectedOrder.user?.email || "N/A"}
+                          </p>
                         </div>
-                     </div>
+                      </div>
+                      <div className="pt-4 border-t border-border/30">
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-3 leading-none">
+                          Shipping Destination
+                        </h4>
+                        <div className="p-5 bg-card border border-border/30 rounded-2xl text-sm font-bold text-foreground leading-relaxed shadow-sm">
+                          {selectedOrder.shippingAddress.address}
+                          <br />
+                          <span className="text-muted-foreground uppercase text-[11px] tracking-wider">
+                            {selectedOrder.shippingAddress.city},{" "}
+                            {selectedOrder.shippingAddress.state}{" "}
+                            {selectedOrder.shippingAddress.zipCode}
+                          </span>
+                          <br />
+                          <span className="text-muted-foreground uppercase text-[11px] tracking-wider font-black">
+                            {selectedOrder.shippingAddress.country}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </Card>
                 </div>
 
                 {/* Order Items */}
                 <div className="mt-10">
-                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground mb-6 ml-2">Shipment Manifest</h3>
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground mb-6 ml-2">
+                    Shipment Manifest
+                  </h3>
                   <div className="space-y-4">
                     {selectedOrder.items.map((item, index) => (
                       <div
@@ -822,24 +1207,40 @@ export default function AdminOrdersPage() {
                         className="flex items-center justify-between p-5 bg-zinc-50/50 dark:bg-white/2 border border-border/30 rounded-3xl group hover:border-islamic-green-500/30 transition-all"
                       >
                         <div className="flex items-center gap-6">
-                            <div className="w-16 h-20 bg-card rounded-2xl flex items-center justify-center border border-border/30 overflow-hidden shadow-sm group-hover:scale-105 transition-transform duration-500">
-                               <img
-                                src={getProductImageUrl(item.product?.images?.[0])}
-                                alt={item.title}
-                                className="w-full h-full object-cover"
-                              />
+                          <div className="w-16 h-20 bg-card rounded-2xl flex items-center justify-center border border-border/30 overflow-hidden shadow-sm group-hover:scale-105 transition-transform duration-500">
+                            <img
+                              src={getProductImageUrl(
+                                item.product?.images?.[0],
+                              )}
+                              alt={item.title}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div>
+                            <p className="font-black text-foreground text-base tracking-tight leading-tight">
+                              {item.title}
+                            </p>
+                            <div className="flex items-center gap-3 mt-2">
+                              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest bg-zinc-100 dark:bg-white/5 py-1 px-2.5 rounded-lg border border-border/30">
+                                SKU: {item.product?._id?.slice(-6) || "N/A"}
+                              </span>
+                              <span className="text-[10px] font-black text-islamic-green-600 uppercase tracking-widest">
+                                Unit: {formatPrice(item.price)}
+                              </span>
                             </div>
-                            <div>
-                               <p className="font-black text-foreground text-base tracking-tight leading-tight">{item.title}</p>
-                               <div className="flex items-center gap-3 mt-2">
-                                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest bg-zinc-100 dark:bg-white/5 py-1 px-2.5 rounded-lg border border-border/30">SKU: {item.product?._id?.slice(-6) || "N/A"}</span>
-                                  <span className="text-[10px] font-black text-islamic-green-600 uppercase tracking-widest">Unit: {formatPrice(item.price)}</span>
-                               </div>
-                            </div>
+                          </div>
                         </div>
                         <div className="text-right">
-                           <p className="text-base font-black text-foreground">{item.quantity} × <span className="opacity-40">{formatPrice(item.price)}</span></p>
-                           <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">Line Total: {formatPrice(item.quantity * item.price)}</p>
+                          <p className="text-base font-black text-foreground">
+                            {item.quantity} ×{" "}
+                            <span className="opacity-40">
+                              {formatPrice(item.price)}
+                            </span>
+                          </p>
+                          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">
+                            Line Total:{" "}
+                            {formatPrice(item.quantity * item.price)}
+                          </p>
                         </div>
                       </div>
                     ))}
@@ -850,22 +1251,34 @@ export default function AdminOrdersPage() {
                 <div className="mt-10 flex justify-end">
                   <Card className="max-w-md w-full bg-foreground text-background dark:bg-zinc-800 dark:text-foreground rounded-[2.5rem] p-10 overflow-hidden relative group">
                     <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:scale-120 group-hover:rotate-12 transition-transform duration-1000">
-                       <ShoppingCart className="h-40 w-40" />
+                      <ShoppingCart className="h-40 w-40" />
                     </div>
                     <div className="space-y-4 relative z-10">
-                       <div className="flex justify-between items-center opacity-60">
-                          <span className="text-xs font-black uppercase tracking-widest">Subtotal Value</span>
-                          <span className="font-bold">{formatPrice(selectedOrder.subtotal)}</span>
-                       </div>
-                       <div className="flex justify-between items-center opacity-60">
-                          <span className="text-xs font-black uppercase tracking-widest">Allocation Fee</span>
-                          <span className="font-bold">{formatPrice(selectedOrder.shippingCost)}</span>
-                       </div>
-                       <div className="h-px bg-current opacity-10 my-4" />
-                       <div className="flex justify-between items-center pt-2">
-                          <span className="text-sm font-black uppercase tracking-widest">Gross Total</span>
-                          <span className="text-3xl font-black tracking-tighter">{formatPrice(selectedOrder.total)}</span>
-                       </div>
+                      <div className="flex justify-between items-center opacity-60">
+                        <span className="text-xs font-black uppercase tracking-widest">
+                          Subtotal Value
+                        </span>
+                        <span className="font-bold">
+                          {formatPrice(selectedOrder.subtotal)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center opacity-60">
+                        <span className="text-xs font-black uppercase tracking-widest">
+                          Allocation Fee
+                        </span>
+                        <span className="font-bold">
+                          {formatPrice(selectedOrder.shippingCost)}
+                        </span>
+                      </div>
+                      <div className="h-px bg-current opacity-10 my-4" />
+                      <div className="flex justify-between items-center pt-2">
+                        <span className="text-sm font-black uppercase tracking-widest">
+                          Gross Total
+                        </span>
+                        <span className="text-3xl font-black tracking-tighter">
+                          {formatPrice(selectedOrder.total)}
+                        </span>
+                      </div>
                     </div>
                   </Card>
                 </div>
@@ -873,6 +1286,89 @@ export default function AdminOrdersPage() {
             </div>
           </div>
         )}
+
+        <AlertDialog
+          open={!!orderToDelete}
+          onOpenChange={(open) => {
+            if (!open) {
+              setOrderToDelete(null);
+            }
+          }}
+        >
+          <AlertDialogContent className="bg-background border border-border/50 shadow-2xl rounded-[2.5rem] p-10">
+            <AlertDialogHeader>
+              <div className="w-16 h-16 bg-red-500/10 text-red-600 rounded-2xl flex items-center justify-center mb-6">
+                <Trash2 className="h-8 w-8" />
+              </div>
+              <AlertDialogTitle className="text-2xl font-black text-foreground tracking-tight">
+                Delete This Order?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-muted-foreground font-medium pt-2 leading-relaxed">
+                This will permanently delete order #
+                {orderToDelete?.orderNumber || orderToDelete?._id.slice(-6)} and
+                cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="mt-8 gap-3">
+              <AlertDialogCancel
+                disabled={deletingOrder}
+                className="h-14 px-8 rounded-2xl font-black text-[10px] uppercase tracking-widest border-border/50"
+              >
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleDeleteOrder();
+                }}
+                disabled={deletingOrder}
+                className="h-14 px-8 rounded-2xl font-black text-[10px] uppercase tracking-widest bg-red-600 hover:bg-red-700 text-white shadow-xl shadow-red-500/20"
+              >
+                {deletingOrder ? "Deleting..." : "Delete Order"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog
+          open={showClearHistoryDialog}
+          onOpenChange={setShowClearHistoryDialog}
+        >
+          <AlertDialogContent className="bg-background border border-border/50 shadow-2xl rounded-[2.5rem] p-10">
+            <AlertDialogHeader>
+              <div className="w-16 h-16 bg-red-500/10 text-red-600 rounded-2xl flex items-center justify-center mb-6">
+                <Trash2 className="h-8 w-8" />
+              </div>
+              <AlertDialogTitle className="text-2xl font-black text-foreground tracking-tight">
+                Clear Order History?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-muted-foreground font-medium pt-2 leading-relaxed">
+                {hasActiveFilters
+                  ? "This will delete all orders matching your current filters."
+                  : "This will delete all orders in history."}{" "}
+                This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="mt-8 gap-3">
+              <AlertDialogCancel
+                disabled={clearingHistory}
+                className="h-14 px-8 rounded-2xl font-black text-[10px] uppercase tracking-widest border-border/50"
+              >
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  clearOrderHistory();
+                }}
+                disabled={clearingHistory}
+                className="h-14 px-8 rounded-2xl font-black text-[10px] uppercase tracking-widest bg-red-600 hover:bg-red-700 text-white shadow-xl shadow-red-500/20"
+              >
+                {clearingHistory ? "Clearing..." : "Clear History"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );

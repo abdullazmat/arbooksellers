@@ -6,7 +6,7 @@ import { verifyAuth } from "@/lib/auth";
 // GET - Get single category
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     await dbConnect();
@@ -15,18 +15,19 @@ export async function GET(
     if (!auth || auth.role !== "admin") {
       return NextResponse.json(
         { error: "Admin access required" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
-    const category = await Category.findById(params.id)
+    const { id } = await params;
+    const category = await Category.findById(id)
       .populate("subcategories")
       .populate("parent");
 
     if (!category) {
       return NextResponse.json(
         { error: "Category not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -34,7 +35,7 @@ export async function GET(
   } catch (error: any) {
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -42,7 +43,7 @@ export async function GET(
 // PUT - Update category
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     await dbConnect();
@@ -51,11 +52,12 @@ export async function PUT(
     if (!auth || auth.role !== "admin") {
       return NextResponse.json(
         { error: "Admin access required" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     const updateData = await request.json();
+    const { id } = await params;
 
     // Check if parent category exists (if being updated)
     if (updateData.parent) {
@@ -63,12 +65,12 @@ export async function PUT(
       if (!parentCategory) {
         return NextResponse.json(
           { error: "Parent category not found" },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
 
-    const category = await Category.findByIdAndUpdate(params.id, updateData, {
+    const category = await Category.findByIdAndUpdate(id, updateData, {
       new: true,
       runValidators: true,
     })
@@ -78,7 +80,7 @@ export async function PUT(
     if (!category) {
       return NextResponse.json(
         { error: "Category not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -90,13 +92,13 @@ export async function PUT(
     if (error.code === 11000) {
       return NextResponse.json(
         { error: "Category with this name already exists" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -104,7 +106,7 @@ export async function PUT(
 // DELETE - Delete category
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     await dbConnect();
@@ -113,15 +115,16 @@ export async function DELETE(
     if (!auth || auth.role !== "admin") {
       return NextResponse.json(
         { error: "Admin access required" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
-    const category = await Category.findById(params.id);
+    const { id } = await params;
+    const category = await Category.findById(id);
     if (!category) {
       return NextResponse.json(
         { error: "Category not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -132,7 +135,7 @@ export async function DELETE(
           error:
             "Cannot delete category with subcategories. Please delete subcategories first.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -143,7 +146,7 @@ export async function DELETE(
       });
     }
 
-    await Category.findByIdAndDelete(params.id);
+    await Category.findByIdAndDelete(id);
 
     return NextResponse.json({
       message: "Category deleted successfully",
@@ -151,7 +154,7 @@ export async function DELETE(
   } catch (error: any) {
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -5,18 +5,27 @@ import Comment from "@/models/Comment";
 import Category from "@/models/Category";
 import mongoose from "mongoose";
 
+function sanitizePublicImages(images: unknown): string[] {
+  if (!Array.isArray(images)) return ["/placeholder.jpg"];
+
+  const cleaned = images.filter(
+    (img): img is string => typeof img === "string" && !img.startsWith("data:"),
+  );
+
+  return cleaned.length > 0 ? cleaned : ["/placeholder.jpg"];
+}
+
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
-    
+
     // Ensure DB is actually connected
     if (mongoose.connection.readyState !== 1) {
       return NextResponse.json(
         { error: "Database not connected" },
-        { status: 503 }
+        { status: 503 },
       );
     }
-
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
@@ -33,7 +42,6 @@ export async function GET(request: NextRequest) {
 
     // Build query with simplified approach
     const query: any = {};
-
 
     if (search) {
       query.$or = [
@@ -54,7 +62,7 @@ export async function GET(request: NextRequest) {
       const categoryInputs = category.split(",");
       const validIds: mongoose.Types.ObjectId[] = [];
       const slugs: string[] = [];
-      
+
       for (const input of categoryInputs) {
         if (mongoose.Types.ObjectId.isValid(input)) {
           validIds.push(new mongoose.Types.ObjectId(input));
@@ -65,12 +73,12 @@ export async function GET(request: NextRequest) {
 
       if (slugs.length > 0) {
         try {
-          const resolvedCategories = await Category.find({ 
-            slug: { $in: slugs.map(s => s.toLowerCase().trim()) } 
-          }).select('_id');
-          resolvedCategories.forEach(c => validIds.push(c._id));
+          const resolvedCategories = await Category.find({
+            slug: { $in: slugs.map((s) => s.toLowerCase().trim()) },
+          }).select("_id");
+          resolvedCategories.forEach((c) => validIds.push(c._id));
         } catch (error) {
-          console.error('Error resolving category slugs:', error);
+          console.error("Error resolving category slugs:", error);
         }
       }
 
@@ -79,8 +87,8 @@ export async function GET(request: NextRequest) {
         query.$and.push({
           $or: [
             { category: { $in: validIds } },
-            { subcategory: { $in: validIds } }
-          ]
+            { subcategory: { $in: validIds } },
+          ],
         });
       }
     }
@@ -89,7 +97,7 @@ export async function GET(request: NextRequest) {
       if (!mongoose.Types.ObjectId.isValid(subcategory)) {
         return NextResponse.json(
           { error: "Invalid subcategory ID format" },
-          { status: 400 }
+          { status: 400 },
         );
       }
       query.subcategory = new mongoose.Types.ObjectId(subcategory);
@@ -103,123 +111,95 @@ export async function GET(request: NextRequest) {
 
     // Build sort object with fallback strategy
     let sortObj: any = {};
-    let sortField = 'createdAt';
+    let sortField = "createdAt";
     let sortDirection = -1;
-    
+
     switch (sort) {
       case "price-low":
-        sortField = 'price';
+        sortField = "price";
         sortDirection = 1;
         break;
       case "price-high":
-        sortField = 'price';
+        sortField = "price";
         sortDirection = -1;
         break;
       case "rating":
         // For rating, we'll sort by createdAt as fallback since rating isn't indexed
-        sortField = 'createdAt';
+        sortField = "createdAt";
         sortDirection = -1;
         break;
       case "oldest":
-        sortField = 'createdAt';
+        sortField = "createdAt";
         sortDirection = 1;
         break;
       default: // newest
-        sortField = 'createdAt';
+        sortField = "createdAt";
         sortDirection = -1;
     }
-    
+
     sortObj[sortField] = sortDirection;
 
     // Optimistic approach - prioritize speed over completeness
     let products: any[] = [];
-    
+
     try {
       // Use aggregation with allowDiskUse to avoid memory limits
       const pipeline = [
         { $match: query },
-        { $project: {
-          _id: 1,
-          title: 1,
-          author: 1,
-          price: 1,
-          originalPrice: 1,
-          images: 1,
-          inStock: 1,
-          stockQuantity: 1,
-          featured: 1,
-          description: 1,
-          size: 1,
-          pages: 1,
-          paper: 1,
-          binding: 1,
-          category: 1,
-          subcategory: 1,
-          slug: 1,
-          createdAt: 1
-        }},
-        { $sort: sortObj },
-        { $skip: skip },
-        { $limit: limit }
-      ];
-
-      let basicProducts;
-      
-      try {
-        basicProducts = await Product.aggregate(pipeline).allowDiskUse(true);
-      } catch (aggError: any) {
-        // Fallback to simple find() if aggregation fails
-        basicProducts = await Product.find(query)
-          .select('_id title author price originalPrice images inStock stockQuantity featured description size pages paper binding category subcategory slug createdAt')
-          .sort(sortObj)
-          .skip(skip)
-          .limit(limit)
-          .lean();
-      }
-
-      if (basicProducts.length === 0) {
-        products = [];
-      } else {
-        // Only fetch categories if we have products and it's not a search query
-        let categoryMap = new Map();
-        if (!search && basicProducts.some((p: any) => p.category || p.subcategory)) {
-          try {
-            const categoryIds = [...new Set([
-              ...basicProducts.map((p: any) => p.category).filter(Boolean),
-              ...basicProducts.map((p: any) => p.subcategory).filter(Boolean)
-            ])];
-            
-            if (categoryIds.length > 0) {
-              const categories = await Category.find({ _id: { $in: categoryIds } })
-                .select('_id name slug')
-                .lean();
-              categoryMap = new Map(categories.map((cat: any) => [cat._id.toString(), cat]));
+        {
+          $lookup: {
+            from: "comments",
+            let: { productIdStr: { $toString: "$_id" } },
+            as: "itemComments",
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ["$productId", "$$productIdStr"] },
+                      { $eq: ["$isApproved", true] },
+                    ],
+                  },
+                },
+              },
+            ],
+          },
+        },
+        {
+          $addFields: {
+            rating: {
+              $let: {
+                vars: {
+                  dynamicComments: "$itemComments",
+                  customReviews: { $ifNull: ["$reviews", []] },
+                },
+                in: {
+                  $let: {
+                    vars: {
+                      totalRating: { $add: [{ $sum: "$$dynamicComments.rating" }, { $sum: "$$customReviews.rating" }] },
+                      totalCount: { $add: [{ $size: "$$dynamicComments" }, { $size: "$$customReviews" }] },
+                    },
+                    in: {
+                      $cond: {
+                        if: { $gt: ["$$totalCount", 0] },
+                        then: { $round: [{ $divide: ["$$totalRating", "$$totalCount"] }, 1] },
+                        else: 0,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            reviewCount: { 
+              $add: [
+                { $size: "$itemComments" }, 
+                { $size: { $ifNull: ["$reviews", []] } }
+              ] 
             }
-        } catch (catError) {
-          // If category fetch fails, continue without categories
-        }
-        }
-
-        // Process products with minimal enrichment
-        products = basicProducts.map((product: any) => {
-          const category = product.category ? categoryMap.get(product.category.toString()) : null;
-          const subcategory = product.subcategory ? categoryMap.get(product.subcategory.toString()) : null;
-          
-          return {
-            ...product,
-            category,
-            subcategory,
-            rating: 0, // Default rating for speed
-            reviews: 0  // Default reviews for speed
-          };
-        });
-      }
-    } catch (error: any) {
-      // Ultimate fallback - use aggregation with allowDiskUse
-      try {
-        const fallbackPipeline = [
-          { $match: query },
-          { $project: {
+          },
+        },
+        {
+          $project: {
             _id: 1,
             title: 1,
             author: 1,
@@ -234,23 +214,129 @@ export async function GET(request: NextRequest) {
             pages: 1,
             paper: 1,
             binding: 1,
+            category: 1,
+            subcategory: 1,
             slug: 1,
-            createdAt: 1
-          }},
+            createdAt: 1,
+            rating: 1,
+            reviewCount: 1,
+            reviews: 1,
+          },
+        },
+        { $sort: sortObj },
+        { $skip: skip },
+        { $limit: limit },
+      ];
+
+      let basicProducts;
+
+      try {
+        basicProducts = await Product.aggregate(pipeline).allowDiskUse(true);
+      } catch (aggError: any) {
+        // Fallback to simple find() if aggregation fails (minimal info)
+        basicProducts = await Product.find(query)
+          .select(
+            "_id title author price originalPrice images inStock stockQuantity featured description size pages paper binding category subcategory slug createdAt reviews",
+          )
+          .sort(sortObj)
+          .skip(skip)
+          .limit(limit)
+          .lean();
+      }
+
+      if (basicProducts.length === 0) {
+        products = [];
+      } else {
+        // ...Existing category mapping logic...
+        let categoryMap = new Map();
+        if (
+          !search &&
+          basicProducts.some((p: any) => p.category || p.subcategory)
+        ) {
+          try {
+            const categoryIds = [
+              ...new Set([
+                ...basicProducts.map((p: any) => p.category).filter(Boolean),
+                ...basicProducts.map((p: any) => p.subcategory).filter(Boolean),
+              ]),
+            ];
+
+            if (categoryIds.length > 0) {
+              const categories = await Category.find({
+                _id: { $in: categoryIds },
+              })
+                .select("_id name slug")
+                .lean();
+              categoryMap = new Map(
+                categories.map((cat: any) => [cat._id.toString(), cat]),
+              );
+            }
+          } catch (catError) {
+            // If category fetch fails, continue without categories
+          }
+        }
+
+        // Process products with minimal enrichment
+        products = basicProducts.map((product: any) => {
+          const category = product.category
+            ? categoryMap.get(product.category.toString())
+            : null;
+          const subcategory = product.subcategory
+            ? categoryMap.get(product.subcategory.toString())
+            : null;
+
+          return {
+            ...product,
+            images: sanitizePublicImages(product.images),
+            category,
+            subcategory,
+            // Use calculated values if available, otherwise fallback
+            rating: typeof product.rating === 'number' ? product.rating : 0,
+            reviews: typeof product.reviewCount === 'number' ? product.reviewCount : (product.reviews?.length || 0),
+          };
+        });
+      }
+    } catch (error: any) {
+      // Ultimate fallback - use aggregation with allowDiskUse
+      try {
+        const fallbackPipeline = [
+          { $match: query },
+          {
+            $project: {
+              _id: 1,
+              title: 1,
+              author: 1,
+              price: 1,
+              originalPrice: 1,
+              images: 1,
+              inStock: 1,
+              stockQuantity: 1,
+              featured: 1,
+              description: 1,
+              size: 1,
+              pages: 1,
+              paper: 1,
+              binding: 1,
+              slug: 1,
+              createdAt: 1,
+              reviews: 1,
+            },
+          },
           { $sort: sortObj },
           { $skip: skip },
-          { $limit: limit }
+          { $limit: limit },
         ];
-        
+
         products = await Product.aggregate(fallbackPipeline).allowDiskUse(true);
-        
+
         // Add default values
         products = products.map((p: any) => ({
           ...p,
+          images: sanitizePublicImages(p.images),
           category: null,
           subcategory: null,
           rating: 0,
-          reviews: 0
+          reviews: p.reviews?.length || 0,
         }));
       } catch (fallbackError: any) {
         // Last resort - get products without sorting, limit to smaller set
@@ -259,19 +345,22 @@ export async function GET(request: NextRequest) {
           // Remove any complex query conditions that might cause issues
           delete emergencyQuery.$or;
           delete emergencyQuery.price;
-          
+
           products = await Product.find(emergencyQuery)
-            .select('_id title author price originalPrice images inStock stockQuantity featured description size pages paper binding slug createdAt')
+            .select(
+              "_id title author price originalPrice images inStock stockQuantity featured description size pages paper binding slug createdAt reviews",
+            )
             .limit(Math.min(limit, 10)) // Limit to 10 items max
             .lean();
-          
+
           // Add default values
           products = products.map((p: any) => ({
             ...p,
+            images: sanitizePublicImages(p.images),
             category: null,
             subcategory: null,
             rating: 0,
-            reviews: 0
+            reviews: p.reviews?.length || 0,
           }));
         } catch (emergencyError: any) {
           products = [];
@@ -293,18 +382,15 @@ export async function GET(request: NextRequest) {
     });
 
     // Add caching headers for better performance
-    response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=300');
-    response.headers.set('ETag', `"${Date.now()}"`);
-    
+    response.headers.set("Cache-Control", "public, max-age=60, s-maxage=300");
+    response.headers.set("ETag", `"${Date.now()}"`);
+
     return response;
   } catch (error: any) {
     // Provide clearer errors to help diagnose issues
     const message = error?.message || "Internal server error";
     const status =
       message.includes("Invalid") || message.includes("format") ? 400 : 500;
-    return NextResponse.json(
-      { error: message },
-      { status }
-    );
+    return NextResponse.json({ error: message }, { status });
   }
 }

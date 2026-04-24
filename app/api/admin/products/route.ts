@@ -175,13 +175,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Reasonable limit for JSON body (images are now URLs only)
+    // Increased limit for JSON body to 50MB to accommodate legacy products with multiple base64 images.
     const contentLength = request.headers.get("content-length");
-    if (contentLength && parseInt(contentLength) > 2 * 1024 * 1024) {
+    if (contentLength && parseInt(contentLength) > 50 * 1024 * 1024) {
       return NextResponse.json(
         {
           error: "Request too large",
-          details: "The request is too large.",
+          details: "The request is too large. Max allowed is 50MB.",
         },
         { status: 413 }
       );

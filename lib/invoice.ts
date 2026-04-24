@@ -264,7 +264,7 @@ export function generateInvoicePDF(invoiceData: InvoiceData): void {
         
         <div class="footer">
           <p>Thank you for your order from AR Book Sellers!</p>
-          <p>For any questions, please contact us at support@arbooksellers.com</p>
+          <p>For any questions, please contact us at contact@arbooksellers.com</p>
           <p>This is a computer-generated invoice. No signature required.</p>
         </div>
       </div>

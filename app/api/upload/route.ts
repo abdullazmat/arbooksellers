@@ -41,11 +41,10 @@ export async function POST(request: NextRequest) {
       maxWidth: 1200,
       quality: 80,
     });
-    const url = `${IMAGE_BASE_URL}${path}`;
 
     return NextResponse.json({
       message: "File uploaded successfully",
-      url,
+      url: path, // Return relative path
       filename: path.split("/").pop(),
     });
   } catch (error) {

@@ -4,8 +4,8 @@
 
 export const APP_CONFIG = {
   shipping: {
-    freeShippingThreshold: 50,
-    baseShippingCost: 5.99,
+    freeShippingThreshold: 3000,
+    baseShippingCost: 200,
   },
   contact: {
     email: "contact@arbooksellers.com",
@@ -15,5 +15,5 @@ export const APP_CONFIG = {
   },
   test: {
     skipConfirmationForDomains: ["example.com", "antigravity.com"],
-  }
+  },
 };
