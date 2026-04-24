@@ -20,6 +20,10 @@ jobs:
           node-version: "20.11.0"
 
       - name: 🔨 Build Project
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          NEXT_PUBLIC_APP_URL: https://arbooksellers.com
         run: |
           npm ci --force
           npm run build

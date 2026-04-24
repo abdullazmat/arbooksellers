@@ -5,21 +5,21 @@ import "@/models/Comment";
 import "@/models/Order";
 import "@/models/User";
 
-const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI;
-
-if (!MONGODB_URI) {
-  throw new Error(
-    "Please define the MONGODB_URI environment variable inside cPanel or .env.local"
-  );
-}
-
-let cached = global.mongoose;
+let cached = (global as any).mongoose;
 
 if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
+  cached = (global as any).mongoose = { conn: null, promise: null };
 }
 
 async function dbConnect() {
+  const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI;
+
+  if (!MONGODB_URI) {
+    throw new Error(
+      "Please define the MONGODB_URI environment variable inside cPanel or .env.local"
+    );
+  }
+
   if (cached.conn) {
     return cached.conn;
   }
